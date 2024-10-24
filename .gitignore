@@ -8,6 +8,8 @@ Unity*
 *.smali
 *.cpp
 *li*
+config.py
+demodapk.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
