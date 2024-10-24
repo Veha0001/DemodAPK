@@ -1,10 +1,10 @@
 # DemodAPk
-APK 📦
+APK 📦, Use [APKEditor](https://github.com/REAndroid/APKEditor)
 + Setup
 ```bash
 pip install -r ./requirement.txt
 ```
-
-Please Edit and Fix it. :)
-- Copy autogen.py to demodapk.py
-- [ x ] Rename Package..
+## autogen.py
+- [x] Rename Package
+- [x] Replace Libs
+- [ ] [...]
