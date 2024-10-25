@@ -33,6 +33,35 @@ Run the script with the following command:
 ```bash
 python autogen.py --config <path_to_config.json> <apk_directory>
 ```
+### Patcher
+```bash
+python patcher.py <config_file>
+# default is config.json
+```
+- Configuration of Patcher
+```json
+{
+    "Patcher": {
+        "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
+        "dump_file": "dump.cs",
+        "output_file": "libil2cpp_patched.so",
+        "patches": [
+            {
+                "method_name": "UnlockAll",
+                "hex_code": "20 00 80 D2 C0 03 5F D6"
+            },
+            {
+                "method_name": "0x111111",
+                "hex_code": "20 25 B1"
+            }
+        ]
+    }
+}
+```
+> [!NOTE]
+> Edit by method_name may work on some dump.cs file.
+> The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).
+
 ## Arguments
 * --config: Path to the JSON configuration file (default: config.json).
 
