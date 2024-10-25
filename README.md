@@ -1,30 +1,59 @@
 # DemodAPk
-APK 📦, Use [APKEditor](https://github.com/REAndroid/APKEditor)
-+ Setup
+
+DemoAPk is a Python-based APK modification tool designed to allow users to easily modify Android APK files with a user-friendly interface. The tool includes features such as renaming package names, modifying resources, and adjusting application metadata.
+
+## Features
+
+- **User-friendly Interface**: Intuitive UI for seamless operation.
+- **Package Renaming**: Easily rename package names in APK files.
+- **Resource Modification**: Modify resources in APK files as needed.
+- **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
+- **Configurable Settings**: Store and manage settings in a JSON configuration file.
+
+## Requirements
+
+- Python 3.x
+- Necessary libraries specified in `requirements.txt`
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Veha0001/DemodAPk.git
+   cd DemodAPk
+   ```
+2. Install the required libraries:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Usage
+
+Run the script with the following command:
 ```bash
-pip install -r ./requirement.txt
+python autogen.py --config <path_to_config.json> <apk_directory>
 ```
-## autogen.py
-- [x] Rename Package
-- [x] Replace Libs
-- [ ] [...]
-## Add Config
-- In config.py file:
-```python
-# Predefined values
-## developers.facebook.com/apps
-FB_APPID = ""
-FB_CLIENT_TOKEN = ""
-FB_LOGIN_PROTOCOL_SCHEME = ""
-## Package
-OLD_PACKAGE_NAME = "com.notmod.game"  # Replace with the current package name
-NEW_PACKAGE_NAME = "com.mod.game"  # Replace with the desired new package name
-OLD_PACKAGE_PATH = "Lcom/notmod/game"
-NEW_PACKAGE_PATH = "Lcom/mod/game"
-# Paths relative to the APK directory
-STRINGS_FILE_RELATIVE_PATH = "resources/package_1/res/values/strings.xml"
-LIB_FILE_RELATIVE_PATH = "root/lib/arm64-v8a/libil2cpp.so"
-LIB_PATCH_FILE_RELATIVE_PATH = "libil2cpp_patched.so"
-ANDROID_MANIFEST_FILE = "AndroidManifest.xml"
-EXCLUDED_SMALI_FILES = []
+## Arguments
+* --config: Path to the JSON configuration file (default: config.json).
+
+* <apk_directory>: Path to the APK directory that contains the files to be modified.
+
+## Example
+```bash
+python autogen.py --config config.json /path/to/apk/directory
 ```
+Follow the prompts to select the APK file and modify its contents according to your preferences.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or features.
+
+<!--
+## Acknowledgements
+
+- Thanks to all contributors and open-source projects that made this tool possible.
+-->

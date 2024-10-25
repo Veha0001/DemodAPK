@@ -1,11 +1,17 @@
 #!/bin/python
-from config import *
+
 import os
 import re
+import sys
+import json
 import shutil
 import argparse
-import pyfiglet
 import itertools
+try:
+    import pyfiglet
+    PYFIGLET_INSTALLED = True
+except ImportError:
+    PYFIGLET_INSTALLED = False
 
 class Colors:
     GREEN = '\033[92m'
@@ -25,23 +31,44 @@ rainbow_colors = [
 ]
 
 def print_rainbow_figlet(text):
-    # Create the figlet text
-    figlet_text = pyfiglet.figlet_format(text)
-    
-    # Generate colored text
-    color_iter = itertools.cycle(rainbow_colors)
-    colored_output = ""
+    if PYFIGLET_INSTALLED:
+        # Create the figlet text
+        figlet_text = pyfiglet.figlet_format(text)
+        
+        # Generate colored text
+        color_iter = itertools.cycle(rainbow_colors)
+        colored_output = ""
 
-    for char in figlet_text:
-        if char in ['\n', '\r']:
-            colored_output += char
+        for char in figlet_text:
+            if char in ['\n', '\r']:
+                colored_output += char
+            else:
+                colored_output += next(color_iter) + char
+
+        # Reset color at the end
+        colored_output += Colors.RESET
+        
+        print(colored_output)
+
+def extract_package_info(manifest_file):
+    OLD_PACKAGE_NAME = None
+    OLD_PACKAGE_PATH = None
+
+    if os.path.isfile(manifest_file):
+        with open(manifest_file, "r", encoding="utf-8") as file:
+            content = file.read()
+
+        # Extract the package name using regex
+        package_name_match = re.search(r'package="([\w\.]+)"', content)
+        if package_name_match:
+            OLD_PACKAGE_NAME = package_name_match.group(1)
+            OLD_PACKAGE_PATH = "L" + OLD_PACKAGE_NAME.replace('.', '/')
         else:
-            colored_output += next(color_iter) + char
+            print(f"{Colors.RED}Package name not found in {manifest_file}.{Colors.RESET}")
+    else:
+        print(f"{Colors.RED}AndroidManifest.xml not found. Skipping package name extraction.{Colors.RESET}")
 
-    # Reset color at the end
-    colored_output += Colors.RESET
-    
-    print(colored_output)
+    return OLD_PACKAGE_NAME, OLD_PACKAGE_PATH
 
 # Function to replace specific values in strings.xml
 def replace_values_in_strings_file(strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme):
@@ -205,12 +232,75 @@ def check_for_dex_folder(apk_dir):
 
 def main():
     print_rainbow_figlet("DemodAPk")
+    # Default configuration structure
+    default_config = {
+        "facebook": {
+            "app_id": "",
+            "client_token": "",
+            "login_protocol_scheme": ""
+        },
+        "package": {
+            "new_name": "",
+            "new_path": ""
+        },
+        "paths": {
+            "strings_file": "",
+            "lib_file": "",
+            "lib_patch_file": "",
+            "android_manifest": "",
+            "excluded_smali_files": []
+        }
+    }
+
+       # Set up argument parsing
+    parser = argparse.ArgumentParser(description="DemodAPk: An APK Modification Script")
+    
     # Argument parsing
-    parser = argparse.ArgumentParser(description="APK Modification Script")
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory")  # Optional positional argument
-    parser.add_argument("-o", "--no-rename-package", action="store_true",
-                        help="Run the script without renaming the package")
+    parser.add_argument(
+        "-n",
+        "--no-rename-package",
+        action="store_true",
+        help="Run the script without renaming the package"
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=str,
+        default="config.json",  # Default config file
+        help="Path to the JSON configuration file."
+    )
     args = parser.parse_args()
+
+    # Check if config file exists, if not, create it with default values
+    if not os.path.isfile(args.config):
+        with open(args.config, "w") as file:
+            json.dump(default_config, file, indent=4)
+        print(f"Configuration file '{args.config}' not found. Created default config file.")
+        sys.exit(0)  # Exit after creating the file to allow editing before next run
+
+    # Load configuration from the specified JSON file
+    try:
+        with open(args.config, "r") as file:
+            config = json.load(file)
+    except json.JSONDecodeError:
+        print(f"Error: Configuration file '{args.config}' is not a valid JSON file.")
+        sys.exit(1)
+
+    # Accessing values from the configuration with empty default values
+    FB_APPID = config.get("facebook", {}).get("app_id", "")
+    FB_CLIENT_TOKEN = config.get("facebook", {}).get("client_token", "")
+    FB_LOGIN_PROTOCOL_SCHEME = config.get("facebook", {}).get("login_protocol_scheme", "")
+
+    NEW_PACKAGE_NAME = config.get("package", {}).get("new_name", "")
+    NEW_PACKAGE_PATH = config.get("package", {}).get("new_path", "")
+
+    STRINGS_FILE_RELATIVE_PATH = config.get("paths", {}).get("strings_file", "")
+    LIB_FILE_RELATIVE_PATH = config.get("paths", {}).get("lib_file", "")
+    LIB_PATCH_FILE_RELATIVE_PATH = config.get("paths", {}).get("lib_patch_file", "")
+    ANDROID_MANIFEST_FILE = config.get("paths", {}).get("android_manifest", "")
+    EXCLUDED_SMALI_FILES = config.get("paths", {}).get("excluded_smali_files", [])
+
 
     # Get APK directory input from the command line or ask for input if not provided
     if args.apk_dir:
@@ -237,11 +327,12 @@ def main():
     manifest_file = os.path.join(apk_dir, ANDROID_MANIFEST_FILE)
     smali_dir = os.path.join(apk_dir, "smali")
     resources_dir = os.path.join(apk_dir, "resources")  # Adjust based on actual structure
+    OLD_PACKAGE_NAME, OLD_PACKAGE_PATH = extract_package_info(manifest_file)
 
     # Feature 1: Replace values in strings.xml and lib.so
     replace_values_in_strings_file(strings_file, FB_APPID, FB_CLIENT_TOKEN, FB_LOGIN_PROTOCOL_SCHEME)
     replace_lib_so(lib_file, lib_patch_file)
-
+    
     # Feature 2: Conditionally rename package name in manifest and resources
     if not skip_package_rename:
         #print(f"{Colors.GREEN}Renaming package name as per the configuration.{Colors.RESET}")
