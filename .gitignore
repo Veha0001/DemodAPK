@@ -9,6 +9,10 @@ Unity*
 *.cpp
 *.cs
 *li*
+patcher.exe
+patcher
+patch_li
+my*
 *.json
 demodapk.py
 JustAsPlanned/
