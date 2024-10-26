@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import glob
 import json
 import shutil
 import argparse
@@ -125,7 +126,7 @@ def rename_package_in_manifest(manifest_file, old_package_name, new_package_name
         print(f"{Colors.RED}AndroidManifest.xml not found. Skipping package renaming in manifest.{Colors.RESET}")
 
 # Function to rename package in smali files while excluding specific files
-def rename_package_in_smali(smali_dir, old_package_name, new_package_name, excluded_files):
+def update_smali_path_package(smali_dir, old_package_path, new_package_path, excluded_files):
     for root, dirs, files in os.walk(smali_dir):
         for file in files:
             file_path = os.path.join(root, file)
@@ -139,7 +140,7 @@ def rename_package_in_smali(smali_dir, old_package_name, new_package_name, exclu
                     content = f.read()
 
                 # Replace old package name with new one
-                new_content = content.replace(old_package_name, new_package_name)
+                new_content = content.replace(old_package_path, new_package_path)
 
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
@@ -163,18 +164,28 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
 
     print(f"{Colors.GREEN}Updated package name in resources files.{Colors.RESET}")
 
-# Function to rename the smali directory
-def rename_smali_directory(smali_dir, old_package_path, new_package_path):
-    old_dir = os.path.join(smali_dir,"classes2", old_package_path.strip("L"))
-    new_dir = os.path.join(smali_dir,"classes2", new_package_path.strip("L"))
-    
-    if os.path.isdir(old_dir):
-        os.rename(old_dir, new_dir)
-        print(f"{Colors.GREEN}Renamed directory {old_dir} to {new_dir}.{Colors.RESET}")
-    else:
-        print(f"{Colors.YELLOW}Directory {old_dir} does not exist. Skipping renaming.{Colors.RESET}")
+def update_smali_directory(smali_dir, old_package_path, new_package_path):
+    # Use glob to find all directories in the smali_dir that match the old package path
+    old_package_pattern = os.path.join(smali_dir, '**', old_package_path.strip("L"))  # Use '**' to search in subdirectories
+    old_dirs = glob.glob(old_package_pattern, recursive=True)  # Recursively find all matching directories
 
-# Function to update APPLICATION_ID in smali files
+    renamed = False  # Track if any directory was renamed
+
+    for old_dir in old_dirs:
+        # Create the new directory path based on the found old directory
+        new_dir = old_dir.replace(old_package_path.strip("L"), new_package_path.strip("L"))
+
+        if os.path.isdir(old_dir):
+            # Rename the old directory to the new directory
+            os.rename(old_dir, new_dir)
+            print(f"{Colors.GREEN}Renamed directory {old_dir} to {new_dir}.{Colors.RESET}")
+            renamed = True
+        else:
+            print(f"{Colors.YELLOW}Directory {old_dir} does not exist. Skipping renaming.{Colors.RESET}")
+
+    if not renamed:
+        print(f"{Colors.YELLOW}No directories matching {old_package_path} were found. Skipping renaming.{Colors.RESET}")
+
 def update_application_id_in_smali(smali_dir, old_package_name, new_package_name):
     for root, dirs, files in os.walk(smali_dir):
         for file in files:
@@ -232,6 +243,7 @@ def check_for_dex_folder(apk_dir):
 
 def main():
     print_rainbow_figlet("DemodAPk")
+    
     # Default configuration structure
     default_config = {
         "facebook": {
@@ -252,7 +264,7 @@ def main():
         }
     }
 
-       # Set up argument parsing
+    # Set up argument parsing
     parser = argparse.ArgumentParser(description="DemodAPk: An APK Modification Script")
     
     # Argument parsing
@@ -269,6 +281,12 @@ def main():
         type=str,
         default="config.json",  # Default config file
         help="Path to the JSON configuration file."
+    )
+    parser.add_argument(
+        "-yd",
+        "--move-rename-smali",
+        action="store_true",
+        help="Rename package in smali files and the smali directory."
     )
     args = parser.parse_args()
 
@@ -300,7 +318,6 @@ def main():
     LIB_PATCH_FILE_RELATIVE_PATH = config.get("paths", {}).get("lib_patch_file", "")
     ANDROID_MANIFEST_FILE = config.get("paths", {}).get("android_manifest", "")
     EXCLUDED_SMALI_FILES = config.get("paths", {}).get("excluded_smali_files", [])
-
 
     # Get APK directory input from the command line or ask for input if not provided
     if args.apk_dir:
@@ -335,18 +352,18 @@ def main():
     
     # Feature 2: Conditionally rename package name in manifest and resources
     if not skip_package_rename:
-        #print(f"{Colors.GREEN}Renaming package name as per the configuration.{Colors.RESET}")
         rename_package_in_manifest(manifest_file, OLD_PACKAGE_NAME, NEW_PACKAGE_NAME)
         rename_package_in_resources(resources_dir, OLD_PACKAGE_NAME, NEW_PACKAGE_NAME)
 
         # Disable certain functions if dex folder exists
         if not dex_folder_exists:
-            # Rename package in smali files, resources, and smali directory
-            #rename_package_in_smali(smali_dir, OLD_PACKAGE_PATH, NEW_PACKAGE_PATH, EXCLUDED_SMALI_FILES)
-            #rename_smali_directory(smali_dir, OLD_PACKAGE_PATH, NEW_PACKAGE_PATH)
-            update_application_id_in_smali(smali_dir, OLD_PACKAGE_NAME, NEW_PACKAGE_NAME)
+            if args.move_rename_smali:
+                update_smali_path_package(smali_dir, OLD_PACKAGE_PATH, NEW_PACKAGE_PATH, EXCLUDED_SMALI_FILES)
+                update_smali_directory(smali_dir, OLD_PACKAGE_PATH, NEW_PACKAGE_PATH)
+            else:
+                update_application_id_in_smali(smali_dir, OLD_PACKAGE_NAME, NEW_PACKAGE_NAME)
     else:
-        print(f"{Colors.YELLOW}Skipping package renaming as requested (using -o flag).{Colors.RESET}")
+        print(f"{Colors.YELLOW}Skipping package renaming as requested (using -n flag).{Colors.RESET}")
 
     # Optionally, you can call the remove_metadata_from_manifest function if needed
     remove_metadata_from_manifest(manifest_file)

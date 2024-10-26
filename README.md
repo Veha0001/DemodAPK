@@ -51,8 +51,12 @@ python patcher.py <config_file>
                 "hex_code": "20 00 80 D2 C0 03 5F D6"
             },
             {
-                "method_name": "0x111111",
-                "hex_code": "20 25 B1"
+                "offset": "0x111111",
+                "hex_code": "1F 20 03 D5"
+            },
+            {
+                "wildcard": "AA DD F5 ?? ?? ?? 00 01",
+                "hex_code": "00 E0 AF D2 C0 03 5F D6"
             }
         ]
     }
