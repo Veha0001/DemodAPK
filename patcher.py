@@ -25,26 +25,27 @@ def load_config(config_path):
         print(f"{RED}Error: Configuration file '{config_path}' not found.{RESET}")
         sys.exit(1)
 
-    with open(config_path, 'r', encoding="utf-8") as file:
+    with open(config_path, "r", encoding="utf-8") as file:
         return json.load(file)
 
 
 def replace_hex_at_offset(data, offset, repl):
     """Replace hex bytes at a specified offset in the binary data."""
-    repl_bytes = bytes.fromhex(repl.replace(' ', ''))
-    data[offset:offset + len(repl_bytes)] = repl_bytes
+    repl_bytes = bytes.fromhex(repl.replace(" ", ""))
+    data[offset: offset + len(repl_bytes)] = repl_bytes
 
 
 def wildcard_pattern_scan(data, pattern):
     """Search for a byte pattern with wildcards in the given data."""
-    pattern_bytes = pattern.split(' ')
+    pattern_bytes = pattern.split(" ")
     pattern_length = len(pattern_bytes)
 
     # Convert pattern into a list of bytes (integers) or None for wildcards
-    pattern_bytes = [int(b, 16) if b != '??' else None for b in pattern_bytes]
+    pattern_bytes = [int(b, 16) if b != "??" else None for b in pattern_bytes]
 
-    for i, _ in enumerate(data[:-pattern_length + 1]):
-        if all(p_b is None or p_b == data[i + j] for j, p_b in enumerate(pattern_bytes)):
+    for i, _ in enumerate(data[: -pattern_length + 1]):
+        if all(p_b is None or p_b == data[i + j]
+                for j, p_b in enumerate(pattern_bytes)):
             return i
     return -1
 
@@ -64,28 +65,38 @@ def patch_code(input_filename, output_filename, patch_list, dump_path):
 
     # Check if any patch uses a wildcard, and print a single note if so
     if any("wildcard" in patch for patch in patch_list):
-        print(f"{CYAN}Note: Scanning with wildcards; this may take longer on larger files...{RESET}")
+        print(
+            f"{CYAN}Note: Scanning with wildcards; this may take longer on larger files...{RESET}"
+        )
 
     for patch in patch_list:
         # Determine whether to use method_name, offset, or wildcard
         if "method_name" in patch:
-            offset = find_offset_by_method_name(patch["method_name"], dump_path)
+            offset = find_offset_by_method_name(
+                patch["method_name"], dump_path)
             if offset is None:
-                print(f"{YELLOW}Warning: Method '{patch['method_name']}' not found. Skipping patch.{RESET}")
+                print(
+                    f"{YELLOW}Warning: Method '{
+                        patch['method_name']}' not found. Skipping patch.{RESET}")
                 continue
         elif "offset" in patch:
             offset = int(patch["offset"], 16)  # Convert hex string to integer
         elif "wildcard" in patch:
             offset = wildcard_pattern_scan(data, patch["wildcard"])
             if offset == -1:
-                print(f"{YELLOW}Warning: No match found for wildcard pattern '{patch['wildcard']}'. Skipping patch.{RESET}")
+                print(
+                    f"{YELLOW}Warning: No match found for wildcard pattern '{
+                        patch['wildcard']}'. Skipping patch.{RESET}")
                 continue
         else:
-            print(f"{YELLOW}Warning: No valid patch definition found. Skipping.{RESET}")
+            print(
+                f"{YELLOW}Warning: No valid patch definition found. Skipping.{RESET}")
             continue
 
         if offset >= len(data):
-            print(f"{RED}Error: Offset 0x{offset:X} is out of range for the input file.{RESET}")
+            print(
+                f"{RED}Error: Offset 0x{
+                    offset:X} is out of range for the input file.{RESET}")
             continue
 
         print(f"{GREEN}Patching at offset 0x{offset:X}{RESET}")
@@ -121,9 +132,12 @@ def find_offset_by_method_name(method_name, dump_path):
                 match = re.search(r"Offset: 0x([0-9A-Fa-f]+)", lines[i - 1])
                 if match:
                     offset = int(match.group(1), 16)
-                    print(f"{GREEN}Found {method_name} at offset 0x{offset:X}{RESET}")
+                    print(
+                        f"{GREEN}Found {method_name} at offset 0x{
+                            offset:X}{RESET}")
                     return offset
-                print(f"{YELLOW}Warning: No offset found for {method_name}.{RESET}")
+                print(
+                    f"{YELLOW}Warning: No offset found for {method_name}.{RESET}")
     return None
 
 
