@@ -1,6 +1,6 @@
-# DemodAPk
+# DemoAPk
 
-DemoAPk is a Python-based APK modification tool designed to allow users to easily modify Android APK files with a user-friendly interface. The tool includes features such as renaming package names, modifying resources, and adjusting application metadata.
+DemoAPk is a tool for modifying and editing the APK package name that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor) and includes a patcher for editing binary files.
 
 ## Features
 
@@ -62,6 +62,19 @@ python patcher.py <config_file>
     }
 }
 ```
+
+## Performance Notice
+
+The `patcher.py` file may work slowly when performing wildcard scans. If you want to run it faster, consider using the C++ version. 
+
+### Building the C++ Version
+
+To build the C++ version, you will need to have `g++` or `gcc` installed, along with the `nlohmann-json` library. You can build it using the following command:
+
+```bash
+g++ -o patcher patcher.cpp -O2
+```
+
 > [!NOTE]
 > Edit by method_name may work on some dump.cs file.
 > The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).

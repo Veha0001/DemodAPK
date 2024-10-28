@@ -99,7 +99,7 @@ def patch_code(input_filename, output_filename, patch_list, dump_path):
                     offset:X} is out of range for the input file.{RESET}")
             continue
 
-        print(f"{GREEN}Patching at offset 0x{offset:X}{RESET}")
+        print(f"{GREEN}Patching at Offset: 0x{offset:X}{RESET}")
         replace_hex_at_offset(data, offset, patch["hex_code"])
 
     try:
@@ -133,7 +133,7 @@ def find_offset_by_method_name(method_name, dump_path):
                 if match:
                     offset = int(match.group(1), 16)
                     print(
-                        f"{GREEN}Found {method_name} at offset 0x{
+                        f"{GREEN}Found {method_name} at Offset: 0x{
                             offset:X}{RESET}")
                     return offset
                 print(

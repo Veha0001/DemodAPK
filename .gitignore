@@ -6,7 +6,6 @@ Unity*
 *.jar
 *.class
 *.smali
-*.cpp
 *.cs
 *li*
 patcher.exe
