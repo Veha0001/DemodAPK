@@ -25,7 +25,7 @@ jobs:
         - language: c-cpp
           build-mode: manual
         - language: python
-          build-mode: manual
+          build-mode: none
 
     steps:
     - name: Checkout repository
@@ -46,7 +46,8 @@ jobs:
           sudo apt-get install -y nlohmann-json3-dev
           g++ -O2 patcher.cpp -o patcher
         elif [ "${{ matrix.language }}" == "python" ]; then
-          pip install -r requirements.txt pylint
+          pip install -r requirements.txt
+          pip install pylint
           pylint -E *.py
         fi
 
