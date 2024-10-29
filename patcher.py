@@ -142,14 +142,14 @@ def find_offset_by_method_name(method_name, dump_path):
 
 
 # Argument parsing
-config_path = DEFAULT_CONFIG_PATH if len(sys.argv) < 2 else sys.argv[1]
-config = load_config(config_path)
+fileconfig = DEFAULT_CONFIG_PATH if len(sys.argv) < 2 else sys.argv[1]
+config = load_config(fileconfig)
 
 # Extract necessary details
-input_filename = config["Patcher"]["input_file"]
-dump_path = config["Patcher"]["dump_file"]
-output_filename = config["Patcher"]["output_file"]
-patch_list = config["Patcher"]["patches"]
+InputFile = config["Patcher"]["input_file"]
+DumpPath = config["Patcher"]["dump_file"]
+OutputFile = config["Patcher"]["output_file"]
+PatchList = config["Patcher"]["patches"]
 
 # Apply patches to binary
-patch_code(input_filename, output_filename, patch_list, dump_path)
+patch_code(InputFile, OutputFile, PatchList, DumpPath)
