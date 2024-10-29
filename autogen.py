@@ -508,7 +508,7 @@ def main():
             update_smali_directory(
                 paths["smali_dir"], package_orig_path, new_package_path
             )
-        else:
+        if not dex_folder_exists:
             update_application_id_in_smali(
                 paths["smali_dir"], package_orig_name, new_package_name
             )
