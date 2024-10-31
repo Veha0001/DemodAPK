@@ -321,44 +321,32 @@ def update_application_id_in_smali(
 
     print(f"{Colors.GREEN}Updated APPLICATION_ID in smali files.{Colors.RESET}")
 
+def remove_metadata_from_manifest(manifest_file, config_file):
+    """removing specified metadata in the AndroidManifest"""
 
-def remove_metadata_from_manifest(manifest_file):
-    "Fix gms play games login poping up "
+    metadata_to_remove = config_file.get("metadata_to_remove", [])
+    if not metadata_to_remove:
+        print(f"{Colors.YELLOW}No metadata entries specified for removal in {config_file}.{Colors.RESET}")  # pylint: disable=line-too-long
+        return
     if os.path.isfile(manifest_file):
         with open(manifest_file, "r", encoding="utf-8") as file:
             lines = file.readlines()
-
-        # Define the metadata to search for and remove
-        metadata_to_remove = [
-            "com.google.android.gms.games.APP_ID",
-            # 'com.google.android.gms.games.unityVersion'
-        ]
-
         # Filter out lines that match the metadata
         filtered_lines = []
         skip = False
         for line in lines:
-            # Check if the line contains one of the metadata names
             if any(meta in line for meta in metadata_to_remove):
                 skip = True  # Skip this line and the next
             elif skip and "/>" in line:  # End of the meta-data entry
                 skip = False  # Stop skipping after closing tag
             else:
                 filtered_lines.append(line)
-
         # Write the filtered lines back to the manifest file
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.writelines(filtered_lines)
-
-        print(
-            f"{Colors.GREEN}Removed specified metadata from {manifest_file}.{Colors.RESET}"
-        )
+        print(f"{Colors.GREEN}Removed specified metadata from {manifest_file}.{Colors.RESET}")
     else:
-        print(
-            f"{
-                Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{
-                Colors.RESET}")
-
+        print(f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{Colors.RESET}")  # pylint: disable=line-too-long
 
 def check_for_dex_folder(apk_dir):
     """Check if a 'dex' folder exists in the specified APK directory."""
@@ -515,7 +503,7 @@ def main():
     else:
         print("Skipping package renaming as requested (using -n flag).")
 
-    remove_metadata_from_manifest(paths["android_manifest"])
+    remove_metadata_from_manifest(paths["android_manifest"], config)
     print(f"{Colors.GREEN}APK modification completed.{Colors.RESET}")
 
 if __name__ == "__main__":
