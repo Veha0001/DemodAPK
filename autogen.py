@@ -322,15 +322,20 @@ def update_application_id_in_smali(
     print(f"{Colors.GREEN}Updated APPLICATION_ID in smali files.{Colors.RESET}")
 
 def remove_metadata_from_manifest(manifest_file, config_file):
-    """removing specified metadata in the AndroidManifest"""
+    """Removes specified metadata in the AndroidManifest"""
 
-    metadata_to_remove = config_file.get("metadata_to_remove", [])
+    # Filter out any empty strings in metadata_to_remove
+    metadata_to_remove = [meta for meta in config_file.get("metadata_to_remove", []) if meta.strip()] # pylint: disable=line-too-long
+
+    # If metadata_to_remove is empty or only contained empty strings, skip removal
     if not metadata_to_remove:
-        print(f"{Colors.YELLOW}No metadata entries specified for removal in {config_file}.{Colors.RESET}")  # pylint: disable=line-too-long
+        print(f"{Colors.YELLOW}No valid metadata entries specified for removal in configuration file.{Colors.RESET}") # pylint: disable=line-too-long
         return
+
     if os.path.isfile(manifest_file):
         with open(manifest_file, "r", encoding="utf-8") as file:
             lines = file.readlines()
+
         # Filter out lines that match the metadata
         filtered_lines = []
         skip = False
@@ -341,12 +346,13 @@ def remove_metadata_from_manifest(manifest_file, config_file):
                 skip = False  # Stop skipping after closing tag
             else:
                 filtered_lines.append(line)
+
         # Write the filtered lines back to the manifest file
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.writelines(filtered_lines)
         print(f"{Colors.GREEN}Removed specified metadata from {manifest_file}.{Colors.RESET}")
     else:
-        print(f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{Colors.RESET}")  # pylint: disable=line-too-long
+        print(f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{Colors.RESET}") # pylint: disable=line-too-long
 
 def check_for_dex_folder(apk_dir):
     """Check if a 'dex' folder exists in the specified APK directory."""
@@ -438,12 +444,14 @@ def main():
             "new_name": "",
             "new_path": ""},
         "paths": {
-            "strings_file": "",
+            "strings_file": "resources/package_1/res/values/strings.xml",
             "lib_file": "",
             "lib_patch_file": "",
-            "android_manifest": "",
+            "android_manifest": "AndroidManifest.xml",
             "excluded_smali_files": [],
         },
+        "metadata_to_remove": [],
+        "Patcher": {}
     }
 
     args = parse_arguments()
