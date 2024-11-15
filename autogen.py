@@ -63,31 +63,42 @@ def print_rainbow_figlet(text):
 
         print(colored_output)
 
+
 def extract_package_info(manifest_file):
-    "Find App Package"
-    package_orig_name = None
-    package_orig_path = None
+    """
+    Extracts the package name and path from an AndroidManifest.xml file.
+
+    Args:
+        manifest_file (str): Path to the AndroidManifest.xml file.
+
+    Returns:
+        tuple: A tuple containing the original package name (str) and its
+               path format (str), or (None, None) if not found.
+    """
+    package_name = None
+    package_path = None
 
     if os.path.isfile(manifest_file):
         with open(manifest_file, "r", encoding="utf-8") as file:
             content = file.read()
 
         # Extract the package name using regex
-        package_name_match = re.search(r'package="([\w\.]+)"', content)
-        if package_name_match:
-            package_orig_name = package_name_match.group(1)
-            package_orig_path = "L" + package_orig_name.replace(".", "/")
+        package_match = re.search(r'package="([\w\.]+)"', content)
+        if package_match:
+            package_name = package_match.group(1)
+            package_path = "L" + package_name.replace(".", "/")
         else:
             print(
-                f"{Colors.RED}Package name not found in {manifest_file}.{Colors.RESET}"
+                f"{Colors.RED}Package name not found in {
+                    manifest_file}.{Colors.RESET}"
             )
     else:
         print(
-            f"{
-                Colors.RED}AndroidManifest.xml not found. Skipping package name extraction.{
-                Colors.RESET}")
+            f"{Colors.RED}AndroidManifest.xml not found. Skipping package name extraction.{
+                Colors.RESET}"
+        )
 
-    return package_orig_name, package_orig_path
+    return package_name, package_path
 
 
 def replace_values_in_strings_file(
@@ -111,36 +122,79 @@ def replace_values_in_strings_file(
         )
         content = re.sub(
             r'<string name="fb_login_protocol_scheme">.*?</string>',
-            f'<string name="fb_login_protocol_scheme">{fb_login_protocol_scheme}</string>',
+            f'<string name="fb_login_protocol_scheme">{
+                fb_login_protocol_scheme}</string>',
             content,
         )
 
         with open(strings_file, "w", encoding="utf-8") as file:
             file.write(content)
-        print(f"{Colors.GREEN}Updated string values in {strings_file}.{Colors.RESET}")
+        print(f"{Colors.GREEN}Updated string values in {
+              strings_file}.{Colors.RESET}")
     else:
-        print(
-            f"{Colors.YELLOW}File '{strings_file}' does not exist. Skipping string value replacements.{Colors.RESET}"  # pylint: disable=line-too-long
-        )
+        print(f"{Colors.YELLOW}File '{strings_file}' does not exist. Skipping string value replacements.{
+              Colors.RESET}")
 
 
-# Function to replace lib.so with libpatch.so
-def replace_lib_so(lib_file, lib_patch_file):
-    "replace a file in libs folder"
-    if os.path.isfile(lib_file) and os.path.isfile(lib_patch_file):
-        shutil.copyfile(lib_patch_file, lib_file)
-        print(f"{Colors.GREEN}Replaced {lib_file} with {lib_patch_file}.{Colors.RESET}")
-    else:
-        print(
-            f"{Colors.RED}lib.so or libpatch.so not found. Skipping replacement.{Colors.RESET}"
-        )
+def replace_files_from_loaded(config, apk_dir):
+    """
+    Replace files based on a preloaded configuration and base directory.
 
+    Args:
+        config (dict): The preloaded configuration dictionary.
+        apk_dir (str): The base directory for the APK structure.
+    """
+    # Process each file replacement
+    for item in config.get("files", []):
+        # Ensure the item is a dictionary with the "replace" key
+        if not isinstance(item, dict) or "replace" not in item:
+            print(f"{Colors.RED}Invalid entry in config: {
+                  item}. Skipping...{Colors.RESET}")
+            continue
+        replace_info = item.get("replace", {})
+        target_file = replace_info.get("target")
+        source_file = replace_info.get("source")
+        # Default to False if not present
+        backup = replace_info.get("backup", False)
+
+        if not target_file or not source_file:
+            print(f"{Colors.RED}Invalid entry in config: {item}{Colors.RESET}")
+            continue
+
+        # Ensure that the target file is inside the apk_dir
+        target_path = os.path.join(apk_dir, target_file)
+
+        # Check if the source file exists (anywhere on the filesystem)
+        if not os.path.isfile(source_file):
+            print(f"{Colors.RED}Source file not found: {
+                  source_file}. Skipping replacement.{Colors.RESET}")
+            continue
+
+        # Perform backup if required
+        if backup:
+            backup_file = f"{target_path}.bak"
+            try:
+                shutil.copyfile(target_path, backup_file)
+                print(f"{Colors.YELLOW}Backup created: {
+                      backup_file}{Colors.RESET}")
+            except Exception as e:
+                print(f"{Colors.RED}Error creating backup for {
+                      target_path}: {e}{Colors.RESET}")
+
+        # Perform the file replacement (source file to target location)
+        try:
+            # Copy the source to the target location
+            shutil.copyfile(source_file, target_path)
+            print(f"{Colors.GREEN}Replaced {target_path} with {
+                  source_file}.{Colors.RESET}")
+        except Exception as e:
+            print(f"{Colors.RED}Error replacing {
+                  target_path}: {e}{Colors.RESET}")
 
 # Function to rename package in AndroidManifest.xml
-def rename_package_in_manifest(
-        manifest_file,
-        old_package_name,
-        new_package_name):
+
+
+def rename_package_in_manifest(manifest_file, old_package_name, new_package_name):
     "Rename Package in AndroidManifest.xml"
     if os.path.isfile(manifest_file):
         try:
@@ -188,38 +242,36 @@ def rename_package_in_manifest(
             with open(manifest_file, "w", encoding="utf-8") as file:
                 file.write(content)
 
-            print(
-                f"{Colors.GREEN}Updated package name in {manifest_file}.{Colors.RESET}"
-            )
+            print(f"{Colors.GREEN}Updated package name in {
+                  manifest_file}.{Colors.RESET}")
 
         except FileNotFoundError:
-            print(
-                f"{Colors.RED}Error: The manifest file '{manifest_file}' was not found.{Colors.RESET}"  # pylint: disable=line-too-long
-            )
+            print(f"{Colors.RED}Error: The manifest file '{manifest_file}' was not found.{
+                  Colors.RESET}")  # pylint: disable=line-too-long
         except IOError as e:
-            print(
-                f"{Colors.RED}Error reading or writing '{manifest_file}': {e}{Colors.RESET}"
-            )
+            print(f"{Colors.RED}Error reading or writing '{
+                  manifest_file}': {e}{Colors.RESET}")
         except re.error as e:
             print(f"{Colors.RED}Error with regular expression: {e}{Colors.RESET}")
         # Removed the general exception catch
     else:
         print(
-            f"{Colors.RED}AndroidManifest.xml not found. Skipping package renaming in manifest.{Colors.RESET}"  # pylint: disable=line-too-long
+            f"{Colors.RED}AndroidManifest.xml not found. Skipping package renaming in manifest.{
+                Colors.RESET}"  # pylint: disable=line-too-long
         )
 
 
-def update_smali_path_package(smali_dir, old_package_path, new_package_path, excluded_files):  # pylint: disable=line-too-long
+def update_smali_path_package(smali_dir, old_package_path, new_package_path):
     "Update smali package paths"
     for root, _, files in os.walk(smali_dir):
         for file in files:
             file_path = os.path.join(root, file)
             # Skip excluded files
-            if any(excluded_file in file_path for excluded_file in excluded_files):
-                print(
-                    f"{Colors.YELLOW}Skipping {file_path} as it's excluded.{Colors.RESET}"
-                )
-                continue
+            # if any(excluded_file in file_path for excluded_file in excluded_files):
+            #    print(
+            #        f"{Colors.YELLOW}Skipping {file_path} as it's excluded.{Colors.RESET}"
+            #    )
+            #    continue
 
             if file.endswith(".smali"):
                 with open(file_path, "r", encoding="utf-8") as f:
@@ -236,10 +288,7 @@ def update_smali_path_package(smali_dir, old_package_path, new_package_path, exc
 
 
 # Function to rename package in resources files
-def rename_package_in_resources(
-        resources_dir,
-        old_package_name,
-        new_package_name):
+def rename_package_in_resources(resources_dir, old_package_name, new_package_name):
     "Update Package Name in resources"
     for root, _, files in os.walk(resources_dir):
         for file in files:
@@ -268,40 +317,33 @@ def update_smali_directory(smali_dir, old_package_path, new_package_path):
     old_package_pattern = os.path.join(
         smali_dir, "**", old_package_path.strip("L")
     )  # Use '**' to search in subdirectories
-    old_dirs = glob.glob(
-        old_package_pattern, recursive=True
-    )  # Recursively find all matching directories
+    # Recursively find all matching directories
+    old_dirs = glob.glob(old_package_pattern, recursive=True)
 
     renamed = False  # Track if any directory was renamed
 
     for old_dir in old_dirs:
         # Create the new directory path based on the found old directory
-        new_dir = old_dir.replace(
-            old_package_path.strip("L"), new_package_path.strip("L")
-        )
+        new_dir = old_dir.replace(old_package_path.strip(
+            "L"), new_package_path.strip("L"))
 
         if os.path.isdir(old_dir):
             # Rename the old directory to the new directory
             os.rename(old_dir, new_dir)
-            print(
-                f"{Colors.GREEN}Renamed directory {old_dir} to {new_dir}.{Colors.RESET}"
-            )
+            print(f"{Colors.GREEN}Renamed directory {
+                  old_dir} to {new_dir}.{Colors.RESET}")
             renamed = True
         else:
-            print(
-                f"{Colors.YELLOW}Directory {old_dir} does not exist. Skipping renaming.{Colors.RESET}"  # pylint: disable=line-too-long
-            )
+            print(f"{Colors.YELLOW}Directory {old_dir} does not exist. Skipping renaming.{
+                  Colors.RESET}")  # pylint: disable=line-too-long
 
     if not renamed:
-        print(
-            f"{Colors.YELLOW}No directories matching {old_package_path} were found. Skipping renaming.{Colors.RESET}"  # pylint: disable=line-too-long
-        )
+        print(f"{Colors.YELLOW}No directories matching {old_package_path} were found. Skipping renaming.{
+              Colors.RESET}")  # pylint: disable=line-too-long
 
 
 def update_application_id_in_smali(
-        smali_dir,
-        old_package_name,
-        new_package_name):
+        smali_dir, old_package_name, new_package_name):
     "Update APPLICATION_ID in BuildConfig.smali for some APPLICATION & GAME"
     for root, _, files in os.walk(smali_dir):
         for file in files:
@@ -312,8 +354,10 @@ def update_application_id_in_smali(
 
                 # Replace APPLICATION_ID
                 new_content = content.replace(
-                    f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"',
-                    f' APPLICATION_ID:Ljava/lang/String; = "{new_package_name}"',
+                    f' APPLICATION_ID:Ljava/lang/String; = "{
+                        old_package_name}"',
+                    f' APPLICATION_ID:Ljava/lang/String; = "{
+                        new_package_name}"',
                 )
 
                 with open(file_path, "w", encoding="utf-8") as f:
@@ -321,15 +365,21 @@ def update_application_id_in_smali(
 
     print(f"{Colors.GREEN}Updated APPLICATION_ID in smali files.{Colors.RESET}")
 
+
 def remove_metadata_from_manifest(manifest_file, config_file):
     """Removes specified metadata in the AndroidManifest"""
 
     # Filter out any empty strings in metadata_to_remove
-    metadata_to_remove = [meta for meta in config_file.get("metadata_to_remove", []) if meta.strip()] # pylint: disable=line-too-long
+    metadata_to_remove = [
+        meta for meta in config_file.get("metadata_to_remove", []) if meta.strip()
+    ]  # pylint: disable=line-too-long
 
     # If metadata_to_remove is empty or only contained empty strings, skip removal
     if not metadata_to_remove:
-        print(f"{Colors.YELLOW}No valid metadata entries specified for removal in configuration file.{Colors.RESET}") # pylint: disable=line-too-long
+        print(
+            f"{Colors.YELLOW}No valid metadata entries specified for removal in configuration file.{
+                Colors.RESET}"
+        )  # pylint: disable=line-too-long
         return
 
     if os.path.isfile(manifest_file):
@@ -350,9 +400,16 @@ def remove_metadata_from_manifest(manifest_file, config_file):
         # Write the filtered lines back to the manifest file
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.writelines(filtered_lines)
-        print(f"{Colors.GREEN}Removed specified metadata from {manifest_file}.{Colors.RESET}")
+        print(
+            f"{Colors.GREEN}Removed specified metadata from {
+                manifest_file}.{Colors.RESET}"
+        )
     else:
-        print(f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{Colors.RESET}") # pylint: disable=line-too-long
+        print(
+            f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{
+                Colors.RESET}"
+        )  # pylint: disable=line-too-long
+
 
 def check_for_dex_folder(apk_dir):
     """Check if a 'dex' folder exists in the specified APK directory."""
@@ -365,8 +422,8 @@ def create_default_config(config_path, default_config):
     "Create config file before run the code."
     with open(config_path, "w", encoding="utf-8") as file:
         json.dump(default_config, file, indent=4)
-    print(
-        f"Configuration file '{config_path}' not found. Created default config file.")
+    print(f"Configuration file '{
+          config_path}' not found. Created default config file.")
     sys.exit(0)
 
 
@@ -376,8 +433,8 @@ def load_config(config_path):
         with open(config_path, "r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError:
-        print(
-            f"Error: Configuration file '{config_path}' is not a valid JSON file.")
+        print(f"Error: Configuration file '{
+              config_path}' is not a valid JSON file.")
         sys.exit(1)
 
 
@@ -416,22 +473,6 @@ def verify_apk_directory(apk_dir):
     return apk_dir
 
 
-def setup_paths(apk_dir, config):
-    "Join config"
-    paths = config.get("paths", {})
-    return {
-        "strings_file": os.path.join(
-            apk_dir, paths.get(
-                "strings_file", "")), "lib_file": os.path.join(
-            apk_dir, paths.get(
-                "lib_file", "")), "lib_patch_file": paths.get(
-            "lib_patch_file", ""), "android_manifest": os.path.join(
-            apk_dir, paths.get(
-                "android_manifest", "")), "smali_dir": os.path.join(
-            apk_dir, "smali"), "resources_dir": os.path.join(
-            apk_dir, "resources"), }
-
-
 def main():
     "The Main functions."
     print_rainbow_figlet("DemodAPk")
@@ -439,21 +480,42 @@ def main():
         "facebook": {
             "app_id": "",
             "client_token": "",
-            "login_protocol_scheme": ""},
+            "login_protocol_scheme": ""
+        },
         "package": {
             "new_name": "",
-            "new_path": ""},
-        "paths": {
-            "strings_file": "resources/package_1/res/values/strings.xml",
-            "lib_file": "",
-            "lib_patch_file": "",
-            "android_manifest": "AndroidManifest.xml",
-            "excluded_smali_files": [],
+            "new_path": ""
         },
+        "files": [
+            {
+                "replace": {
+                    "target": "",
+                    "source": "",
+                    "backup": False
+                }
+            }
+        ],
         "metadata_to_remove": [],
-        "Patcher": {}
+        "Patcher": {
+            "input_file": "",
+            "dump_file": "",
+            "output_file": "",
+            "patches": [
+                {
+                    "method_name": "",
+                    "hex_code": ""
+                },
+                {
+                    "offset": "",
+                    "hex_code": ""
+                },
+                {
+                    "wildcard": "",
+                    "hex_code": ""
+                }
+            ]
+        }
     }
-
     args = parse_arguments()
     if not os.path.isfile(args.config):
         create_default_config(args.config, default_config)
@@ -469,50 +531,50 @@ def main():
     apk_dir = args.apk_dir or input(
         "Please enter the path to the APK directory: ")
     apk_dir = verify_apk_directory(apk_dir)
-    paths = setup_paths(apk_dir, config)
+
+    android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
+    resources_folder = os.path.join(apk_dir, "resources")
+    smali_folder = os.path.join(apk_dir, "smali")
+    value_strings = os.path.join(
+        resources_folder, "package_1/res/values/strings.xml")
 
     dex_folder_exists = check_for_dex_folder(apk_dir)
     if dex_folder_exists:
-        print(f"{Colors.BOLD}{Colors.UNDERLINE}{Colors.YELLOW}Dex folder found. Certain functions will be disabled.{Colors.RESET}")  # pylint: disable=line-too-long
-
+        print(
+            f"{Colors.BOLD}{Colors.UNDERLINE}{Colors.YELLOW}Dex folder found. Certain functions will be disabled.{
+                Colors.RESET}"
+        )
 
     package_orig_name, package_orig_path = extract_package_info(
-        paths["android_manifest"]
-    )
+        android_manifest)
     replace_values_in_strings_file(
-        paths["strings_file"],
-        facebook_appid,
-        fb_client_token,
-        fb_login_protocol_scheme)
-    replace_lib_so(paths["lib_file"], paths["lib_patch_file"])
+        value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
+    )
 
+    replace_files_from_loaded(config, apk_dir)
     if not args.no_rename_package:
         rename_package_in_manifest(
-            paths["android_manifest"], package_orig_name, new_package_name
+            android_manifest, package_orig_name, new_package_name
         )
         rename_package_in_resources(
-            paths["resources_dir"], package_orig_name, new_package_name
+            resources_folder, package_orig_name, new_package_name
         )
 
         if not dex_folder_exists and args.move_rename_smali:
             update_smali_path_package(
-                paths["smali_dir"],
-                package_orig_path,
-                new_package_path,
-                config["paths"]["excluded_smali_files"],
-            )
+                smali_folder, package_orig_path, new_package_path)
             update_smali_directory(
-                paths["smali_dir"], package_orig_path, new_package_path
-            )
+                smali_folder, package_orig_path, new_package_path)
         if not dex_folder_exists:
             update_application_id_in_smali(
-                paths["smali_dir"], package_orig_name, new_package_name
+                smali_folder, package_orig_name, new_package_name
             )
     else:
         print("Skipping package renaming as requested (using -n flag).")
 
-    remove_metadata_from_manifest(paths["android_manifest"], config)
+    remove_metadata_from_manifest(android_manifest, config)
     print(f"{Colors.GREEN}APK modification completed.{Colors.RESET}")
+
 
 if __name__ == "__main__":
     main()
