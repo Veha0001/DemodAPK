@@ -46,7 +46,7 @@ def print_rainbow_figlet(text):
     "Print logo with rainbow_colors"
     if PYFIGLET_INSTALLED:
         # Create the figlet text
-        figlet_text = pyfiglet.figlet_format(text)
+        figlet_text = pyfiglet.figlet_format(text, font="slant") # type: ignore
 
         # Generate colored text
         color_iter = itertools.cycle(rainbow_colors)
@@ -191,9 +191,8 @@ def replace_files_from_loaded(config, apk_dir):
             print(f"{Colors.RED}Error replacing {
                   target_path}: {e}{Colors.RESET}")
 
+
 # Function to rename package in AndroidManifest.xml
-
-
 def rename_package_in_manifest(manifest_file, old_package_name, new_package_name):
     "Rename Package in AndroidManifest.xml"
     if os.path.isfile(manifest_file):
@@ -475,7 +474,7 @@ def verify_apk_directory(apk_dir):
 
 def main():
     "The Main functions."
-    print_rainbow_figlet("DemodAPk")
+    print_rainbow_figlet("DemodAPK")
     default_config = {
         "facebook": {
             "app_id": "",

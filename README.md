@@ -1,10 +1,8 @@
-# DemoAPk
+# DemoAPK
 
 DemoAPk is a tool for modifying and editing the APK package name that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor) and includes a patcher for editing binary files.
 
 ## Features
-
-- **User-friendly Interface**: Intuitive UI for seamless operation.
 - **Package Renaming**: Easily rename package names in APK files.
 - **Resource Modification**: Modify resources in APK files as needed.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
