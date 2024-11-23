@@ -7,11 +7,11 @@ DemoAPk is a tool for modifying and editing the APK package name that has been d
 - **Resource Modification**: Modify resources in APK files as needed.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
----
 + [x] Replace Facebook App API
 + [x] Inject libil2cpp.so
 + [x] Update package name
-### Not Complete
+
+### InComplete
 - [x] Update App Name
 - [x] Replace Google App API
 - [x] More Patch Ability?
@@ -77,11 +77,14 @@ The `patcher.py` file may work slowly when performing wildcard scans. If you wan
 ### Building the C++ Version
 
 To build the C++ version, you will need to have `g++` or `gcc` installed, along with the `nlohmann-json` library. You can build it using the following command:
-
 ```bash
 g++ -o patcher patcher.cpp -O2
 ```
-
+For **Windows** using [MSYS2](https://www.msys2.org/) First Install some package:
+```bash
+pacman -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-nlohmann-json
+```
+Then run the gcc command: `g++ -o patcher patcher.cpp -O2`
 > [!NOTE]
 > Edit by method_name may work on some dump.cs file.
 > The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).

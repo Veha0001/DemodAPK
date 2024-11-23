@@ -13,7 +13,6 @@ patcher
 patch_li
 my*
 *.json
-demodapk.py
 JustAsPlanned/
 # Byte-compiled / optimized / DLL files
 __pycache__/
