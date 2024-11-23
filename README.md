@@ -7,6 +7,15 @@ DemoAPk is a tool for modifying and editing the APK package name that has been d
 - **Resource Modification**: Modify resources in APK files as needed.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
+---
++ [x] Replace Facebook App API
++ [x] Inject libil2cpp.so
++ [x] Update package name
+### Not Complete
+- [x] Update App Name
+- [x] Replace Google App API
+- [x] More Patch Ability?
+- [x] Clean code?
 
 ## Requirements
 

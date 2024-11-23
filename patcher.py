@@ -22,7 +22,8 @@ DEFAULT_CONFIG_PATH = "config.json"  # Default configuration file name
 def load_config(config_path):
     """Load the JSON configuration file."""
     if not os.path.exists(config_path):
-        print(f"{RED}Error: Configuration file '{config_path}' not found.{RESET}")
+        print(f"{RED}Error: Configuration file '{
+              config_path}' not found.{RESET}")
         sys.exit(1)
 
     with open(config_path, "r", encoding="utf-8") as file:
@@ -66,7 +67,8 @@ def patch_code(input_filename, output_filename, patch_list, dump_path):
     # Check if any patch uses a wildcard, and print a single note if so
     if any("wildcard" in patch for patch in patch_list):
         print(
-            f"{CYAN}Note: Scanning with wildcards; this may take longer on larger files...{RESET}"
+            f"{CYAN}Note: Scanning with wildcards; this may take longer on larger files...{
+                RESET}"
         )
 
     for patch in patch_list:
@@ -109,7 +111,8 @@ def patch_code(input_filename, output_filename, patch_list, dump_path):
         print(f"{RED}Error writing output file: {e}{RESET}")
         return
 
-    print(f"{CYAN}Patching completed. Output written to '{output_filename}'.{RESET}")
+    print(f"{CYAN}Patching completed. Output written to '{
+          output_filename}'.{RESET}")
 
 
 def find_offset_by_method_name(method_name, dump_path):
