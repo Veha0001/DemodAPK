@@ -82,9 +82,9 @@ g++ -o patcher patcher.cpp -O2
 ```
 For **Windows** using [MSYS2](https://www.msys2.org/) First Install some package:
 ```bash
-pacman -Sy mingw-w64-x86_64-gcc mingw-w64-x86_64-nlohmann-json
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-nlohmann-json gcc
 ```
-Then run the gcc command: `g++ -o patcher patcher.cpp -O2`
+Then run the gcc command: `g++ patcher.cpp -o patcher.exe -O2`
 > [!NOTE]
 > Edit by method_name may work on some dump.cs file.
 > The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).
