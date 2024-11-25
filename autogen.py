@@ -7,6 +7,7 @@ import glob
 import json
 import shutil
 import argparse
+
 try:
     from art import text2art
 except ImportError:
@@ -37,11 +38,12 @@ def print_rainbow_art(text, font="smslant", bold=False):
     # Generate ASCII art using the specified font
     ascii_art = text2art(text, font=font)
     # Split the ASCII art into lines
-    lines = ascii_art.splitlines()
-    # Apply rainbow colors line by line
-    for i, line in enumerate(lines):
-        color = rainbow_colors[i % len(rainbow_colors)]
-        print(color + line + "\033[0m")  # Reset color after each line
+    if isinstance(ascii_art, str):
+        lines = ascii_art.splitlines()
+        # Apply rainbow colors line by line
+        for i, line in enumerate(lines):
+            color = rainbow_colors[i % len(rainbow_colors)]
+            print(color + line + "\033[0m")  # Reset color after each line
 
 
 class Colors:  # pylint: disable=too-few-public-methods
@@ -83,7 +85,9 @@ def extract_package_info(manifest_file):
     return package_name, package_path
 
 
-def replace_values_in_strings_file(strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme):
+def replace_values_in_strings_file(
+    strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme
+):
     if os.path.isfile(strings_file):
         with open(strings_file, "r", encoding="utf-8") as file:
             content = file.read()
@@ -247,8 +251,7 @@ def update_smali_path_package(smali_dir, old_package_path, new_package_path):
                     content = f.read()
 
                 # Replace old package name with new one
-                new_content = content.replace(
-                    old_package_path, new_package_path)
+                new_content = content.replace(old_package_path, new_package_path)
 
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
@@ -291,8 +294,9 @@ def update_smali_directory(smali_dir, old_package_path, new_package_path):
 
     for old_dir in old_dirs:
         # Create the new directory path based on the found old directory
-        new_dir = old_dir.replace(old_package_path.strip(
-            "L"), new_package_path.strip("L"))
+        new_dir = old_dir.replace(
+            old_package_path.strip("L"), new_package_path.strip("L")
+        )
 
         if os.path.isdir(old_dir):
             # Rename the old directory to the new directory
@@ -375,8 +379,7 @@ def remove_metadata_from_manifest(manifest_file, config_file):
 
 
 def check_for_dex_folder(apk_dir):
-    dex_folder_path = os.path.join(
-        apk_dir, "dex")  # Adjust the path if necessary
+    dex_folder_path = os.path.join(apk_dir, "dex")  # Adjust the path if necessary
     return os.path.isdir(dex_folder_path)
 
 
@@ -399,8 +402,7 @@ def load_config(config_path):
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description="DemodAPk: An APK Modification Script")
+    parser = argparse.ArgumentParser(description="DemodAPk: An APK Modification Script")
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory")
     parser.add_argument(
         "-n",
@@ -434,44 +436,20 @@ def verify_apk_directory(apk_dir):
 def main():
     print_rainbow_art("DemodAPK", bold=True)
     default_config = {
-        "facebook": {
-            "app_id": "",
-            "client_token": "",
-            "login_protocol_scheme": ""
-        },
-        "package": {
-            "new_name": "",
-            "new_path": ""
-        },
-        "files": [
-            {
-                "replace": {
-                    "target": "",
-                    "source": "",
-                    "backup": False
-                }
-            }
-        ],
+        "facebook": {"app_id": "", "client_token": "", "login_protocol_scheme": ""},
+        "package": {"new_name": "", "new_path": ""},
+        "files": [{"replace": {"target": "", "source": "", "backup": False}}],
         "metadata_to_remove": [],
         "Patcher": {
             "input_file": "",
             "dump_file": "",
             "output_file": "",
             "patches": [
-                {
-                    "method_name": "",
-                    "hex_code": ""
-                },
-                {
-                    "offset": "",
-                    "hex_code": ""
-                },
-                {
-                    "wildcard": "",
-                    "hex_code": ""
-                }
-            ]
-        }
+                {"method_name": "", "hex_code": ""},
+                {"offset": "", "hex_code": ""},
+                {"wildcard": "", "hex_code": ""},
+            ],
+        },
     }
     args = parse_arguments()
     if not os.path.isfile(args.config):
@@ -485,15 +463,13 @@ def main():
     )
     new_package_name = config.get("package", {}).get("new_name", "")
     new_package_path = config.get("package", {}).get("new_path", "")
-    apk_dir = args.apk_dir or input(
-        "Please enter the path to the APK directory: ")
+    apk_dir = args.apk_dir or input("Please enter the path to the APK directory: ")
     apk_dir = verify_apk_directory(apk_dir)
 
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali")
-    value_strings = os.path.join(
-        resources_folder, "package_1/res/values/strings.xml")
+    value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
 
     dex_folder_exists = check_for_dex_folder(apk_dir)
     if dex_folder_exists:
@@ -502,8 +478,7 @@ def main():
                 Colors.RESET}"
         )
 
-    package_orig_name, package_orig_path = extract_package_info(
-        android_manifest)
+    package_orig_name, package_orig_path = extract_package_info(android_manifest)
     replace_values_in_strings_file(
         value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
     )
@@ -518,10 +493,8 @@ def main():
         )
 
         if not dex_folder_exists and args.move_rename_smali:
-            update_smali_path_package(
-                smali_folder, package_orig_path, new_package_path)
-            update_smali_directory(
-                smali_folder, package_orig_path, new_package_path)
+            update_smali_path_package(smali_folder, package_orig_path, new_package_path)
+            update_smali_directory(smali_folder, package_orig_path, new_package_path)
         if not dex_folder_exists:
             update_application_id_in_smali(
                 smali_folder, package_orig_name, new_package_name
