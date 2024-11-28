@@ -521,9 +521,46 @@ def parse_arguments():
 
 
 def verify_apk_directory(apk_dir):
+    """
+    Verifies if the given directory is a valid decoded APK directory.
+
+    Args:
+        apk_dir (str): Path to the APK directory.
+
+    Returns:
+        str: Verified APK directory path.
+    """
     if not os.path.exists(apk_dir):
         msg.error(f"The directory {apk_dir} does not exist.")
         sys.exit(1)
+
+    # Check for required files and folders
+    required_files = ["AndroidManifest.xml"]
+    required_folders = ["resources", "root"]
+    optional_folders = ["dex", "smali"]
+
+    # Check for required files
+    for req_file in required_files:
+        if not os.path.isfile(os.path.join(apk_dir, req_file)):
+            msg.error(f"Missing required file '{req_file}' in {apk_dir}.")
+            sys.exit(1)
+
+    # Check for required folders
+    for req_folder in required_folders:
+        if not os.path.isdir(os.path.join(apk_dir, req_folder)):
+            msg.error(f"Missing required folder '{req_folder}' in {apk_dir}.")
+            sys.exit(1)
+
+    # Check for at least one optional folder
+    if not any(
+        os.path.isdir(os.path.join(apk_dir, folder)) for folder in optional_folders
+    ):
+        msg.error(
+            f"At least one of the following folders is required in {apk_dir}: {', '.join(optional_folders)}."
+        )
+        sys.exit(1)
+
+    msg.info(f"APK directory verified: {apk_dir}")
     return apk_dir
 
 
