@@ -7,22 +7,16 @@ import glob
 import json
 import shutil
 import argparse
+from typing import Optional
+# import time
 
 try:
     from art import text2art
 except ImportError:
     text2art = None
 
-
 # Define base ANSI color codes for the rainbow
-base_rainbow_colors = [
-    "31",  # Red
-    "33",  # Yellow
-    "32",  # Green
-    "36",  # Cyan
-    "34",  # Blue
-    "35",  # Magenta
-]
+base_rainbow_colors = [31, 33, 32, 36, 34, 35]
 
 
 def print_rainbow_art(text, font="smslant", bold=False):
@@ -46,16 +40,85 @@ def print_rainbow_art(text, font="smslant", bold=False):
             print(color + line + "\033[0m")  # Reset color after each line
 
 
-class Colors:  # pylint: disable=too-few-public-methods
-    GREEN = "\033[92m"
-    YELLOW = "\033[93m"
-    RED = "\033[91m"
-    PURPLE = "\033[95m"
-    BLUE = "\033[94m"
-    CYAN = "\033[96m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-    RESET = "\033[0m"
+class MessagePrinter:
+    def __init__(self):
+        self.colors = {
+            "green": "\033[92m",
+            "yellow": "\033[93m",
+            "red": "\033[91m",
+            "purple": "\033[95m",
+            "blue": "\033[94m",
+            "cyan": "\033[96m",
+            "bold": "\033[1m",
+            "underline": "\033[4m",
+            "reset": "\033[0m",
+        }
+
+    def print(
+        self,
+        message: str,
+        color: Optional[str] = None,
+        bold: bool = False,
+        underline: bool = False,
+        inline: bool = False,
+        prefix: Optional[str] = None,
+    ):
+        color_code = self.colors.get(color or "", "")
+        bold_code = self.colors["bold"] if bold else ""
+        underline_code = self.colors["underline"] if underline else ""
+        reset_code = self.colors["reset"]
+
+        formatted_message = f"{bold_code}{color_code}{prefix or ''}{reset_code} {color_code}{bold_code}{underline_code}{message}{reset_code}".strip()
+
+        if inline:
+            print(f"\r{formatted_message}", end="", flush=True)
+        else:
+            print(formatted_message)
+
+    def success(self, message, bold: bool = False, inline=False):
+        self.print(message, color="green", bold=bold, inline=inline, prefix="[SUCCESS]")
+
+    def warning(
+        self,
+        message,
+        color: Optional[str] = "yellow",
+        bold: bool = False,
+        underline: bool = False,
+        inline=False,
+    ):
+        # Use the passed color, bold, and underline values
+        self.print(
+            message,
+            color=color,
+            bold=bold,
+            underline=underline,
+            inline=inline,
+            prefix="[WARNING]",
+        )
+
+    def error(self, message, inline=False):
+        self.print(message, color="red", inline=inline, prefix="[ERROR]")
+
+    def info(self, message, bold: bool = False, inline=False):
+        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[INFO]")
+
+    def progress(self, message, inline=True):
+        self.print(
+            f"{message}", color="blue", bold=True, inline=inline, prefix="[PROGRESS]"
+        )
+
+    def input(self, prompt: str, color: Optional[str] = None, bold: bool = False):
+        """Displays a styled input prompt and returns the user input."""
+        color_code = self.colors.get(color or "", "")
+        bold_code = self.colors["bold"] if bold else ""
+        reset_code = self.colors["reset"]
+
+        formatted_prompt = f"{bold_code}{color_code}[INPUT] {prompt}{reset_code}"
+        return input(formatted_prompt)
+
+
+# Example usage
+msg = MessagePrinter()
 
 
 def extract_package_info(manifest_file):
@@ -72,20 +135,13 @@ def extract_package_info(manifest_file):
             package_name = package_match.group(1)
             package_path = "L" + package_name.replace(".", "/")
         else:
-            print(
-                f"{Colors.RED}Package name not found in {
-                    manifest_file}.{Colors.RESET}"
-            )
+            msg.error(f"Package name not found in {manifest_file}.")
     else:
-        print(
-            f"{Colors.RED}AndroidManifest.xml not found. Skipping package name extraction.{
-                Colors.RESET}"
-        )
-
+        msg.error("AndroidManifest.xml not found.")
     return package_name, package_path
 
 
-def replace_values_in_strings_file(
+def update_facebook_app_values(
     strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme
 ):
     if os.path.isfile(strings_file):
@@ -112,11 +168,9 @@ def replace_values_in_strings_file(
 
         with open(strings_file, "w", encoding="utf-8") as file:
             file.write(content)
-        print(f"{Colors.GREEN}Updated string values in {
-              strings_file}.{Colors.RESET}")
+        msg.success("Updated Facebook App values")
     else:
-        print(f"{Colors.YELLOW}File '{strings_file}' does not exist. Skipping string value replacements.{
-              Colors.RESET}")
+        msg.error(f"File: {strings_file}, does not exists.")
 
 
 def replace_files_from_loaded(config, apk_dir):
@@ -124,8 +178,7 @@ def replace_files_from_loaded(config, apk_dir):
     for item in config.get("files", []):
         # Ensure the item is a dictionary with the "replace" key
         if not isinstance(item, dict) or "replace" not in item:
-            print(f"{Colors.RED}Invalid entry in config: {
-                  item}. Skipping...{Colors.RESET}")
+            msg.error(f"Invalid entry in config: {item}.")
             continue
         replace_info = item.get("replace", {})
         target_file = replace_info.get("target")
@@ -134,7 +187,7 @@ def replace_files_from_loaded(config, apk_dir):
         backup = replace_info.get("backup", False)
 
         if not target_file or not source_file:
-            print(f"{Colors.RED}Invalid entry in config: {item}{Colors.RESET}")
+            msg.error(f"Invalid entry in config: {item}.")
             continue
 
         # Ensure that the target file is inside the apk_dir
@@ -142,8 +195,7 @@ def replace_files_from_loaded(config, apk_dir):
 
         # Check if the source file exists (anywhere on the filesystem)
         if not os.path.isfile(source_file):
-            print(f"{Colors.RED}Source file not found: {
-                  source_file}. Skipping replacement.{Colors.RESET}")
+            msg.error(f"Source file not found: {os.path.basename(source_file)}.")
             continue
 
         # Perform backup if required
@@ -151,21 +203,19 @@ def replace_files_from_loaded(config, apk_dir):
             backup_file = f"{target_path}.bak"
             try:
                 shutil.copyfile(target_path, backup_file)
-                print(f"{Colors.YELLOW}Backup created: {
-                      backup_file}{Colors.RESET}")
-            except Exception as e:
-                print(f"{Colors.RED}Error creating backup for {
-                      target_path}: {e}{Colors.RESET}")
+                msg.success(f"Backup created for {os.path.basename(target_file)}.")
+            except Exception:
+                msg.error(f"Creating backup for {os.path.basename(target_file)}.")
 
         # Perform the file replacement (source file to target location)
         try:
             # Copy the source to the target location
             shutil.copyfile(source_file, target_path)
-            print(f"{Colors.GREEN}Replaced {target_path} with {
-                  source_file}.{Colors.RESET}")
-        except Exception as e:
-            print(f"{Colors.RED}Error replacing {
-                  target_path}: {e}{Colors.RESET}")
+            msg.success(
+                f"Replaced {os.path.basename(target_file)} with {os.path.basename(source_file)}."
+            )
+        except Exception:
+            msg.error(f"No such file or directory: {os.path.basename(target_file)}")
 
 
 # Function to rename package in AndroidManifest.xml
@@ -215,24 +265,17 @@ def rename_package_in_manifest(manifest_file, old_package_name, new_package_name
 
             with open(manifest_file, "w", encoding="utf-8") as file:
                 file.write(content)
-
-            print(f"{Colors.GREEN}Updated package name in {
-                  manifest_file}.{Colors.RESET}")
+            msg.success(f"Updated package name in {manifest_file}")
 
         except FileNotFoundError:
-            print(f"{Colors.RED}Error: The manifest file '{manifest_file}' was not found.{
-                  Colors.RESET}")
-        except IOError as e:
-            print(f"{Colors.RED}Error reading or writing '{
-                  manifest_file}': {e}{Colors.RESET}")
+            msg.error(f"The manifest file '{manifest_file}' was not found.")
+        except IOError:
+            msg.error(f"Reading or writing '{manifest_file}.")
         except re.error as e:
-            print(f"{Colors.RED}Error with regular expression: {e}{Colors.RESET}")
+            msg.error(f"Regular expression; {e}")
         # Removed the general exception catch
     else:
-        print(
-            f"{Colors.RED}AndroidManifest.xml not found. Skipping package renaming in manifest.{
-                Colors.RESET}"
-        )
+        msg.error("AndroidManifest.xml was not found.")
 
 
 def update_smali_path_package(smali_dir, old_package_path, new_package_path):
@@ -256,34 +299,62 @@ def update_smali_path_package(smali_dir, old_package_path, new_package_path):
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
 
-    print(f"{Colors.GREEN}Updated package name in smali files.{Colors.RESET}")
+    msg.success("Updated package name in smali files.")
 
 
-# Function to rename package in resources files
 def rename_package_in_resources(resources_dir, old_package_name, new_package_name):
-    for root, _, files in os.walk(resources_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            if file.endswith(".xml") or file.endswith(
-                ".json"
-            ):  # Adjust based on file types
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
+    try:
+        # Check if resources directory exists
+        if not os.path.isdir(resources_dir):
+            raise FileNotFoundError(
+                f"The resources directory '{resources_dir}' does not exist."
+            )
 
-                # Replace old package name with new one
-                new_content = content.replace(
-                    f'"{old_package_name}"', f'"{new_package_name}"'
-                )
+        updated_any = False  # Track if any file was updated
+        valid_file_extensions = (
+            ".xml",
+            ".json",
+            ".txt",
+        )  # Define file types to process
 
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(new_content)
+        for root, _, files in os.walk(resources_dir):
+            for file in files:
+                if not file.endswith(valid_file_extensions):
+                    continue  # Skip irrelevant file types
 
-    print(f"{Colors.GREEN}Updated package name in resources files.{Colors.RESET}")
+                file_path = os.path.join(root, file)
+
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+
+                    # Check if the old package name exists in the file
+                    if f'"{old_package_name}"' in content:
+                        new_content = content.replace(
+                            f'"{old_package_name}"', f'"{new_package_name}"'
+                        )
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(new_content)
+                        updated_any = True
+
+                except UnicodeDecodeError:
+                    msg.warning(f"File {file_path} is not UTF-8 encoded, skipping.")
+                except (OSError, IOError) as e:
+                    msg.error(f"Failed to process file: {file_path}. Error: {e}")
+
+        if updated_any:
+            msg.success("Updated package name in resource files.")
+        else:
+            msg.info("No files with the specified package name were found to update.")
+
+    except FileNotFoundError as fnf_error:
+        msg.error(str(fnf_error))
+    except Exception as e:
+        msg.error(f"An unexpected error occurred: {e}")
 
 
 def update_smali_directory(smali_dir, old_package_path, new_package_path):
     # Use glob to find all directories in the smali_dir that match the old
-    # package path
     old_package_pattern = os.path.join(
         smali_dir, "**", old_package_path.strip("L")
     )  # Use '**' to search in subdirectories
@@ -301,38 +372,70 @@ def update_smali_directory(smali_dir, old_package_path, new_package_path):
         if os.path.isdir(old_dir):
             # Rename the old directory to the new directory
             os.rename(old_dir, new_dir)
-            print(f"{Colors.GREEN}Renamed directory {
-                  old_dir} to {new_dir}.{Colors.RESET}")
+            msg.success(f"Renamed directory {old_dir} to {new_dir}.")
             renamed = True
         else:
-            print(f"{Colors.YELLOW}Directory {old_dir} does not exist. Skipping renaming.{
-                  Colors.RESET}")
+            msg.info(f"Directory {old_dir} does not exist. Skipping renaming.")
 
     if not renamed:
-        print(f"{Colors.YELLOW}No directories matching {old_package_path} were found. Skipping renaming.{
-              Colors.RESET}")
+        msg.info(
+            f"No directories matching {old_package_path} were found. Skipping renaming."
+        )
 
 
 def update_application_id_in_smali(smali_dir, old_package_name, new_package_name):
-    for root, _, files in os.walk(smali_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            if file.endswith("BuildConfig.smali"):
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
+    try:
+        # Check if smali directory exists
+        if not os.path.isdir(smali_dir):
+            raise FileNotFoundError(
+                f"The smali directory '{smali_dir}' does not exist."
+            )
 
-                # Replace APPLICATION_ID
-                new_content = content.replace(
-                    f' APPLICATION_ID:Ljava/lang/String; = "{
-                        old_package_name}"',
-                    f' APPLICATION_ID:Ljava/lang/String; = "{
-                        new_package_name}"',
-                )
+        buildconfig_found = False
+        updated_any = False
 
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(new_content)
+        for root, _, files in os.walk(smali_dir):
+            for file in files:
+                if file.endswith("BuildConfig.smali"):
+                    buildconfig_found = True
+                    file_path = os.path.join(root, file)
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read()
 
-    print(f"{Colors.GREEN}Updated APPLICATION_ID in smali files.{Colors.RESET}")
+                        # Check if old APPLICATION_ID exists in the file
+                        if (
+                            f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"'
+                            in content
+                        ):
+                            # Replace APPLICATION_ID
+                            new_content = content.replace(
+                                f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"',
+                                f' APPLICATION_ID:Ljava/lang/String; = "{new_package_name}"',
+                            )
+                            with open(file_path, "w", encoding="utf-8") as f:
+                                f.write(new_content)
+                            updated_any = True
+
+                    except (OSError, IOError) as e:
+                        msg.error(f"Failed to update {file_path}: {e}")
+
+        if not buildconfig_found:
+            raise FileNotFoundError(
+                "No BuildConfig.smali files found in the provided smali directory."
+            )
+        if not updated_any:
+            raise ValueError(
+                "No BuildConfig.smali file contained the specified old APPLICATION_ID."
+            )
+    except FileNotFoundError as fnf_error:
+        msg.error(str(fnf_error))
+    except ValueError as val_error:
+        msg.error(str(val_error))
+    except Exception as e:
+        msg.error(f"An unexpected error occurred: {e}")
+    else:
+        msg.success("Updated APPLICATION_ID in smali files.")
 
 
 def remove_metadata_from_manifest(manifest_file, config_file):
@@ -343,10 +446,7 @@ def remove_metadata_from_manifest(manifest_file, config_file):
 
     # If metadata_to_remove is empty or only contained empty strings, skip removal
     if not metadata_to_remove:
-        print(
-            f"{Colors.YELLOW}No valid metadata entries specified for removal in configuration file.{
-                Colors.RESET}"
-        )
+        # msg.info("No valid metadata entries specified for removal in configuration file.")
         return
 
     if os.path.isfile(manifest_file):
@@ -367,15 +467,9 @@ def remove_metadata_from_manifest(manifest_file, config_file):
         # Write the filtered lines back to the manifest file
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.writelines(filtered_lines)
-        print(
-            f"{Colors.GREEN}Removed specified metadata from {
-                manifest_file}.{Colors.RESET}"
-        )
+        msg.success("Removed specified metadata from AndroidManifest.xml.")
     else:
-        print(
-            f"{Colors.RED}File '{manifest_file}' does not exist. Skipping metadata removal.{
-                Colors.RESET}"
-        )
+        msg.warning(f"File '{manifest_file}' does not exist.")
 
 
 def check_for_dex_folder(apk_dir):
@@ -386,8 +480,9 @@ def check_for_dex_folder(apk_dir):
 def create_default_config(config_path, default_config):
     with open(config_path, "w", encoding="utf-8") as file:
         json.dump(default_config, file, indent=4)
-    print(f"Configuration file '{
-          config_path}' not found. Created default config file.")
+    msg.info(
+        f"Configuration file '{config_path}' not found. Created default config file."
+    )
     sys.exit(0)
 
 
@@ -396,8 +491,7 @@ def load_config(config_path):
         with open(config_path, "r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError:
-        print(f"Error: Configuration file '{
-              config_path}' is not a valid JSON file.")
+        msg.error(f"Configuration file '{config_path}' is not a valid JSON file.")
         sys.exit(1)
 
 
@@ -418,7 +512,7 @@ def parse_arguments():
         help="Path to the JSON configuration file.",
     )
     parser.add_argument(
-        "-yd",
+        "-mv",
         "--move-rename-smali",
         action="store_true",
         help="Rename package in smali files and the smali directory.",
@@ -428,7 +522,7 @@ def parse_arguments():
 
 def verify_apk_directory(apk_dir):
     if not os.path.exists(apk_dir):
-        print(f"Error: The directory {apk_dir} does not exist.")
+        msg.error(f"The directory {apk_dir} does not exist.")
         sys.exit(1)
     return apk_dir
 
@@ -463,7 +557,9 @@ def main():
     )
     new_package_name = config.get("package", {}).get("new_name", "")
     new_package_path = config.get("package", {}).get("new_path", "")
-    apk_dir = args.apk_dir or input("Please enter the path to the APK directory: ")
+    apk_dir = args.apk_dir or msg.input(
+        "Please enter the APk directory: ", color="cyan"
+    )
     apk_dir = verify_apk_directory(apk_dir)
 
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
@@ -473,13 +569,14 @@ def main():
 
     dex_folder_exists = check_for_dex_folder(apk_dir)
     if dex_folder_exists:
-        print(
-            f"{Colors.BOLD}{Colors.UNDERLINE}{Colors.YELLOW}Dex folder found. Certain functions will be disabled.{
-                Colors.RESET}"
+        msg.warning(
+            "Dex folder found. Some functions will be disabled.",
+            bold=True,
+            underline=True,
         )
 
     package_orig_name, package_orig_path = extract_package_info(android_manifest)
-    replace_values_in_strings_file(
+    update_facebook_app_values(
         value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
     )
 
@@ -500,10 +597,10 @@ def main():
                 smali_folder, package_orig_name, new_package_name
             )
     else:
-        print("Skipping package renaming as requested (using -n flag).")
+        msg.info("Skipping package renaming as requested (using -n flag).")
 
     remove_metadata_from_manifest(android_manifest, config)
-    print(f"{Colors.GREEN}APK modification completed.{Colors.RESET}")
+    msg.info("APK modification finished! Tasks executed.", bold=True)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ Unity*
 *.smali
 *.cs
 *li*
+beta.py
 patcher.exe
 patcher
 patch_li
