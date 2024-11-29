@@ -28,8 +28,8 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Veha0001/DemodAPk.git
-   cd DemodAPk
+   git clone https://github.com/Veha0001/DemodAPK.git
+   cd DemodAPK
    ```
 2. Install the required libraries:
    ```bash
