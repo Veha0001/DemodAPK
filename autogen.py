@@ -565,7 +565,6 @@ def verify_apk_directory(apk_dir):
 
 
 def main():
-    print_rainbow_art("DemodAPK", bold=True)
     default_config = {
         "facebook": {"app_id": "", "client_token": "", "login_protocol_scheme": ""},
         "package": {"new_name": "", "new_path": ""},
@@ -641,4 +640,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print_rainbow_art("DemodAPK", bold=True, font="small")
     main()
