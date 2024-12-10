@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -170,6 +169,11 @@ void patch_code(const std::string &input_filename,
 
   std::cout << CYAN << "Patching completed. Output written to '"
             << output_filename << "'." << RESET << std::endl;
+
+#ifdef _WIN32
+  std::cout << "Press Enter to exit...";
+  std::cin.get();
+#endif
 }
 
 int main(int argc, char *argv[]) {
