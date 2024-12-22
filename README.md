@@ -119,6 +119,7 @@ python autogen.py --config config.json /path/to/apk/directory
 
 ```json
 {
+  "level": 0,
   "facebook": {
     "app_id": "1234567890",
     "client_token": "aaabbbcccddd0001",

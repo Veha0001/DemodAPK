@@ -8,7 +8,6 @@ import json
 import shutil
 import argparse
 from typing import Optional
-# import time
 
 try:
     from art import text2art
@@ -219,63 +218,67 @@ def replace_files_from_loaded(config, apk_dir):
 
 
 # Function to rename package in AndroidManifest.xml
-def rename_package_in_manifest(manifest_file, old_package_name, new_package_name):
-    if os.path.isfile(manifest_file):
-        try:
-            with open(manifest_file, "r", encoding="utf-8") as file:
-                content = file.read()
+def rename_package_in_manifest(
+    manifest_file, old_package_name, new_package_name, level=0
+):
+    if not os.path.isfile(manifest_file):
+        msg.error("AndroidManifest.xml was not found.")
+        return
 
-            # Normalize line endings (for Windows compatibility)
-            content = content.replace("\r\n", "\n")
+    try:
+        with open(manifest_file, "r", encoding="utf-8") as file:
+            content = file.read()
 
-            # Replace package name and authorities
-            content = re.sub(
-                f'package="{old_package_name}"',
-                f'package="{new_package_name}"',
-                content,
-            )
-            # pyright: ignore[
+        # Normalize line endings (for Windows compatibility)
+        content = content.replace("\r\n", "\n")
 
-            # content = re.sub(
-            # f'android:taskAffinity="{old_package_name}"',
-            # f'android:taskAffinity="{new_package_name}"',
-            # content,
-            # )]
-
-            content = re.sub(
+        # Base replacements
+        replacements = [
+            (f'package="{old_package_name}"', f'package="{new_package_name}"'),
+            (
                 f'android:name="{old_package_name}\\.',
                 f'android:name="{new_package_name}.',
-                content,
-            )
-            content = re.sub(
+            ),
+            (
                 f'android:authorities="{old_package_name}\\.',
                 f'android:authorities="{new_package_name}.',
-                content,
+            ),
+        ]
+
+        # Add additional replacements for level == 1
+        if level == 1:
+            replacements.extend(
+                [
+                    (
+                        f'android:taskAffinity="{old_package_name}"',
+                        f'android:taskAffinity="{new_package_name}"',
+                    ),
+                    (
+                        f'android:host="{old_package_name}"',
+                        f'android:host="{new_package_name}"',
+                    ),
+                    (
+                        f'android:host="cct\\.{old_package_name}"',
+                        f'android:host="cct.{new_package_name}"',
+                    ),
+                ]
             )
-            # content = re.sub(
-            #    f'android:host="{old_package_name}"',
-            #    f'android:host="{new_package_name}"',
-            #    content,
-            # )
-            # content = re.sub(
-            #    f'android:host="cct\.{old_package_name}"',
-            #    f'android:host="cct.{new_package_name}"',
-            #    content,
-            # )
 
-            with open(manifest_file, "w", encoding="utf-8") as file:
-                file.write(content)
-            msg.success(f"Updated package name in {manifest_file}")
+        # Perform replacements
+        for pattern, replacement in replacements:
+            content = re.sub(pattern, replacement, content)
 
-        except FileNotFoundError:
-            msg.error(f"The manifest file '{manifest_file}' was not found.")
-        except IOError:
-            msg.error(f"Reading or writing '{manifest_file}.")
-        except re.error as e:
-            msg.error(f"Regular expression; {e}")
-        # Removed the general exception catch
-    else:
-        msg.error("AndroidManifest.xml was not found.")
+        with open(manifest_file, "w", encoding="utf-8") as file:
+            file.write(content)
+
+        msg.success(f"Updated package name in {manifest_file}")
+
+    except FileNotFoundError:
+        msg.error(f"The manifest file '{manifest_file}' was not found.")
+    except IOError as e:
+        msg.error(f"Error reading or writing the manifest file: {e}")
+    except re.error as e:
+        msg.error(f"Regular expression error: {e}")
 
 
 def update_smali_path_package(smali_dir, old_package_path, new_package_path):
@@ -566,13 +569,14 @@ def verify_apk_directory(apk_dir):
 
 def main():
     default_config = {
+        "level": 0,
         "facebook": {"app_id": "", "client_token": "", "login_protocol_scheme": ""},
         "package": {"new_name": "", "new_path": ""},
         "files": [{"replace": {"target": "", "source": "", "backup": False}}],
         "metadata_to_remove": [],
         "Patcher": {
             "input_file": "",
-            "dump_file": "",
+            "dump_file": "dump.cs",
             "output_file": "",
             "patches": [
                 {"method_name": "", "hex_code": ""},
@@ -586,6 +590,7 @@ def main():
         create_default_config(args.config, default_config)
 
     config = load_config(args.config)
+    manifest_edit_level = config.get("level", 0)
     facebook_appid = config.get("facebook", {}).get("app_id", "")
     fb_client_token = config.get("facebook", {}).get("client_token", "")
     fb_login_protocol_scheme = config.get("facebook", {}).get(
@@ -619,7 +624,7 @@ def main():
     replace_files_from_loaded(config, apk_dir)
     if not args.no_rename_package:
         rename_package_in_manifest(
-            android_manifest, package_orig_name, new_package_name
+            android_manifest, package_orig_name, new_package_name, manifest_edit_level
         )
         rename_package_in_resources(
             resources_folder, package_orig_name, new_package_name
