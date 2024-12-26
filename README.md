@@ -51,7 +51,7 @@ python patcher.py <config_file>
 # default is config.json
 ```
 
-- Configuration of Patcher
+Configuration of Patcher
 
 ```json
 {
@@ -77,11 +77,11 @@ python patcher.py <config_file>
 }
 ```
 
-## Performance Notice
+#### Performance Notice
 
 The `patcher.py` file may work slowly when performing wildcard scans. If you want to run it faster, consider using the C++ version.
 
-### Building the C++ Version
+#### Building the C++ Version
 
 To build the C++ version, you will need to have `g++` or `gcc` installed, along with the `nlohmann-json` library. You can build it using the following command:
 
@@ -109,16 +109,17 @@ Then run the gcc command: `g++ patcher.cpp -o patcher.exe -O2`
 
 ## Example
 
-> Run with a custom config file.
+Run with a custom config file.
 
 ```bash
 python autogen.py --config config.json /path/to/apk/directory
 ```
 
-> An Example of config.json
+All available example options in config.json
 
 ```json
 {
+  "log": 0,
   "level": 0,
   "facebook": {
     "app_id": "1234567890",
@@ -144,7 +145,9 @@ python autogen.py --config config.json /path/to/apk/directory
       }
     }
   ],
-  "metadata_to_remove": [""],
+  "metadata_to_remove": [
+    "com.google.android.gms.games.APP_ID"
+  ],
   "Patcher": {
     "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
     "dump_file": "dump.cs",

@@ -174,6 +174,8 @@ def update_facebook_app_values(
 
 def replace_files_from_loaded(config, apk_dir):
     # Process each file replacement
+    if "files" not in config:
+        return
     for item in config.get("files", []):
         # Ensure the item is a dictionary with the "replace" key
         if not isinstance(item, dict) or "replace" not in item:
@@ -271,7 +273,7 @@ def rename_package_in_manifest(
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.write(content)
 
-        msg.success(f"Updated package name in {manifest_file}")
+        msg.success(f"Updated package name in AndroidManifest.xml")
 
     except FileNotFoundError:
         msg.error(f"The manifest file '{manifest_file}' was not found.")
@@ -470,7 +472,7 @@ def remove_metadata_from_manifest(manifest_file, config_file):
         # Write the filtered lines back to the manifest file
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.writelines(filtered_lines)
-        msg.success("Removed specified metadata from AndroidManifest.xml.")
+        msg.success("Specific metadata removed from manifest.")
     else:
         msg.warning(f"File '{manifest_file}' does not exist.")
 
@@ -572,7 +574,6 @@ def main():
         "level": 0,
         "facebook": {"app_id": "", "client_token": "", "login_protocol_scheme": ""},
         "package": {"new_name": "", "new_path": ""},
-        "files": [{"replace": {"target": "", "source": "", "backup": False}}],
         "metadata_to_remove": [],
         "Patcher": {
             "input_file": "",
@@ -590,6 +591,7 @@ def main():
         create_default_config(args.config, default_config)
 
     config = load_config(args.config)
+    log_level = config.get("log", 0)
     manifest_edit_level = config.get("level", 0)
     facebook_appid = config.get("facebook", {}).get("app_id", "")
     fb_client_token = config.get("facebook", {}).get("client_token", "")
@@ -607,9 +609,8 @@ def main():
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali")
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-
     dex_folder_exists = check_for_dex_folder(apk_dir)
-    if dex_folder_exists:
+    if log_level == 0 and dex_folder_exists:
         msg.warning(
             "Dex folder found. Some functions will be disabled.",
             bold=True,
@@ -617,12 +618,15 @@ def main():
         )
 
     package_orig_name, package_orig_path = extract_package_info(android_manifest)
-    update_facebook_app_values(
-        value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
-    )
+
+    if "facebook" in config:
+        update_facebook_app_values(
+            value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
+        )
 
     replace_files_from_loaded(config, apk_dir)
-    if not args.no_rename_package:
+
+    if not args.no_rename_package and "package" in config:
         rename_package_in_manifest(
             android_manifest, package_orig_name, new_package_name, manifest_edit_level
         )
