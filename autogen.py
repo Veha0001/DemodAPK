@@ -255,6 +255,15 @@ def rename_package_in_manifest(
                         f'android:taskAffinity="{old_package_name}"',
                         f'android:taskAffinity="{new_package_name}"',
                     ),
+                ]
+            )
+        if level == 2:
+            replacements.extend(
+                [
+                    (
+                        f'android:taskAffinity="{old_package_name}"',
+                        f'android:taskAffinity="{new_package_name}"',
+                    ),
                     (
                         f'android:host="{old_package_name}"',
                         f'android:host="{new_package_name}"',
@@ -265,6 +274,7 @@ def rename_package_in_manifest(
                     ),
                 ]
             )
+
 
         # Perform replacements
         for pattern, replacement in replacements:
