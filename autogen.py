@@ -641,13 +641,15 @@ def main():
             update_application_id_in_smali(
                 smali_folder, package_orig_name, new_package_name
             )
-    else:
-        msg.info("Skipping package renaming as requested (using -n flag).")
-
-    remove_metadata_from_manifest(android_manifest, config)
-    msg.info("APK modification finished! Tasks executed.", bold=True)
 
 
+    if "metadata_to_remove" in config:
+        remove_metadata_from_manifest(android_manifest, config)
+
+
+    msg.info("APK modification finished!", bold=True)
+
+    
 if __name__ == "__main__":
     print_rainbow_art("DemodAPK", bold=True, font="small")
     main()
