@@ -253,11 +253,22 @@ def rename_package_in_manifest(
                 [
                     (
                         f'android:taskAffinity="{old_package_name}"',
+                        'android:taskAffinity=""',
+                    ),
+                ]
+            )
+
+        if level == 2:
+            replacements.extend(
+                [
+                    (
+                        f'android:taskAffinity="{old_package_name}"',
                         f'android:taskAffinity="{new_package_name}"',
                     ),
                 ]
             )
-        if level == 2:
+
+        if level == 3:
             replacements.extend(
                 [
                     (
@@ -275,6 +286,25 @@ def rename_package_in_manifest(
                 ]
             )
 
+        if level == 4:
+            replacements.extend(
+                [
+                    (
+                        f'android:taskAffinity="{old_package_name}"',
+                        'android:taskAffinity=""',
+                    ),
+                    (
+                        f'android:host="{old_package_name}"',
+                        f'android:host="{new_package_name}"',
+                    ),
+                    (
+                        f'android:host="cct\\.{old_package_name}"',
+                        f'android:host="cct.{new_package_name}"',
+                    ),
+                ]
+            )
+
+
 
         # Perform replacements
         for pattern, replacement in replacements:
@@ -283,7 +313,7 @@ def rename_package_in_manifest(
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.write(content)
 
-        msg.success(f"Updated package name in AndroidManifest.xml")
+        msg.success("Updated package name in AndroidManifest.xml")
 
     except FileNotFoundError:
         msg.error(f"The manifest file '{manifest_file}' was not found.")
@@ -659,7 +689,7 @@ def main():
 
     msg.info("APK modification finished!", bold=True)
 
-    
+
 if __name__ == "__main__":
     print_rainbow_art("DemodAPK", bold=True, font="small")
     main()
