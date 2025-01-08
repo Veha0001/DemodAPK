@@ -80,6 +80,7 @@ Configuration of Patcher
 #### Performance Notice
 
 The `patcher.py` file may work slowly when performing wildcard scans. If you want to run it faster, consider using the C++ version.
+You may want to checkout [BinaryPatch](https://github.com/Veha0001/BinaryPatch) built with **Rust**. For `patcher` **C++** will discontinue update..
 
 #### Building the C++ Version
 

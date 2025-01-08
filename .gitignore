@@ -9,12 +9,15 @@ Unity*
 *.cs
 *li*
 beta.py
+Patcher
+Patcher.exe
 patcher.exe
 patcher
 patch_li
 my*
 *.json
 JustAsPlanned/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
