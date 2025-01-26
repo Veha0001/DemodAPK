@@ -638,17 +638,21 @@ def main():
         config = json.load(file)
 
     apk_dir = args.apk_dir or msg.input("Please enter the APK directory: ", color="cyan")
-    apk_dir = verify_apk_directory(apk_dir)
+
+    if apk_dir.endswith(".apk"):
+        dex_folder_exists = False
+    else:
+        apk_dir = verify_apk_directory(apk_dir)
+        dex_folder_exists = check_for_dex_folder(apk_dir)
 
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali")
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-    dex_folder_exists = check_for_dex_folder(apk_dir)
 
     package_orig_name, package_orig_path = extract_package_info(android_manifest)
 
-    for item in config.get("DemodAPK", []):
+    for item in config.get("DEMODAPK", []):
         if item.get("package") == package_orig_name:
             update_config = item.get("update", {})
             log_level = item.get("log", 0)
@@ -669,10 +673,10 @@ def main():
                 decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_folder_exists)
                 apk_dir = decoded_dir
 
-            # Run start commands if present
+            # Run begin commands if present
             if "command" in item:
-                start_commands = item.get("command", {}).get("start", [])
-                run_commands(start_commands)
+                begin_commands = item.get("command", {}).get("begin", [])
+                run_commands(begin_commands)
 
             if "facebook" in update_config:
                 update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
