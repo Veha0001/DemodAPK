@@ -5,7 +5,6 @@ import re
 import sys
 import glob
 import json
-import shutil
 import argparse
 import subprocess
 from typing import Optional
@@ -646,14 +645,21 @@ def main():
 
 
             if not apk_dir.endswith(".apk"):
+                # Run begin commands if present
+                if "command" in item:
+                    begin_commands = item.get("command", {}).get("begin", [])
+                    run_commands(begin_commands)
+
                 android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
                 resources_folder = os.path.join(apk_dir, "resources")
-                if dex_option == False:
+                if not dex_option:
                     smali_folder = os.path.join(apk_dir, "smali")
+                else:
+                    smali_folder = None
+
                 value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-
                 package_orig_name, package_orig_path = extract_package_info(android_manifest)
-
+                
                 if "facebook" in update_config:
                     update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
 
@@ -664,24 +670,22 @@ def main():
                     rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
                     rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
 
-                    if not dex_folder_exists and args.move_rename_smali:
+                    if not dex_folder_exists and args.move_rename_smali and dex_option:
                         update_smali_path_package(smali_folder, package_orig_path, new_package_path)
                         update_smali_directory(smali_folder, package_orig_path, new_package_path)
-                    if not dex_folder_exists:
+                    if not dex_folder_exists and dex_option:
                         update_application_id_in_smali(smali_folder, package_orig_name, new_package_name)
 
                 if "metadata_to_remove" in update_config:
                     remove_metadata_from_manifest(android_manifest, update_config)
-
-            # Run begin commands if present
-            if "command" in item:
-                begin_commands = item.get("command", {}).get("begin", [])
-                run_commands(begin_commands)
-            
             # Build APK if it was decoded or if input is not an APK file
             if "command" in item:
                 output_apk = os.path.basename(apk_dir.rstrip('/'))
-                build_apk(editor_jar, apk_dir, os.path.join(apk_dir, output_apk + ".apk"))
+                output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
+                if not os.path.exists(output_apk_path):
+                    build_apk(editor_jar, apk_dir, output_apk_path)
+                else:
+                    msg.info(f"APK already exists at {output_apk_path}. Skipping build.")
 
             # Run end commands if present
             if "command" in item:
