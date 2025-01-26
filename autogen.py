@@ -640,16 +640,10 @@ def main():
 
             # Decode APK if input is an APK file and command is present
             if "command" in item and apk_dir.endswith(".apk"):
-                decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_folder_exists)
+                dex_option = item.get("command", {}).get("dex", False)
+                decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
                 apk_dir = decoded_dir
 
-                # Update paths after decoding
-                android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-                resources_folder = os.path.join(apk_dir, "resources")
-                smali_folder = os.path.join(apk_dir, "smali")
-                value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-
-                package_orig_name, package_orig_path = extract_package_info(android_manifest)
 
             # Run begin commands if present
             if "command" in item:
@@ -657,6 +651,13 @@ def main():
                 run_commands(begin_commands)
 
             if not apk_dir.endswith(".apk"):
+                android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
+                resources_folder = os.path.join(apk_dir, "resources")
+                smali_folder = os.path.join(apk_dir, "smali")
+                value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
+
+                package_orig_name, package_orig_path = extract_package_info(android_manifest)
+
                 if "facebook" in update_config:
                     update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
 
