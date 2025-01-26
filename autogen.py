@@ -178,11 +178,12 @@ def replace_files_from_loaded(update_config, apk_dir):
         src = replace_info.get("from")
         dest = replace_info.get("to")
         if src and dest:
-            src_path = os.path.join(apk_dir, src)
             dest_path = os.path.join(apk_dir, dest)
-            if os.path.isfile(src_path):
-                os.replace(src_path, dest_path)
-                msg.info(f"Replaced {src_path} with {dest_path}")
+            if os.path.isfile(src):
+                os.replace(src, dest_path)
+                msg.info(f"Replaced {src} with {dest_path}")
+            else:
+                msg.error(f"Source file {src} does not exist.")
 
 
 # Function to rename package in AndroidManifest.xml
@@ -604,6 +605,9 @@ def main():
         config = json.load(file)
 
     apk_dir = args.apk_dir or msg.input("Please enter the APK directory: ", color="cyan")
+    if not apk_dir:
+        msg.error("APK directory is required.")
+        sys.exit(1)
 
     if apk_dir.endswith(".apk"):
         dex_folder_exists = False
@@ -616,7 +620,8 @@ def main():
     if not apk_dir.endswith(".apk"):
         android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
         resources_folder = os.path.join(apk_dir, "resources")
-        smali_folder = os.path.join(apk_dir, "smali")
+        if dex_folder_exists:
+            smali_folder = os.path.join(apk_dir, "smali")
         value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
 
         package_orig_name, package_orig_path = extract_package_info(android_manifest)
@@ -634,26 +639,23 @@ def main():
             new_package_name = update_config.get("package", "")
             new_package_path = "L" + new_package_name.replace(".", "/")
             editor_jar = item.get("command", {}).get("editor_jar", "")
+            dex_option = item.get("command", {}).get("dex", False)
 
             if log_level == 0 and dex_folder_exists:
                 msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
 
             # Decode APK if input is an APK file and command is present
             if "command" in item and apk_dir.endswith(".apk"):
-                dex_option = item.get("command", {}).get("dex", False)
+                
                 decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
                 apk_dir = decoded_dir
 
 
-            # Run begin commands if present
-            if "command" in item:
-                begin_commands = item.get("command", {}).get("begin", [])
-                run_commands(begin_commands)
-
             if not apk_dir.endswith(".apk"):
                 android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
                 resources_folder = os.path.join(apk_dir, "resources")
-                smali_folder = os.path.join(apk_dir, "smali")
+                if dex_option == False:
+                    smali_folder = os.path.join(apk_dir, "smali")
                 value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
 
                 package_orig_name, package_orig_path = extract_package_info(android_manifest)
@@ -677,15 +679,20 @@ def main():
                 if "metadata_to_remove" in update_config:
                     remove_metadata_from_manifest(android_manifest, update_config)
 
-            # Run end commands if present
+            # Run begin commands if present
             if "command" in item:
-                end_commands = item.get("command", {}).get("end", [])
-                run_commands(end_commands)
-
+                begin_commands = item.get("command", {}).get("begin", [])
+                run_commands(begin_commands)
+            
             # Build APK if it was decoded or if input is not an APK file
             if "command" in item:
                 output_apk = os.path.basename(apk_dir.rstrip('/'))
                 build_apk(editor_jar, apk_dir, os.path.join(apk_dir, output_apk + ".apk"))
+                
+            # Run end commands if present
+            if "command" in item:
+                end_commands = item.get("command", {}).get("end", [])
+                run_commands(end_commands)
 
             msg.info("APK modification finished!", bold=True)
             break
