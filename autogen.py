@@ -177,19 +177,23 @@ def replace_files_from_loaded(update_config, apk_dir):
         replace_info = file.get("replace", {})
         src = replace_info.get("from")
         dest = replace_info.get("to")
+        keepfile = replace_info.get("keep", True)
         if src and dest:
             dest_path = os.path.join(apk_dir, dest)
             try:
                 if os.path.isfile(src):
-                    shutil.copyfile(src,  dest_path)
-                    msg.success(f"Replaced {src} to {dest_path}")
+                    if keepfile:
+                        shutil.copyfile(src, dest_path)
+                        msg.success(f"Copied {src} to {dest_path}")
+                    else:
+                        os.replace(src, dest_path)
+                        msg.success(f"Replaced {src} with {dest_path}")
                 else:
                     msg.error(f"Source file {src} does not exist.")
             except Exception as e:
                 msg.error(f"Failed to replace {src} with {dest_path}: {e}")
         else:
             msg.warning("Invalid replace configuration: 'from' or 'to' path is missing.")
-
 
 # Function to rename package in AndroidManifest.xml
 def rename_package_in_manifest(
