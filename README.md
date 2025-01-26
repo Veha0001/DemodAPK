@@ -41,46 +41,16 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 Run the script with the following command:
 
 ```bash
-python autogen.py --config <path_to_config.json> <apk_directory>
+python autogen.py --config <path_to_config.json> <apk_directory/apk_file>
 ```
 
 ### Patcher
 
-```bash
-python patcher.py <config_file>
-# default is config.json
-```
-
-Configuration of Patcher
-
-```json
-{
-  "Patcher": {
-    "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
-    "dump_file": "dump.cs",
-    "output_file": "libil2cpp_patched.so",
-    "patches": [
-      {
-        "method_name": "UnlockAll",
-        "hex_code": "20 00 80 D2 C0 03 5F D6"
-      },
-      {
-        "offset": "0x111111",
-        "hex_code": "1F 20 03 D5"
-      },
-      {
-        "wildcard": "AA DD F5 ?? ?? ?? 00 01",
-        "hex_code": "00 E0 AF D2 C0 03 5F D6"
-      }
-    ]
-  }
-}
-```
-
 #### Performance Notice
 
 The `patcher.py` file may work slowly when performing wildcard scans. If you want to run it faster, consider using the C++ version.
-You may want to checkout [BinaryPatch](https://github.com/Veha0001/BinaryPatch) built with **Rust**. For `patcher` **C++** will discontinue update..
+
+You may want to checkout [BinaryPatch](https://github.com/Veha0001/BinaryPatch) built with **Rust**. For `patcher.cpp` will be discontinue for now..
 
 #### Building the C++ Version
 
@@ -90,64 +60,49 @@ To build the C++ version, you will need to have `g++` or `gcc` installed, along 
 g++ -o patcher patcher.cpp -O2
 ```
 
-For **Windows** using [MSYS2](https://www.msys2.org/) First Install some package:
-
-```bash
-pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-nlohmann-json gcc
-```
-
-Then run the gcc command: `g++ patcher.cpp -o patcher.exe -O2`
-
 > [!NOTE]
 > Edit by method_name may work on some dump.cs file.
 > The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).
 
-## Arguments
-
-- --config: Path to the JSON configuration file (default: config.json).
-
-- <apk_directory>: Path to the APK directory that contains the files to be modified.
-
 ## Example
-
-Run with a custom config file.
-
-```bash
-python autogen.py --config config.json /path/to/apk/directory
-```
-
-All available example options in config.json
-
+This is a `config.json` example file:
 ```json
 {
-  "log": 0,
-  "level": 0,
-  "facebook": {
-    "app_id": "1234567890",
-    "client_token": "aaabbbcccddd0001",
-    "login_protocol_scheme": "fb1234567890"
-  },
-  "package": {
-    "new_name": "com.app.master",
-    "new_path": "Lcom/app/master"
-  },
-  "files": [
+  "DemodAPK": [
     {
-      "replace": {
-        "target": "root/lib/arm64-v8a/libil2cpp.so",
-        "source": "/path/to/external/bin.so",
-        "backup": true
-      }
-    },
-    {
-      "replace": {
-        "target": "resources/package_1/res/values/strings.xml",
-        "source": "./path/to/external/strings_new.xml"
+      "log": 1,
+      "package": "com.coconut.bottle",
+      "command": {
+        "editor_jar": "~/.local/bin/APKEditor*.jar",
+        "dex": true,
+        "begin": [
+          "./Patcher"
+        ],
+        "end": [
+          "apksigner sign --key ~/media.pk8 --cert ~/media.x509.pem src/coconut/*.apk"
+        ]
+      },
+      "update": {
+        "level": 0,
+        "package": "com.prpr.musedashjap",
+        "facebook": {
+          "app_id": "727272716253111",
+          "client_token": "vipfbhs8quqyb717217ah",
+          "login_protocol_scheme": "fb727272716253111"
+        },
+        "files": [
+          {
+            "replace": {
+              "from": "./src/libil2cpp_patched.so",
+              "to": "root/lib/arm64-v8a/libil2cpp.so"
+            }
+          }
+        ],
+        "metadata_to_remove": [
+          "com.google.android.gms.games.APP_ID"
+        ]
       }
     }
-  ],
-  "metadata_to_remove": [
-    "com.google.android.gms.games.APP_ID"
   ],
   "Patcher": {
     "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
