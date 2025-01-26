@@ -181,7 +181,7 @@ def replace_files_from_loaded(update_config, apk_dir):
             dest_path = os.path.join(apk_dir, dest)
             try:
                 if os.path.isfile(src):
-                    shutil.copyfile(src,dest)
+                    shutil.copyfile(src,  dest_path)
                     msg.success(f"Replaced {src} to {dest_path}")
                 else:
                     msg.error(f"Source file {src} does not exist.")
