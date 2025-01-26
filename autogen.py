@@ -617,17 +617,6 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-    if not apk_dir.endswith(".apk"):
-        android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-        resources_folder = os.path.join(apk_dir, "resources")
-        if dex_folder_exists:
-            smali_folder = os.path.join(apk_dir, "smali")
-        value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-
-        package_orig_name, package_orig_path = extract_package_info(android_manifest)
-    else:
-        package_orig_name, package_orig_path = None, None
-
     for item in config.get("DemodAPK", []):
         if item.get("package") == package_orig_name or apk_dir.endswith(".apk"):
             update_config = item.get("update", {})
@@ -646,8 +635,8 @@ def main():
 
             # Decode APK if input is an APK file and command is present
             if "command" in item and apk_dir.endswith(".apk"):
-                
-                decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+                if not os.path.exists(decoded_dir):
+                    decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
                 apk_dir = decoded_dir
 
 
@@ -688,7 +677,7 @@ def main():
             if "command" in item:
                 output_apk = os.path.basename(apk_dir.rstrip('/'))
                 build_apk(editor_jar, apk_dir, os.path.join(apk_dir, output_apk + ".apk"))
-                
+
             # Run end commands if present
             if "command" in item:
                 end_commands = item.get("command", {}).get("end", [])
