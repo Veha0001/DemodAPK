@@ -676,7 +676,7 @@ def main():
                     rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
                     rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
 
-                    if not dex_folder_exists and dex_option:
+                    if not dex_folder_exists and dex_option != True:
                         if args.move_rename_smali:
                             update_smali_path_package(smali_folder, package_orig_path, new_package_path)
                             update_smali_directory(smali_folder, package_orig_path, new_package_path)
