@@ -172,51 +172,17 @@ def update_facebook_app_values(
         msg.error(f"File: {strings_file}, does not exists.")
 
 
-def replace_files_from_loaded(config, apk_dir):
-    # Process each file replacement
-    if "files" not in config:
-        return
-    for item in config.get("files", []):
-        # Ensure the item is a dictionary with the "replace" key
-        if not isinstance(item, dict) or "replace" not in item:
-            msg.error(f"Invalid entry in config: {item}.")
-            continue
-        replace_info = item.get("replace", {})
-        target_file = replace_info.get("target")
-        source_file = replace_info.get("source")
-        # Default to False if not present
-        backup = replace_info.get("backup", False)
-
-        if not target_file or not source_file:
-            msg.error(f"Invalid entry in config: {item}.")
-            continue
-
-        # Ensure that the target file is inside the apk_dir
-        target_path = os.path.join(apk_dir, target_file)
-
-        # Check if the source file exists (anywhere on the filesystem)
-        if not os.path.isfile(source_file):
-            msg.error(f"Source file not found: {os.path.basename(source_file)}.")
-            continue
-
-        # Perform backup if required
-        if backup:
-            backup_file = f"{target_path}.bak"
-            try:
-                shutil.copyfile(target_path, backup_file)
-                msg.success(f"Backup created for {os.path.basename(target_file)}.")
-            except Exception:
-                msg.error(f"Creating backup for {os.path.basename(target_file)}.")
-
-        # Perform the file replacement (source file to target location)
-        try:
-            # Copy the source to the target location
-            shutil.copyfile(source_file, target_path)
-            msg.success(
-                f"Replaced {os.path.basename(target_file)} with {os.path.basename(source_file)}."
-            )
-        except Exception:
-            msg.error(f"No such file or directory: {os.path.basename(target_file)}")
+def replace_files_from_loaded(update_config, apk_dir):
+    for file in update_config.get("files", []):
+        replace_info = file.get("replace", {})
+        src = replace_info.get("from")
+        dest = replace_info.get("to")
+        if src and dest:
+            src_path = os.path.join(apk_dir, src)
+            dest_path = os.path.join(apk_dir, dest)
+            if os.path.isfile(src_path):
+                os.replace(src_path, dest_path)
+                msg.info(f"Replaced {src_path} with {dest_path}")
 
 
 # Function to rename package in AndroidManifest.xml
@@ -641,7 +607,7 @@ def main():
 
     if apk_dir.endswith(".apk"):
         dex_folder_exists = False
-        decoded_dir = apk_dir + "_decoded"
+        decoded_dir = apk_dir.rsplit('.', 1)[0]
     else:
         apk_dir = verify_apk_directory(apk_dir)
         dex_folder_exists = check_for_dex_folder(apk_dir)
@@ -694,7 +660,8 @@ def main():
                 if "facebook" in update_config:
                     update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
 
-                replace_files_from_loaded(update_config, apk_dir)
+                if "files" in update_config:
+                    replace_files_from_loaded(update_config, apk_dir)
 
                 if not args.no_rename_package and "package" in update_config:
                     rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
@@ -716,8 +683,8 @@ def main():
 
             # Build APK if it was decoded or if input is not an APK file
             if "command" in item:
-                output_apk = os.path.basename(apk_dir.rstrip('/')) + ".apk"
-                build_apk(editor_jar, apk_dir, os.path.join(apk_dir, output_apk))
+                output_apk = os.path.basename(apk_dir.rstrip('/'))
+                build_apk(editor_jar, apk_dir, os.path.join(apk_dir, output_apk + ".apk"))
 
             msg.info("APK modification finished!", bold=True)
             break
