@@ -178,11 +178,17 @@ def replace_files_from_loaded(update_config, apk_dir):
         dest = replace_info.get("to")
         if src and dest:
             dest_path = os.path.join(apk_dir, dest)
-            if os.path.isfile(src):
-                os.replace(src, dest_path)
-                msg.info(f"Replaced {src} with {dest_path}")
-            else:
-                msg.error(f"Source file {src} does not exist.")
+            try:
+                if os.path.isfile(src):
+                    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                    os.replace(src, dest_path)
+                    msg.success(f"Replaced {src} with {dest_path}")
+                else:
+                    msg.error(f"Source file {src} does not exist.")
+            except Exception as e:
+                msg.error(f"Failed to replace {src} with {dest_path}: {e}")
+        else:
+            msg.warning("Invalid replace configuration: 'from' or 'to' path is missing.")
 
 
 # Function to rename package in AndroidManifest.xml
@@ -670,10 +676,10 @@ def main():
                     rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
                     rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
 
-                    if not dex_folder_exists and args.move_rename_smali and dex_option:
-                        update_smali_path_package(smali_folder, package_orig_path, new_package_path)
-                        update_smali_directory(smali_folder, package_orig_path, new_package_path)
                     if not dex_folder_exists and dex_option:
+                        if args.move_rename_smali:
+                            update_smali_path_package(smali_folder, package_orig_path, new_package_path)
+                            update_smali_directory(smali_folder, package_orig_path, new_package_path)
                         update_application_id_in_smali(smali_folder, package_orig_name, new_package_name)
 
                 if "metadata_to_remove" in update_config:
