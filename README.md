@@ -84,7 +84,7 @@ This is a `config.json` example file:
       },
       "update": {
         "level": 0,
-        "package": "com.prpr.musedashjap",
+        "package": "com.coconut.jungle",
         "facebook": {
           "app_id": "727272716253111",
           "client_token": "vipfbhs8quqyb717217ah",
