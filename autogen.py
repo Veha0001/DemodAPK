@@ -5,6 +5,7 @@ import re
 import sys
 import glob
 import json
+import shutil
 import argparse
 import subprocess
 from typing import Optional
@@ -154,8 +155,8 @@ def update_facebook_app_values(
             content,
         )
         content = re.sub(
-            r'<string name="fb_client_token">.*?</string>',
-            f'<string name="fb_client_token">{fb_client_token}</string>',
+            r'<string name="facebook_client_token">.*?</string>',
+            f'<string name="facebook_client_token">{fb_client_token}</string>',
             content,
         )
         content = re.sub(
@@ -180,9 +181,8 @@ def replace_files_from_loaded(update_config, apk_dir):
             dest_path = os.path.join(apk_dir, dest)
             try:
                 if os.path.isfile(src):
-                    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-                    os.replace(src, dest_path)
-                    msg.success(f"Replaced {src} with {dest_path}")
+                    shutil.copyfile(src,dest)
+                    msg.success(f"Replaced {src} to {dest_path}")
                 else:
                     msg.error(f"Source file {src} does not exist.")
             except Exception as e:
@@ -588,13 +588,28 @@ def run_commands(commands):
         except subprocess.CalledProcessError as e:
             msg.error(f"Command failed: {command}\nError: {e}")
 
+def check_java_installed():
+    try:
+        subprocess.run(["java", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+    except FileNotFoundError:
+        return False
+
 def decode_apk(editor_jar, apk_file, output_dir, dex=False):
+    if not check_java_installed():
+        msg.error("Java is not installed. Please install Java to proceed.")
+        sys.exit(1)
     command = f"java -jar {editor_jar} d -i {apk_file} -o {output_dir}"
     if dex:
         command += " -dex"
     run_commands([command])
 
 def build_apk(editor_jar, input_dir, output_apk):
+    if not check_java_installed():
+        msg.error("Java is not installed. Please install Java to proceed.")
+        sys.exit(1)
     command = f"java -jar {editor_jar} b -i {input_dir} -o {output_apk}"
     run_commands([command])
 
