@@ -617,6 +617,11 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
+    if apk_dir.endswith(".apk"):
+        package_orig_name, package_orig_path = None, None
+    else:
+        package_orig_name, package_orig_path = extract_package_info(os.path.join(apk_dir, "AndroidManifest.xml"))
+
     for item in config.get("DemodAPK", []):
         if item.get("package") == package_orig_name or apk_dir.endswith(".apk"):
             update_config = item.get("update", {})
