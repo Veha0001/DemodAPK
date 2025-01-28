@@ -533,6 +533,12 @@ def parse_arguments():
         help="Path to the JSON configuration file.",
     )
     parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force overwrite the decoded APK directory.",
+    )
+    parser.add_argument(
         "-mv",
         "--move-rename-smali",
         action="store_true",
@@ -662,6 +668,9 @@ def main():
             if log_level == True and dex_folder_exists:
                 msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
             
+            if "command" in item and args.force:
+                shutil.rmtree(decoded_dir, ignore_errors=True)
+                
             # Decode APK if input is an APK file and command is present
             if "command" in item and apk_dir.endswith(".apk"):
                 if not os.path.exists(decoded_dir):

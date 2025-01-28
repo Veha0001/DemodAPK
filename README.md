@@ -70,7 +70,7 @@ This is a `config.json` example file:
 {
   "DemodAPK": [
     {
-      "log": 1,
+      "log": true,
       "dex": true,
       "package": "com.coconut.bottle",
       "command": {
