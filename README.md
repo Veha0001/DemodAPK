@@ -71,10 +71,10 @@ This is a `config.json` example file:
   "DemodAPK": [
     {
       "log": 1,
+      "dex": true,
       "package": "com.coconut.bottle",
       "command": {
         "editor_jar": "~/.local/bin/APKEditor*.jar",
-        "dex": true,
         "begin": [
           "./Patcher"
         ],

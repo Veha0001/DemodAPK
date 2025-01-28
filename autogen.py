@@ -649,7 +649,7 @@ def main():
     for item in config.get("DemodAPK", []):
         if item.get("package") == package_orig_name or apk_dir.endswith(".apk"):
             update_config = item.get("update", {})
-            log_level = item.get("log", 0)
+            log_level = item.get("log", False)
             manifest_edit_level = update_config.get("level", 0)
             facebook_appid = update_config.get("facebook", {}).get("app_id", "")
             fb_client_token = update_config.get("facebook", {}).get("client_token", "")
@@ -657,11 +657,11 @@ def main():
             new_package_name = update_config.get("package", "")
             new_package_path = "L" + new_package_name.replace(".", "/")
             editor_jar = item.get("command", {}).get("editor_jar", "")
-            dex_option = item.get("command", {}).get("dex", False)
+            dex_option = item.get("dex", False)
 
-            if log_level == 0 and dex_folder_exists:
+            if log_level == True and dex_folder_exists:
                 msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
-
+            
             # Decode APK if input is an APK file and command is present
             if "command" in item and apk_dir.endswith(".apk"):
                 if not os.path.exists(decoded_dir):
