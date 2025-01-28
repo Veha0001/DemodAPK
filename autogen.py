@@ -1,14 +1,14 @@
 #!/bin/python
 
-import os
-import re
-import sys
-import glob
-import json
-import shutil
+import os, re, sys, glob, json, shutil
 import argparse
 import subprocess
 from typing import Optional
+try:
+    from colorama import init
+    init(autoreset=True)
+except ImportError:
+    pass
 
 try:
     from art import text2art
