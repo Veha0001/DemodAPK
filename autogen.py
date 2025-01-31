@@ -647,10 +647,13 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-    if apk_dir.endswith(".apk") and config.get("DemodAPK").get("command").get("editor_jar"):
+    editor_jar = config.get("DemodAPK", []).get("command").get("editor_jar", "")
+    dex_option = config.get("DemodAPK", []).get("dex", False)
+    
+    if apk_dir.endswith(".apk") and editor_jar:
         if not os.path.exists(decoded_dir):
-                decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
-                package_orig_name, package_orig_path = extract_package_info(os.path.join(decoded_dir, "AndroidManifest.xml"))
+            decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+            package_orig_name, package_orig_path = extract_package_info(os.path.join(decoded_dir, "AndroidManifest.xml"))
     else:
         package_orig_name, package_orig_path = extract_package_info(os.path.join(apk_dir, "AndroidManifest.xml"))
 
