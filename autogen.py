@@ -647,21 +647,25 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-    if apk_dir.endswith(".apk"):
-        package_orig_name, package_orig_path = None, None
+    if apk_dir.endswith(".apk") and config.get("DemodAPK").get("command").get("editor_jar"):
+        if not os.path.exists(decoded_dir):
+                decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+                package_orig_name, package_orig_path = extract_package_info(os.path.join(decoded_dir, "AndroidManifest.xml"))
     else:
         package_orig_name, package_orig_path = extract_package_info(os.path.join(apk_dir, "AndroidManifest.xml"))
 
     for item in config.get("DemodAPK", []):
-        if item.get("package") == package_orig_name or apk_dir.endswith(".apk"):
+        if item.get("package") == package_orig_name:
             update_config = item.get("update", {})
             log_level = item.get("log", False)
             manifest_edit_level = update_config.get("level", 0)
-            facebook_appid = update_config.get("facebook", {}).get("app_id", "")
-            fb_client_token = update_config.get("facebook", {}).get("client_token", "")
-            fb_login_protocol_scheme = update_config.get("facebook", {}).get("login_protocol_scheme", "")
-            new_package_name = update_config.get("package", "")
-            new_package_path = "L" + new_package_name.replace(".", "/")
+            if update_config.get("facebook"):
+                facebook_appid = update_config.get("facebook", {}).get("app_id", "")
+                fb_client_token = update_config.get("facebook", {}).get("client_token", "")
+                fb_login_protocol_scheme = update_config.get("facebook", {}).get("login_protocol_scheme", "")
+            if update_config.get("package"):    
+                new_package_name = update_config.get("package", "")
+                new_package_path = "L" + new_package_name.replace(".", "/")
             editor_jar = item.get("command", {}).get("editor_jar", "")
             dex_option = item.get("dex", False)
 
@@ -671,13 +675,6 @@ def main():
             if "command" in item and args.force:
                 shutil.rmtree(decoded_dir, ignore_errors=True)
                 
-            # Decode APK if input is an APK file and command is present
-            if "command" in item and apk_dir.endswith(".apk"):
-                if not os.path.exists(decoded_dir):
-                    decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
-                apk_dir = decoded_dir
-
-
             if not apk_dir.endswith(".apk"):
                 # Run begin commands if present
                 if "command" in item:
