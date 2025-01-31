@@ -127,6 +127,9 @@ This is a `config.json` example file:
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
+### :l
+- It’s didnt work if you want to add other package configuration.
+- This is helpless, Cause i didnt know do it yet..
 
 ## License
 

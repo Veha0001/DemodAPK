@@ -647,96 +647,83 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-    editor_jar = ""
-    dex_option = False
     for item in config.get("DemodAPK", []):
-        if "command" in item:
-            editor_jar = item.get("command", {}).get("editor_jar", "")
-            dex_option = item.get("dex", False)
-            break
-    
-    if apk_dir.endswith(".apk") and editor_jar:
-        if not os.path.exists(decoded_dir):
-            decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
-            package_orig_name, package_orig_path = extract_package_info(os.path.join(decoded_dir, "AndroidManifest.xml"))
-    else:
-        package_orig_name, package_orig_path = extract_package_info(os.path.join(apk_dir, "AndroidManifest.xml"))
-
-    matched_package_config = None
-    for item in config.get("DemodAPK", []):
-        if item.get("package") == package_orig_name:
-            matched_package_config = item
-            break
-
-    if matched_package_config:
-        update_config = matched_package_config.get("update", {})
-        log_level = matched_package_config.get("log", False)
-        manifest_edit_level = update_config.get("level", 0)
-        if update_config.get("facebook"):
+        if item.get("package"):
+            update_config = item.get("update", {})
+            log_level = item.get("log", False)
+            manifest_edit_level = update_config.get("level", 0)
             facebook_appid = update_config.get("facebook", {}).get("app_id", "")
             fb_client_token = update_config.get("facebook", {}).get("client_token", "")
             fb_login_protocol_scheme = update_config.get("facebook", {}).get("login_protocol_scheme", "")
-        if update_config.get("package"):    
             new_package_name = update_config.get("package", "")
             new_package_path = "L" + new_package_name.replace(".", "/")
+            editor_jar = item.get("command", {}).get("editor_jar", "")
+            dex_option = item.get("dex", False)
 
-        if log_level == True and dex_folder_exists:
-            msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
-        
-        if "command" in matched_package_config and args.force:
-            shutil.rmtree(decoded_dir, ignore_errors=True)
+            if log_level == True and dex_folder_exists:
+                msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
             
-        if not apk_dir.endswith(".apk"):
-            # Run begin commands if present
-            if "command" in matched_package_config:
-                begin_commands = matched_package_config.get("command", {}).get("begin", [])
-                run_commands(begin_commands)
+            if "command" in item and args.force:
+                shutil.rmtree(decoded_dir, ignore_errors=True)
+                
+            # Decode APK if input is an APK file and command is present
+            if "command" in item and apk_dir.endswith(".apk"):
+                if not os.path.exists(decoded_dir):
+                    decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+                apk_dir = decoded_dir
 
-            android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-            resources_folder = os.path.join(apk_dir, "resources")
-            if not dex_option:
-                smali_folder = os.path.join(apk_dir, "smali")
-            else:
-                smali_folder = None
+            if not apk_dir.endswith(".apk"):
+                # Run begin commands if present
+                if "command" in item:
+                    begin_commands = item.get("command", {}).get("begin", [])
+                    run_commands(begin_commands)
 
-            value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-            package_orig_name, package_orig_path = extract_package_info(android_manifest)
-            
-            if "facebook" in update_config:
-                update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
+                android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
+                resources_folder = os.path.join(apk_dir, "resources")
+                if not dex_option:
+                    smali_folder = os.path.join(apk_dir, "smali")
+                else:
+                    smali_folder = None
 
-            if "files" in update_config:
-                replace_files_from_loaded(update_config, apk_dir)
+                value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
+                package_orig_name, package_orig_path = extract_package_info(android_manifest)
+                
+                if "facebook" in update_config:
+                    update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
 
-            if not args.no_rename_package and "package" in update_config:
-                rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
-                rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
+                if "files" in update_config:
+                    replace_files_from_loaded(update_config, apk_dir)
 
-                if not dex_folder_exists and dex_option != True:
-                    if args.move_rename_smali:
-                        update_smali_path_package(smali_folder, package_orig_path, new_package_path)
-                        update_smali_directory(smali_folder, package_orig_path, new_package_path)
-                    update_application_id_in_smali(smali_folder, package_orig_name, new_package_name)
+                if not args.no_rename_package and "package" in update_config:
+                    rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
+                    rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
 
-            if "metadata_to_remove" in update_config:
-                remove_metadata_from_manifest(android_manifest, update_config)
-        # Build APK if it was decoded or if input is not an APK file
-        if "command" in matched_package_config:
-            output_apk = os.path.basename(apk_dir.rstrip('/'))
-            output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
-            if not os.path.exists(output_apk_path):
-                build_apk(editor_jar, apk_dir, output_apk_path)
-            else:
-                msg.info(f"APK already exists at {output_apk_path}. Skipping build.")
+                    if not dex_folder_exists and dex_option != True:
+                        if args.move_rename_smali:
+                            update_smali_path_package(smali_folder, package_orig_path, new_package_path)
+                            update_smali_directory(smali_folder, package_orig_path, new_package_path)
+                        update_application_id_in_smali(smali_folder, package_orig_name, new_package_name)
 
-        # Run end commands if present
-        if "command" in matched_package_config:
-            end_commands = matched_package_config.get("command", {}).get("end", [])
-            run_commands(end_commands)
+                if "metadata_to_remove" in update_config:
+                    remove_metadata_from_manifest(android_manifest, update_config)
+            # Build APK if it was decoded or if input is not an APK file
+            if "command" in item:
+                output_apk = os.path.basename(apk_dir.rstrip('/'))
+                output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
+                if not os.path.exists(output_apk_path):
+                    build_apk(editor_jar, apk_dir, output_apk_path)
+                else:
+                    msg.info(f"APK already exists at {output_apk_path}. Skipping build.")
 
-        msg.info("APK modification finished!", bold=True)
+            # Run end commands if present
+            if "command" in item:
+                end_commands = item.get("command", {}).get("end", [])
+                run_commands(end_commands)
+
+            msg.info("APK modification finished!", bold=True)
+            break
     else:
-        msg.error(f"No matching package found for '{package_orig_name}' in configuration.")
+        msg.error(f"No matching configuration found for the APK directory: {apk_dir}")
 
 if __name__ == "__main__":
     print_rainbow_art("DemodAPK", bold=True, font="small")
