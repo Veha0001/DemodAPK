@@ -647,8 +647,13 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-    editor_jar = config.get("DemodAPK", []).get("command").get("editor_jar", "")
-    dex_option = config.get("DemodAPK", []).get("dex", False)
+    editor_jar = ""
+    dex_option = False
+    for item in config.get("DemodAPK", []):
+        if "command" in item:
+            editor_jar = item.get("command", {}).get("editor_jar", "")
+            dex_option = item.get("dex", False)
+            break
     
     if apk_dir.endswith(".apk") and editor_jar:
         if not os.path.exists(decoded_dir):
@@ -669,9 +674,7 @@ def main():
             if update_config.get("package"):    
                 new_package_name = update_config.get("package", "")
                 new_package_path = "L" + new_package_name.replace(".", "/")
-            editor_jar = item.get("command", {}).get("editor_jar", "")
-            dex_option = item.get("dex", False)
-
+                
             if log_level == True and dex_folder_exists:
                 msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
             
