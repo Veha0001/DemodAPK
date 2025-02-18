@@ -68,42 +68,42 @@ g++ -o patcher patcher.cpp -O2
 This is a `config.json` example file:
 ```json
 {
-  "DemodAPK": [
-    {
+  "DemodAPK": {
+    "com.overpower.game": {
       "log": true,
       "dex": true,
-      "package": "com.coconut.bottle",
       "command": {
         "editor_jar": "~/.local/bin/APKEditor*.jar",
         "begin": [
           "./Patcher"
         ],
         "end": [
-          "apksigner sign --key ~/media.pk8 --cert ~/media.x509.pem src/coconut/*.apk"
+          "apksigner sign --key ~/.Keys/mine.pk8 --cert ~/.Keys/mine.x509.pem src/Game/*.apk"
         ]
       },
-      "update": {
-        "level": 0,
-        "package": "com.coconut.jungle",
-        "facebook": {
-          "app_id": "727272716253111",
-          "client_token": "vipfbhs8quqyb717217ah",
-          "login_protocol_scheme": "fb727272716253111"
-        },
-        "files": [
-          {
-            "replace": {
-              "from": "./src/libil2cpp_patched.so",
-              "to": "root/lib/arm64-v8a/libil2cpp.so"
-            }
+      "level": 0,
+      "package": "com.yes.game",
+      "facebook": {
+        "app_id": "0000000000000",
+        "client_token": "dj2025id828018ahzl11",
+        "login_protocol_scheme": "fb0000000000000"
+      },
+      "files": [
+        {
+          "replace": {
+            "keep": false,
+            "from": "./src/libil2cpp_patched.so",
+            "to": "root/lib/arm64-v8a/libil2cpp.so"
           }
-        ],
-        "metadata_to_remove": [
+        }
+      ],
+      "manifest": {
+        "remove_metadata": [
           "com.google.android.gms.games.APP_ID"
         ]
       }
     }
-  ],
+  },
   "Patcher": {
     "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
     "dump_file": "dump.cs",
@@ -127,10 +127,11 @@ This is a `config.json` example file:
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
+<!--
 ### :l
 - It’s didnt work if you want to add other package configuration.
 - This is helpless, Cause i didnt know do it yet..
-
+-->
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

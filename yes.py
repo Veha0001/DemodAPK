@@ -634,47 +634,7 @@ def main():
         msg.error("APK directory is required.")
         sys.exit(1)
 
-    # Initialize android_manifest variable
-    android_manifest = None
-    package_orig_name, package_orig_path = None, None
-
     if apk_dir.endswith(".apk"):
-        # Extract preconfigured package names
-        available_packages = list(config.get("DemodAPK", {}).keys())
-
-        if not available_packages:
-            msg.error("No preconfigured packages found in config.json.")
-            sys.exit(1)
-
-        # Show available packages and let user select one
-        msg.info("Select a package configuration for this APK:")
-        for index, pkg in enumerate(available_packages, start=1):
-            print(f" [{index}] {pkg}")
-
-        while True:
-            try:
-                selection = int(msg.input("Enter the number of the package to use: ", color="cyan"))
-                if 1 <= selection <= len(available_packages):
-                    package_orig_name = available_packages[selection - 1]
-                    break
-                else:
-                    msg.error("Invalid selection. Choose a number from the list.")
-            except ValueError:
-                msg.error("Please enter a valid number.")
-
-        # Retrieve the selected package configuration
-        apk_config = config["DemodAPK"].get(package_orig_name)
-
-        if not apk_config:
-            msg.error(f"No configuration found for package: {package_orig_name}")
-            sys.exit(1)
-
-        # Check if the package has command settings
-        if "command" not in apk_config or "editor_jar" not in apk_config["command"]:
-            msg.error("The selected package does not have command settings.")
-            msg.info("Cannot decode APK without command settings.")
-            sys.exit(1)
-
         dex_folder_exists = False
         decoded_dir = apk_dir.rsplit('.', 1)[0]
     else:
@@ -682,18 +642,15 @@ def main():
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-        # Extract package info from AndroidManifest.xml
-        android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-        if not os.path.isfile(android_manifest):
-            msg.error("AndroidManifest.xml not found in the directory.")
-            sys.exit(1)
-        
-        package_orig_name, package_orig_path = extract_package_info(android_manifest)
-        apk_config = config.get("DemodAPK", {}).get(package_orig_name)
+    # Extract package name from the AndroidManifest.xml
+    android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
+    package_orig_name, package_orig_path = extract_package_info(android_manifest)
 
-        if not apk_config:
-            msg.error(f"No configuration found for package: {package_orig_name}")
-            sys.exit(1)
+    # Find the matching configuration for the package name
+    apk_config = config.get("DemodAPK", {}).get(package_orig_name)
+    if not apk_config:
+        msg.error(f"No configuration found for package: {package_orig_name}")
+        sys.exit(1)
 
     # Extract config values
     log_level = apk_config.get("log", False)
@@ -712,10 +669,10 @@ def main():
         msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
 
     # Decode APK if input is an APK file
-    if apk_dir.endswith(".apk"):
-        if args.force:
-            shutil.rmtree(decoded_dir, ignore_errors=True)
+    if apk_dir.endswith(".apk") and "command" in apk_config and "editor_jar" in apk_config["command"]:
         if not os.path.exists(decoded_dir):
+            if args.force:
+                shutil.rmtree(decoded_dir, ignore_errors=True)
             decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
         apk_dir = decoded_dir
 
@@ -727,9 +684,7 @@ def main():
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali") if not dex_option else None
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-    if not android_manifest:
-        android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-        
+
     # Modify APK contents
     if facebook_config:
         update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
@@ -737,7 +692,7 @@ def main():
     if "files" in apk_config:
         for file_entry in apk_config["files"]:
             replace_files_from_loaded(file_entry, apk_dir)
-
+        
     if not args.no_rename_package and "package" in apk_config:
         rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
         rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
@@ -763,7 +718,6 @@ def main():
         run_commands(apk_config.get("command", {}).get("end", []))
 
     msg.info("APK modification finished!", bold=True)
-
 
 if __name__ == "__main__":
     print_rainbow_art("DemodAPK", bold=True, font="small")
