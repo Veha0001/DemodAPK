@@ -35,13 +35,17 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
    ```bash
    pip install -r requirements.txt
    ```
+3. Install demodapk
+   ```bash
+   pip install .
+   ```
 
 ## Usage
 
 Run the script with the following command:
 
 ```bash
-python autogen.py --config <path_to_config.json> <apk_directory/apk_file>
+python demodapk.py --config <path_to_config.json> <apk_directory/apk_file>
 ```
 
 ### Patcher
