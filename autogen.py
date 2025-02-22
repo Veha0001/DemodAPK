@@ -629,6 +629,7 @@ def load_config():
         return json.load(f)
 
 def main():
+    print_rainbow_art("DemodAPK", bold=True, font="small")
     args = parse_arguments()
     config = load_config()
     apk_dir = args.apk_dir or msg.input("Please enter the APK directory: ", color="cyan")
@@ -768,5 +769,4 @@ def main():
     msg.info("APK modification finished!", bold=True)
 
 if __name__ == "__main__":
-    print_rainbow_art("DemodAPK", bold=True, font="small")
     main()
