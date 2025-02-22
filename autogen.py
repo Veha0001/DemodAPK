@@ -3,6 +3,7 @@
 import os, re, sys, glob, json, shutil
 import argparse
 import subprocess
+from platformdirs import user_config_dir
 from typing import Optional
 try:
     from colorama import init
@@ -301,12 +302,11 @@ def update_smali_path_package(smali_dir, old_package_path, new_package_path):
         for file in files:
             file_path = os.path.join(root, file)
             # Skip excluded files
-            # if any(excluded_file in file_path for excluded_file in excluded_files):
-            #    print(
-            #        f"{Colors.YELLOW}Skipping {file_path} as it's excluded.{Colors.RESET}"
-            #    )
-            #    continue
-
+            """
+            if any(excluded_file in file_path for excluded_file in excluded_files):
+                msg.info(f"Skipping {file_path} as it’s excluded.")
+            continue
+            """
             if file.endswith(".smali"):
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -501,18 +501,8 @@ def create_default_config(config_path, default_config):
     )
     sys.exit(0)
 
-
-def load_config(config_path):
-    try:
-        with open(config_path, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except json.JSONDecodeError:
-        msg.error(f"Configuration file '{config_path}' is not a valid JSON file.")
-        sys.exit(1)
-
-
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="DemodAPk: An APK Modification Script")
+    parser = argparse.ArgumentParser(description="DemodAPK: APK Modification Script, Made by @Veha0001.")
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory")
     parser.add_argument(
         "-n",
@@ -606,29 +596,41 @@ def decode_apk(editor_jar, apk_file, output_dir, dex=False):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f"java -jar {editor_jar} d -i {apk_file} -o {output_dir}"
+    command = f"java -jar {editor_jar} d -i '{apk_file}' -o '{output_dir}' "
     if dex:
-        command += " -dex"
+        command += "-dex"
     run_commands([command])
 
 def build_apk(editor_jar, input_dir, output_apk):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f"java -jar {editor_jar} b -i {input_dir} -o {output_apk}"
+    command = f"java -jar {editor_jar} b -i '{input_dir}' -o '{output_apk}' "
     run_commands([command])
+
+def get_config_path():
+    local_config = "config.json"
+    
+    if os.path.exists(local_config):
+        return local_config
+
+    # Cross-platform config directory
+    global_config = os.path.join(user_config_dir("DemodAPK"), "config.json")
+    return global_config
+
+def load_config():
+    config_path = get_config_path()
+    
+    if not os.path.exists(config_path):
+        print(f"Config file not found at {config_path}")
+        return {}
+
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 def main():
     args = parse_arguments()
-    config_path = "config.json"
-
-    if not os.path.isfile(config_path):
-        msg.error(f"Configuration file '{config_path}' not found.")
-        sys.exit(1)
-
-    with open(config_path, "r", encoding="utf-8") as file:
-        config = json.load(file)
-
+    config = load_config()
     apk_dir = args.apk_dir or msg.input("Please enter the APK directory: ", color="cyan")
     if not apk_dir:
         msg.error("APK directory is required.")
@@ -656,6 +658,7 @@ def main():
                 selection = int(msg.input("Enter the number of the package to use: ", color="cyan"))
                 if 1 <= selection <= len(available_packages):
                     package_orig_name = available_packages[selection - 1]
+                    package_orig_path = "L" + package_orig_name.replace(".", "/")
                     break
                 else:
                     msg.error("Invalid selection. Choose a number from the list.")
@@ -763,7 +766,6 @@ def main():
         run_commands(apk_config.get("command", {}).get("end", []))
 
     msg.info("APK modification finished!", bold=True)
-
 
 if __name__ == "__main__":
     print_rainbow_art("DemodAPK", bold=True, font="small")
