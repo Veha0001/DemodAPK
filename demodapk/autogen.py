@@ -1,12 +1,19 @@
 #!/bin/python
 
-import os, re, sys, glob, json, shutil
+import os
+import re
+import sys
+import glob
+import json
+import shutil
 import argparse
 import subprocess
-from platformdirs import user_config_dir
 from typing import Optional
+from platformdirs import user_config_dir
+
 try:
     from colorama import init
+
     init(autoreset=True)
 except ImportError:
     pass
@@ -194,6 +201,8 @@ def replace_files_from_loaded(file_entry, apk_dir):
             shutil.move(src, dest)
 
         msg.success(f"Replaced file: {src} → {dest}")
+
+
 def rename_package_in_manifest(
     manifest_file, old_package_name, new_package_name, level=0
 ):
@@ -278,8 +287,6 @@ def rename_package_in_manifest(
                 ]
             )
 
-
-
         # Perform replacements
         for pattern, replacement in replacements:
             content = re.sub(pattern, replacement, content)
@@ -296,17 +303,10 @@ def rename_package_in_manifest(
     except re.error as e:
         msg.error(f"Regular expression error: {e}")
 
-
 def update_smali_path_package(smali_dir, old_package_path, new_package_path):
     for root, _, files in os.walk(smali_dir):
         for file in files:
             file_path = os.path.join(root, file)
-            # Skip excluded files
-            """
-            if any(excluded_file in file_path for excluded_file in excluded_files):
-                msg.info(f"Skipping {file_path} as it’s excluded.")
-            continue
-            """
             if file.endswith(".smali"):
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -458,7 +458,9 @@ def update_application_id_in_smali(smali_dir, old_package_name, new_package_name
 
 def remove_metadata_from_manifest(manifest_file, config_file):
     # Filter out any empty strings in metadata_to_remove
-    metadata_to_remove = [meta for meta in config_file if isinstance(meta, str) and meta.strip()]
+    metadata_to_remove = [
+        meta for meta in config_file if isinstance(meta, str) and meta.strip()
+    ]
 
     # If metadata_to_remove is empty or only contained empty strings, skip removal
     if not metadata_to_remove:
@@ -501,8 +503,11 @@ def create_default_config(config_path, default_config):
     )
     sys.exit(0)
 
+
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="DemodAPK: APK Modification Script, Made by @Veha0001.")
+    parser = argparse.ArgumentParser(
+        description="DemodAPK: APK Modification Script, Made by @Veha0001."
+    )
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory")
     parser.add_argument(
         "-n",
@@ -584,14 +589,21 @@ def run_commands(commands):
             msg.error(f"Command failed: {command}\nError: {e}")
             sys.exit(1)
 
+
 def check_java_installed():
     try:
-        subprocess.run(["java", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        subprocess.run(
+            ["java", "-version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
         return True
     except subprocess.CalledProcessError:
         return False
     except FileNotFoundError:
         return False
+
 
 def decode_apk(editor_jar, apk_file, output_dir, dex=False):
     if not check_java_installed():
@@ -602,6 +614,7 @@ def decode_apk(editor_jar, apk_file, output_dir, dex=False):
         command += " -dex"
     run_commands([command])
 
+
 def build_apk(editor_jar, input_dir, output_apk):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
@@ -609,19 +622,19 @@ def build_apk(editor_jar, input_dir, output_apk):
     command = f'java -jar {editor_jar} b -i "{input_dir}" -o "{output_apk}"'
     run_commands([command])
 
+
 def get_config_path():
     local_config = "config.json"
-    
     if os.path.exists(local_config):
         return local_config
-
     # Cross-platform config directory
     global_config = os.path.join(user_config_dir("DemodAPK"), "config.json")
     return global_config
 
+
 def load_config():
     config_path = get_config_path()
-    
+
     if not os.path.exists(config_path):
         print(f"Config file not found at {config_path}")
         return {}
@@ -633,7 +646,9 @@ def main():
     print_rainbow_art("DemodAPK", bold=True, font="small")
     args = parse_arguments()
     config = load_config()
-    apk_dir = args.apk_dir or msg.input("Please enter the APK directory: ", color="cyan")
+    apk_dir = args.apk_dir or msg.input(
+        "Please enter the APK directory: ", color="cyan"
+    )
     if not apk_dir:
         msg.error("APK directory is required.")
         sys.exit(1)
@@ -657,13 +672,14 @@ def main():
 
         while True:
             try:
-                selection = int(msg.input("Enter the number of the package to use: ", color="cyan"))
+                selection = int(
+                    msg.input("Enter the number of the package to use: ", color="cyan")
+                )
                 if 1 <= selection <= len(available_packages):
                     package_orig_name = available_packages[selection - 1]
                     package_orig_path = "L" + package_orig_name.replace(".", "/")
                     break
-                else:
-                    msg.error("Invalid selection. Choose a number from the list.")
+                msg.error("Invalid selection. Choose a number from the list.")
             except ValueError:
                 msg.error("Please enter a valid number.")
 
@@ -681,7 +697,7 @@ def main():
             sys.exit(1)
 
         dex_folder_exists = False
-        decoded_dir = apk_dir.rsplit('.', 1)[0]
+        decoded_dir = apk_dir.rsplit(".", 1)[0]
     else:
         apk_dir = verify_apk_directory(apk_dir)
         dex_folder_exists = check_for_dex_folder(apk_dir)
@@ -692,7 +708,7 @@ def main():
         if not os.path.isfile(android_manifest):
             msg.error("AndroidManifest.xml not found in the directory.")
             sys.exit(1)
-        
+
         package_orig_name, package_orig_path = extract_package_info(android_manifest)
         apk_config = config.get("DemodAPK", {}).get(package_orig_name)
 
@@ -714,7 +730,11 @@ def main():
 
     # Log a warning if dex folder is found
     if log_level and dex_folder_exists:
-        msg.warning("Dex folder found. Some functions will be disabled.", bold=True, underline=True)
+        msg.warning(
+            "Dex folder found. Some functions will be disabled.",
+            bold=True,
+            underline=True,
+        )
 
     # Decode APK if input is an APK file
     if apk_dir.endswith(".apk"):
@@ -734,33 +754,51 @@ def main():
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
     if not android_manifest:
         android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-        
+
     # Modify APK contents
     if facebook_config:
-        update_facebook_app_values(value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme)
+        update_facebook_app_values(
+            value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
+        )
 
     if "files" in apk_config:
         for file_entry in apk_config["files"]:
             replace_files_from_loaded(file_entry, apk_dir)
 
     if not args.no_rename_package and "package" in apk_config:
-        rename_package_in_manifest(android_manifest, package_orig_name, new_package_name, manifest_edit_level)
-        rename_package_in_resources(resources_folder, package_orig_name, new_package_name)
+        rename_package_in_manifest(
+            android_manifest, package_orig_name, new_package_name, manifest_edit_level
+        )
+        rename_package_in_resources(
+            resources_folder, package_orig_name, new_package_name
+        )
 
         if not dex_folder_exists and not dex_option:
             if args.move_rename_smali:
-                update_smali_path_package(smali_folder, package_orig_path, new_package_path)
-                update_smali_directory(smali_folder, package_orig_path, new_package_path)
-            update_application_id_in_smali(smali_folder, package_orig_name, new_package_name)
+                update_smali_path_package(
+                    smali_folder, package_orig_path, new_package_path
+                )
+                update_smali_directory(
+                    smali_folder, package_orig_path, new_package_path
+                )
+            update_application_id_in_smali(
+                smali_folder, package_orig_name, new_package_name
+            )
 
     if "manifest" in apk_config and "remove_metadata" in apk_config["manifest"]:
-        remove_metadata_from_manifest(android_manifest, apk_config["manifest"]["remove_metadata"])
+        remove_metadata_from_manifest(
+            android_manifest, apk_config["manifest"]["remove_metadata"]
+        )
 
     # Build APK if decoded
-    output_apk = os.path.basename(apk_dir.rstrip('/'))
+    output_apk = os.path.basename(apk_dir.rstrip("/"))
     output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
 
-    if not os.path.exists(output_apk_path) and "command" in apk_config and "editor_jar" in apk_config["command"]:
+    if (
+        not os.path.exists(output_apk_path)
+        and "command" in apk_config
+        and "editor_jar" in apk_config["command"]
+    ):
         build_apk(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands
@@ -768,6 +806,7 @@ def main():
         run_commands(apk_config.get("command", {}).get("end", []))
 
     msg.info("APK modification finished!", bold=True)
+
 
 if __name__ == "__main__":
     main()
