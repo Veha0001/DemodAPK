@@ -1,6 +1,6 @@
-# DemoAPK
+# DemodAPK
 
-DemoAPk is a tool for modifying and editing the APK package name that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor) and includes a patcher for editing binary files.
+DemodAPk is a tool for modifying and editing the APK package name that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor) and includes a patcher for editing binary files.
 
 ## Overview
 
@@ -45,9 +45,12 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 Run the script with the following command:
 
 ```bash
-python demodapk.py --config <path_to_config.json> <apk_directory/apk_file>
+demodapk <apk_directory/apk_file>
 ```
-
+help:
+```bash
+demodapk -h
+```
 ### Patcher
 
 #### Performance Notice
