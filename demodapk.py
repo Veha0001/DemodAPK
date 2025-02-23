@@ -596,16 +596,16 @@ def decode_apk(editor_jar, apk_file, output_dir, dex=False):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f"java -jar {editor_jar} d -i '{apk_file}' -o '{output_dir}' "
+    command = f'java -jar "{editor_jar}" d -i "{apk_file}" -o "{output_dir}"'
     if dex:
-        command += "-dex"
+        command += " -dex"
     run_commands([command])
 
 def build_apk(editor_jar, input_dir, output_apk):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f"java -jar {editor_jar} b -i '{input_dir}' -o '{output_apk}' "
+    command = f'java -jar "{editor_jar}" b -i "{input_dir}" -o "{output_apk}"'
     run_commands([command])
 
 def get_config_path():
