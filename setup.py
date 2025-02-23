@@ -7,11 +7,11 @@ setup(
     name="DemodAPK",
     author="Veha Veha",
     version="1.0",
-    py_modules=["demodapk"],
+    py_modules=["demodapk.autogen"],
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "demodapk = demodapk:main",
+            "demodapk = demodapk.autogen:main",
         ],
     },
 )
