@@ -1,4 +1,3 @@
-*/*
 *.apk
 *.ipa
 Unity*
@@ -14,9 +13,8 @@ Patcher.exe
 patcher.exe
 patcher
 patch_li
-my*
+y*
 *.json
-JustAsPlanned/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
