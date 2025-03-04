@@ -179,65 +179,73 @@ def update_facebook_app_values(
     else:
         msg.error(f"File: {strings_file}, does not exists.")
 
-
-def update_files_from_loaded(file_entry, apk_dir):
+def update_files_from_loaded(files_info, apk_dir):
     """Modify files based on the configuration entry (replace, copy, move within APK)."""
-
-    # Handle file operations based on the config
-    for operation, files in file_entry.items():
+    
+    for operation, files in files_info.items():
         if operation == "replace":
             for src, dest in files.items():
+                if isinstance(dest, list):
+                    msg.error(f"Replace does not support multiple destinations: {src}")
+                    continue  # Skip invalid entry
+                
                 dest_path = os.path.join(apk_dir, dest)
-
+                
                 if not os.path.exists(src):
                     msg.error(f"Source file '{src}' not found.")
                     continue
-
+                
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-
+                
                 try:
                     shutil.move(src, dest_path)
-                    msg.success(f"Replaced file: {src} → {dest_path}")
+                    msg.success(f"Replaced: {src} → {dest_path}")
                 except Exception as e:
-                    msg.error(f"Failed to replace: '{src}' → '{dest_path}': {e}")
+                    msg.error(f"Failed to replace '{src}' → '{dest_path}': {e}")
 
         elif operation == "copy":
-            for src, dest in files.items():
-                dest_path = os.path.join(apk_dir, dest)
-
+            for src, dests in files.items():
+                if not isinstance(dests, list):
+                    dests = [dests]  # Ensure it's a list
+                
                 if not os.path.exists(src):
-                    msg.error(f"Source file: '{src}' not found.")
+                    msg.error(f"Source file '{src}' not found.")
                     continue
+                
+                for dest in dests:
+                    dest_path = os.path.join(apk_dir, dest)
+                    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
-                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-
-                try:
-                    shutil.copy2(src, dest_path)
-                    msg.success(f"Copied file: {src} → {dest_path}")
-                except Exception as e:
-                    msg.error(f"Failed to copy: '{src}' → '{dest_path}': {e}")
+                    try:
+                        shutil.copy2(src, dest_path)
+                        msg.success(f"Copied: {src} → {dest_path}")
+                    except Exception as e:
+                        msg.error(f"Failed to copy '{src}' → '{dest_path}': {e}")
 
         elif operation == "move":
             for src, dest in files.items():
-                # Ensure move is happening inside the APK directory
+                if isinstance(dest, list):
+                    msg.error(f"Move does not support multiple destinations: {src}")
+                    continue  # Skip invalid entry
+                
                 if not src.startswith(apk_dir):
                     msg.error(f"Move operation only supports files inside the APK directory: {src}")
                     continue
-
+                
                 dest_path = os.path.join(apk_dir, dest)
-
+                
                 if not os.path.exists(src):
-                    msg.error(f"Source file: '{src}' not found.")
+                    msg.error(f"Source file '{src}' not found.")
                     continue
-
+                
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-
+                
                 try:
                     shutil.move(src, dest_path)
-                    msg.success(f"Moved file: {src} → {dest_path}")
+                    msg.success(f"Moved: {src} → {dest_path}")
                 except Exception as e:
-                    msg.error(f"Failed to move: '{src}' → '{dest_path}': {e}")
-
+                    msg.error(f"Failed to move '{src}' → '{dest_path}': {e}")
+                    
 def rename_package_in_manifest(
     manifest_file, old_package_name, new_package_name, level=0
 ):
