@@ -21,8 +21,9 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 
 ## Requirements
 
-- Python 3.x
-- Necessary libraries specified in `requirements.txt`
+- Python v3.x or higher.
+- Java v8 or higher.
+- Necessary libraries specified in `requirements.txt`.
 
 ## Installation
 
@@ -95,15 +96,17 @@ This is a `config.json` example file:
         "client_token": "dj2025id828018ahzl11",
         "login_protocol_scheme": "fb0000000000000"
       },
-      "files": [
-        {
-          "replace": {
-            "keep": false,
-            "from": "./src/libil2cpp_patched.so",
-            "to": "root/lib/arm64-v8a/libil2cpp.so"
-          }
+      "files": {
+        "replace": {
+            "patches/beta/libil2cpp_patched.so": "root/lib/arm64-v8a/libil2cpp.so"
+        },
+        "copy": {
+            "assets/background.png": "res/drawable/background.png"
+        },
+        "move": {
+            "root/lib/arm64-v8a/libreal.so": "root/lib/arm64-v8a/libfake.so"
         }
-      ],
+      },
       "manifest": {
         "remove_metadata": [
           "com.google.android.gms.games.APP_ID"

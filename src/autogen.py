@@ -180,28 +180,63 @@ def update_facebook_app_values(
         msg.error(f"File: {strings_file}, does not exists.")
 
 
-def replace_files_from_loaded(file_entry, apk_dir):
-    """Replace files based on the config entry."""
-    if "replace" in file_entry:
-        replace_info = file_entry["replace"]
-        src = replace_info["from"]
-        dest = os.path.join(apk_dir, replace_info["to"])
-        keep_original = replace_info.get("keep", False)
+def update_files_from_loaded(file_entry, apk_dir):
+    """Modify files based on the configuration entry (replace, copy, move within APK)."""
 
-        if not os.path.exists(src):
-            msg.error(f"Source file '{src}' not found.")
-            return
+    # Handle file operations based on the config
+    for operation, files in file_entry.items():
+        if operation == "replace":
+            for src, dest in files.items():
+                dest_path = os.path.join(apk_dir, dest)
 
-        if not os.path.exists(os.path.dirname(dest)):
-            os.makedirs(os.path.dirname(dest), exist_ok=True)
+                if not os.path.exists(src):
+                    msg.error(f"Source file '{src}' not found.")
+                    continue
 
-        if keep_original:
-            shutil.copy2(src, dest)
-        else:
-            shutil.move(src, dest)
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
-        msg.success(f"Replaced file: {src} → {dest}")
+                try:
+                    shutil.move(src, dest_path)
+                    msg.success(f"Replaced file: {src} → {dest_path}")
+                except Exception as e:
+                    msg.error(f"Failed to replace: '{src}' → '{dest_path}': {e}")
 
+        elif operation == "copy":
+            for src, dest in files.items():
+                dest_path = os.path.join(apk_dir, dest)
+
+                if not os.path.exists(src):
+                    msg.error(f"Source file: '{src}' not found.")
+                    continue
+
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+
+                try:
+                    shutil.copy2(src, dest_path)
+                    msg.success(f"Copied file: {src} → {dest_path}")
+                except Exception as e:
+                    msg.error(f"Failed to copy: '{src}' → '{dest_path}': {e}")
+
+        elif operation == "move":
+            for src, dest in files.items():
+                # Ensure move is happening inside the APK directory
+                if not src.startswith(apk_dir):
+                    msg.error(f"Move operation only supports files inside the APK directory: {src}")
+                    continue
+
+                dest_path = os.path.join(apk_dir, dest)
+
+                if not os.path.exists(src):
+                    msg.error(f"Source file: '{src}' not found.")
+                    continue
+
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+
+                try:
+                    shutil.move(src, dest_path)
+                    msg.success(f"Moved file: {src} → {dest_path}")
+                except Exception as e:
+                    msg.error(f"Failed to move: '{src}' → '{dest_path}': {e}")
 
 def rename_package_in_manifest(
     manifest_file, old_package_name, new_package_name, level=0
@@ -727,7 +762,7 @@ def main():
     new_package_name = apk_config.get("package", "")
     new_package_path = "L" + new_package_name.replace(".", "/")
     editor_jar = apk_config.get("command", {}).get("editor_jar", "")
-
+    files_entry = apk_config.get("files", {})
     # Log a warning if dex folder is found
     if log_level and dex_folder_exists:
         msg.warning(
@@ -762,8 +797,7 @@ def main():
         )
 
     if "files" in apk_config:
-        for file_entry in apk_config["files"]:
-            replace_files_from_loaded(file_entry, apk_dir)
+        update_files_from_loaded(files_entry, apk_dir)
 
     if not args.no_rename_package and "package" in apk_config:
         rename_package_in_manifest(
