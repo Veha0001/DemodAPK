@@ -15,7 +15,7 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 - **Commands**: Automatically decodes and builds APKs, with the ability to run commands after decoding and building.
 - **Package Renaming**: Easily rename package names in APK files.
 - **Resource Modification**: Modify resources in APK files as needed.
-- **Facebook API Updates**: Automati311cally replaces Facebook App details in the appropriate XML files.
+- **Facebook API Updates**: Automatically replaces Facebook App details in the appropriate XML files.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
 - **For educational purposes**: You're learning how APK files work or exploring reverse engineering ethically.
