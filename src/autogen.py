@@ -179,24 +179,25 @@ def update_facebook_app_values(
     else:
         msg.error(f"File: {strings_file}, does not exists.")
 
+
 def update_files_from_loaded(files_info, apk_dir):
     """Modify files based on the configuration entry (replace, copy, move within APK)."""
-    
+
     for operation, files in files_info.items():
         if operation == "replace":
             for src, dest in files.items():
                 if isinstance(dest, list):
                     msg.error(f"Replace does not support multiple destinations: {src}")
                     continue  # Skip invalid entry
-                
+
                 dest_path = os.path.join(apk_dir, dest)
-                
+
                 if not os.path.exists(src):
                     msg.error(f"Source file '{src}' not found.")
                     continue
-                
+
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-                
+
                 try:
                     shutil.move(src, dest_path)
                     msg.success(f"Replaced: {src} → {dest_path}")
@@ -207,11 +208,11 @@ def update_files_from_loaded(files_info, apk_dir):
             for src, dests in files.items():
                 if not isinstance(dests, list):
                     dests = [dests]  # Ensure it's a list
-                
+
                 if not os.path.exists(src):
                     msg.error(f"Source file '{src}' not found.")
                     continue
-                
+
                 for dest in dests:
                     dest_path = os.path.join(apk_dir, dest)
                     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
@@ -222,30 +223,28 @@ def update_files_from_loaded(files_info, apk_dir):
                     except Exception as e:
                         msg.error(f"Failed to copy '{src}' → '{dest_path}': {e}")
 
-        elif operation == "move":
+        elif operation == "base_move":
             for src, dest in files.items():
                 if isinstance(dest, list):
                     msg.error(f"Move does not support multiple destinations: {src}")
                     continue  # Skip invalid entry
-                
-                if not src.startswith(apk_dir):
-                    msg.error(f"Move operation only supports files inside the APK directory: {src}")
-                    continue
-                
+
+                src = os.path.join(apk_dir, src)
                 dest_path = os.path.join(apk_dir, dest)
-                
+
                 if not os.path.exists(src):
                     msg.error(f"Source file '{src}' not found.")
                     continue
-                
+
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-                
+
                 try:
                     shutil.move(src, dest_path)
                     msg.success(f"Moved: {src} → {dest_path}")
                 except Exception as e:
                     msg.error(f"Failed to move '{src}' → '{dest_path}': {e}")
-                    
+
+
 def rename_package_in_manifest(
     manifest_file, old_package_name, new_package_name, level=0
 ):
@@ -345,6 +344,7 @@ def rename_package_in_manifest(
         msg.error(f"Error reading or writing the manifest file: {e}")
     except re.error as e:
         msg.error(f"Regular expression error: {e}")
+
 
 def update_smali_path_package(smali_dir, old_package_path, new_package_path):
     for root, _, files in os.walk(smali_dir):
@@ -648,17 +648,30 @@ def check_java_installed():
         return False
 
 
-def decode_apk(editor_jar, apk_file, output_dir, dex=False):
+def apkeditor_merge(editor_jar, apk_file, merge_base_apk):
+    # New base name of apk_file end with .apk
+    command = f'java -jar {editor_jar} m -i "{apk_file}" -o "{merge_base_apk}"'
+    run_commands([command])
+
+
+def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f'java -jar {editor_jar} d -i "{apk_file}" -o "{output_dir}"'
+    merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
+    # If apk_file is not end with .apk then merge
+    if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
+        apkeditor_merge(editor_jar, apk_file, merge_base_apk)
+        output_dir = merge_base_apk.rsplit(".", 1)[0]
+        command = f'java -jar {editor_jar} d -i "{merge_base_apk}" -o "{output_dir}"'
+    else:
+        command = f'java -jar {editor_jar} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
     run_commands([command])
 
 
-def build_apk(editor_jar, input_dir, output_apk):
+def apkeditor_build(editor_jar, input_dir, output_apk):
     if not check_java_installed():
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
@@ -685,6 +698,7 @@ def load_config():
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 def main():
     print_rainbow_art("DemodAPK", bold=True, font="small")
     args = parse_arguments()
@@ -700,7 +714,7 @@ def main():
     android_manifest = None
     package_orig_name, package_orig_path = None, None
 
-    if apk_dir.endswith(".apk"):
+    if os.path.isfile(apk_dir):
         # Extract preconfigured package names
         available_packages = list(config.get("DemodAPK", {}).keys())
 
@@ -780,11 +794,11 @@ def main():
         )
 
     # Decode APK if input is an APK file
-    if apk_dir.endswith(".apk"):
+    if os.path.isfile(apk_dir):
         if args.force:
             shutil.rmtree(decoded_dir, ignore_errors=True)
         if not os.path.exists(decoded_dir):
-            decode_apk(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+            apkeditor_decode(editor_jar, apk_dir, decoded_dir, dex=dex_option)
         apk_dir = decoded_dir
 
     # Run pre-modification commands
@@ -841,7 +855,7 @@ def main():
         and "command" in apk_config
         and "editor_jar" in apk_config["command"]
     ):
-        build_apk(editor_jar, apk_dir, output_apk_path)
+        apkeditor_build(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands
     if "command" in apk_config and "end" in apk_config["command"]:

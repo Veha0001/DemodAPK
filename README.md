@@ -1,6 +1,6 @@
 # DemodAPK
 
-DemodAPk is a tool for modifying and editing the APK package name that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor) and includes a patcher for editing binary files.
+**DemodAPK** is a tool for modifying and editing an **apk** that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor).
 
 ## Overview
 
@@ -8,13 +8,14 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 
 - Update Facebook App credentials (App ID, Client Token, Login Protocol Scheme).
 - Rename package names in the APK manifest and associated files.
-- Apply binary patches and remove metadata.
+- Apply binary patches with programs like [Hexsaly](https://github.com/Veha0001/Hexsaly).
 
 ## Features
 
+- **Commands**: Automatically decodes and builds APKs, with the ability to run commands after decoding and building.
 - **Package Renaming**: Easily rename package names in APK files.
 - **Resource Modification**: Modify resources in APK files as needed.
-- **Facebook API Updates**: Automatically replaces Facebook App details in the appropriate XML files.
+- **Facebook API Updates**: Automati311cally replaces Facebook App details in the appropriate XML files.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
 - **For educational purposes**: You're learning how APK files work or exploring reverse engineering ethically.
@@ -25,52 +26,21 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 - Java v8 or higher.
 - Necessary libraries specified in `requirements.txt`.
 
-## Installation
+## Install
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Veha0001/DemodAPK.git
-   cd DemodAPK
-   ```
-2. Install the required libraries:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Install demodapk
-   ```bash
-   pip install .
-   ```
+```sh
+pip install git+https://github.com/Veha0001/DemodAPK
+```
 
 ## Usage
 
 Run the script with the following command:
 
 ```bash
-demodapk <apk_directory/apk_file>
-```
-help:
-```bash
-demodapk -h
-```
-### Patcher
-
-#### Performance Notice
-
-The `patcher.py` file may work slowly when performing wildcard scans. If you want to run it faster, consider using the C++ version.
-
-You may want to checkout [BinaryPatch](https://github.com/Veha0001/BinaryPatch) built with **Rust**. For `patcher.cpp` will be discontinue for now..
-
-#### Building the C++ Version
-
-To build the C++ version, you will need to have `g++` or `gcc` installed, along with the `nlohmann-json` library. You can build it using the following command:
-
-```bash
-g++ -o patcher patcher.cpp -O2
+demodapk [Options] <apk_directory/apk_file> 
 ```
 
-> [!NOTE]
-> Edit by method_name may work on some dump.cs file.
-> The dump.cs file is get from [Il2CppDumper](https://github.com/Perfare/Il2CppDumper).
+For more about options run the command with `-h`.
 
 ## Example
 This is a `config.json` example file:
@@ -81,9 +51,9 @@ This is a `config.json` example file:
       "log": true,
       "dex": true,
       "command": {
-        "editor_jar": "~/.local/bin/APKEditor*.jar",
+        "editor_jar": "./APKEditor.jar",
         "begin": [
-          "./Patcher"
+          "hexsaly -i 0"
         ],
         "end": [
           "apksigner sign --key ~/.Keys/mine.pk8 --cert ~/.Keys/mine.x509.pem src/Game/*.apk"
@@ -103,7 +73,7 @@ This is a `config.json` example file:
         "copy": {
             "assets/background.png": "res/drawable/background.png"
         },
-        "move": {
+        "base_move": {
             "root/lib/arm64-v8a/libreal.so": "root/lib/arm64-v8a/libfake.so"
         }
       },
@@ -113,27 +83,7 @@ This is a `config.json` example file:
         ]
       }
     }
-  },
-  "Patcher": {
-    "input_file": "apkdir/root/lib/arm64-v8a/libil2cpp.so",
-    "dump_file": "dump.cs",
-    "output_file": "libil2cpp_patched.so",
-    "patches": [
-      {
-        "method_name": "UnlockAll",
-        "hex_code": "20 00 80 D2 C0 03 5F D6"
-      },
-      {
-        "offset": "0x111111",
-        "hex_code": "1F 20 03 D5"
-      },
-      {
-        "wildcard": "AA DD F5 ?? ?? ?? 00 01",
-        "hex_code": "00 E0 AF D2 C0 03 5F D6"
-      }
-    ]
   }
-}
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
