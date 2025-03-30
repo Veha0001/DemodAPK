@@ -43,7 +43,9 @@ demodapk [Options] <apk_directory/apk_file>
 For more about options run the command with `-h`.
 
 ## Example
+
 This is a `config.json` example file:
+
 ```json
 {
   "DemodAPK": {
@@ -87,6 +89,7 @@ This is a `config.json` example file:
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

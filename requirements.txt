@@ -2,4 +2,4 @@ art
 colorama
 setuptools
 platformdirs
-
+inquirer

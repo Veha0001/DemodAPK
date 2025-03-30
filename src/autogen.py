@@ -23,6 +23,11 @@ try:
 except ImportError:
     text2art = None
 
+try:
+    import inquirer
+except ImportError:
+    inquirer = None
+
 # Define base ANSI color codes for the rainbow
 base_rainbow_colors = [31, 33, 32, 36, 34, 35]
 
@@ -722,23 +727,31 @@ def main():
             msg.error("No preconfigured packages found in config.json.")
             sys.exit(1)
 
-        # Show available packages and let user select one
-        msg.info("Select a package configuration for this APK:")
-        for index, pkg in enumerate(available_packages, start=1):
-            print(f" [{index}] {pkg}")
+        if inquirer is None:
+            msg.error("Inquirer package is not installed. Please install it to proceed.")
+            sys.exit(1)
 
-        while True:
-            try:
-                selection = int(
-                    msg.input("Enter the number of the package to use: ", color="cyan")
-                )
-                if 1 <= selection <= len(available_packages):
-                    package_orig_name = available_packages[selection - 1]
-                    package_orig_path = "L" + package_orig_name.replace(".", "/")
-                    break
-                msg.error("Invalid selection. Choose a number from the list.")
-            except ValueError:
-                msg.error("Please enter a valid number.")
+        # Create the inquirer question
+        questions = [
+            inquirer.List(
+                'package',
+                message="Select a package configuration for this APK",
+                choices=available_packages,
+            )
+        ]
+
+        try:
+            # Show the interactive selection menu
+            answers = inquirer.prompt(questions)
+            if answers and 'package' in answers:
+                package_orig_name = answers['package']
+                package_orig_path = "L" + package_orig_name.replace(".", "/")
+            else:
+                msg.error("No package was selected.")
+                sys.exit(1)
+        except Exception as e:
+            msg.error(f"Error during package selection: {e}")
+            sys.exit(1)
 
         # Retrieve the selected package configuration
         apk_config = config["DemodAPK"].get(package_orig_name)
