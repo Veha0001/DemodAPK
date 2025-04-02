@@ -115,10 +115,8 @@ class MessagePrinter:
     def info(self, message, bold: bool = False, inline=False):
         self.print(message, color="cyan", bold=bold, inline=inline, prefix="[ℹ]")
 
-    def progress(self, message, inline=True):
-        self.print(
-            f"{message}", color="blue", bold=True, inline=inline, prefix="[➜]"
-        )
+    def progress(self, message, inline=False, bold: bool = False):
+        self.print(message, color="blue", bold=bold, inline=inline, prefix="[➜]")
 
     def input(self, prompt: str, color: Optional[str] = None, bold: bool = False, nextline: bool = False):
         """Displays a styled input prompt and returns the user input."""
@@ -634,7 +632,7 @@ def verify_apk_directory(apk_dir):
     return apk_dir
 
 
-def run_commands(commands, target_dir=None):
+def run_commands(commands):
     """
     Run commands with support for conditional execution based on directory existence.
     
@@ -654,20 +652,18 @@ def run_commands(commands, target_dir=None):
             elif isinstance(command, dict):
                 # Dictionary command with potential "present" flag
                 cmd = command.get("command")
-                present = command.get("present", False)
+                quiet = command.get("quiet", False)
                 
                 if cmd:
-                    should_run = True
-                    if present and target_dir:
-                        # Only run if present=True and target directory doesn't exist
-                        should_run = not os.path.exists(target_dir)
-                    
-                    if should_run:
-                        try:
+                    try:
+                        if quiet:
+                            msg.progress(f"$ {cmd}")
+                            subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE)
+                        else:
                             subprocess.run(cmd, shell=True, check=True)
-                        except subprocess.CalledProcessError as e:
-                            msg.error(f"Command failed: {cmd}\nError: {e}")
-                            sys.exit(1)
+                    except subprocess.CalledProcessError as e:
+                        msg.error(f"Command failed: {cmd}\nError: {e}")
+                        sys.exit(1)
 
 
 def check_java_installed():
@@ -845,7 +841,7 @@ def main():
 
     # Run pre-modification commands
     if "command" in apk_config and "begin" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("begin", []), decoded_dir)
+        run_commands(apk_config.get("command", {}).get("begin", []))
 
     # Paths
     resources_folder = os.path.join(apk_dir, "resources")
@@ -901,7 +897,7 @@ def main():
 
     # Run post-modification commands
     if "command" in apk_config and "end" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("end", []), decoded_dir)
+        run_commands(apk_config.get("command", {}).get("end", []))
 
     msg.info("APK modification finished!", bold=True)
 
