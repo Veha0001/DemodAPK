@@ -89,7 +89,7 @@ class MessagePrinter:
             print(formatted_message)
 
     def success(self, message, bold: bool = False, inline=False):
-        self.print(message, color="green", bold=bold, inline=inline, prefix="[SUCCESS]")
+        self.print(message, color="green", bold=bold, inline=inline, prefix="[✔]")
 
     def warning(
         self,
@@ -106,27 +106,30 @@ class MessagePrinter:
             bold=bold,
             underline=underline,
             inline=inline,
-            prefix="[WARNING]",
+            prefix="[⚠]",
         )
 
     def error(self, message, inline=False):
-        self.print(message, color="red", inline=inline, prefix="[ERROR]")
+        self.print(message, color="red", inline=inline, prefix="[✖]")
 
     def info(self, message, bold: bool = False, inline=False):
-        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[INFO]")
+        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[ℹ]")
 
     def progress(self, message, inline=True):
         self.print(
-            f"{message}", color="blue", bold=True, inline=inline, prefix="[PROGRESS]"
+            f"{message}", color="blue", bold=True, inline=inline, prefix="[➜]"
         )
 
-    def input(self, prompt: str, color: Optional[str] = None, bold: bool = False):
+    def input(self, prompt: str, color: Optional[str] = None, bold: bool = False, nextline: bool = False):
         """Displays a styled input prompt and returns the user input."""
         color_code = self.colors.get(color or "", "")
         bold_code = self.colors["bold"] if bold else ""
         reset_code = self.colors["reset"]
-
-        formatted_prompt = f"{bold_code}{color_code}[INPUT] {prompt}{reset_code}"
+        if not nextline:
+            formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}"
+        else:            
+            formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}\n> "
+        # Use input() to get user input            
         return input(formatted_prompt)
 
 
@@ -554,9 +557,11 @@ def create_default_config(config_path, default_config):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
+        prog="demodapk", 
+        usage="%(prog)s <apk_dir> [options]",
         description="DemodAPK: APK Modification Script, Made by @Veha0001."
     )
-    parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory")
+    parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory/file")
     parser.add_argument(
         "-n",
         "--no-rename-package",
@@ -582,7 +587,7 @@ def parse_arguments():
         action="store_true",
         help="Rename package in smali files and the smali directory.",
     )
-    return parser.parse_args()
+    return parser
 
 
 def verify_apk_directory(apk_dir):
@@ -716,7 +721,7 @@ def get_config_path():
     if os.path.exists(local_config):
         return local_config
     # Cross-platform config directory
-    global_config = os.path.join(user_config_dir("DemodAPK"), "config.json")
+    global_config = os.path.join(user_config_dir("demodapk"), "config.json")
     return global_config
 
 
@@ -724,22 +729,19 @@ def load_config():
     config_path = get_config_path()
 
     if not os.path.exists(config_path):
-        print(f"Config file not found at {config_path}")
         return {}
-
     with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def main():
     print_rainbow_art("DemodAPK", bold=True, font="small")
-    args = parse_arguments()
+    parsers = parse_arguments()
+    args = parsers.parse_args()
     config = load_config()
-    apk_dir = args.apk_dir or msg.input(
-        "Please enter the APK directory: ", color="cyan"
-    )
-    if not apk_dir:
-        msg.error("APK directory is required.")
+    apk_dir = args.apk_dir
+    if apk_dir is None:
+        parsers.print_help()
         sys.exit(1)
 
     # Initialize android_manifest variable
