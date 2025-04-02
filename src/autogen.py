@@ -629,13 +629,40 @@ def verify_apk_directory(apk_dir):
     return apk_dir
 
 
-def run_commands(commands):
-    for command in commands:
-        try:
-            subprocess.run(command, shell=True, check=True)
-        except subprocess.CalledProcessError as e:
-            msg.error(f"Command failed: {command}\nError: {e}")
-            sys.exit(1)
+def run_commands(commands, target_dir=None):
+    """
+    Run commands with support for conditional execution based on directory existence.
+    
+    Args:
+        commands: List of commands or list of command dictionaries
+        target_dir: Target directory to check for existence (default: None)
+    """
+    if isinstance(commands, list):
+        for command in commands:
+            if isinstance(command, str):
+                # Simple string command - run directly
+                try:
+                    subprocess.run(command, shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    msg.error(f"Command failed: {command}\nError: {e}")
+                    sys.exit(1)
+            elif isinstance(command, dict):
+                # Dictionary command with potential "present" flag
+                cmd = command.get("command")
+                present = command.get("present", False)
+                
+                if cmd:
+                    should_run = True
+                    if present and target_dir:
+                        # Only run if present=True and target directory doesn't exist
+                        should_run = not os.path.exists(target_dir)
+                    
+                    if should_run:
+                        try:
+                            subprocess.run(cmd, shell=True, check=True)
+                        except subprocess.CalledProcessError as e:
+                            msg.error(f"Command failed: {cmd}\nError: {e}")
+                            sys.exit(1)
 
 
 def check_java_installed():
@@ -816,7 +843,7 @@ def main():
 
     # Run pre-modification commands
     if "command" in apk_config and "begin" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("begin", []))
+        run_commands(apk_config.get("command", {}).get("begin", []), decoded_dir)
 
     # Paths
     resources_folder = os.path.join(apk_dir, "resources")
@@ -872,7 +899,7 @@ def main():
 
     # Run post-modification commands
     if "command" in apk_config and "end" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("end", []))
+        run_commands(apk_config.get("command", {}).get("end", []), decoded_dir)
 
     msg.info("APK modification finished!", bold=True)
 

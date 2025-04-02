@@ -55,7 +55,10 @@ This is a `config.json` example file:
       "command": {
         "editor_jar": "./APKEditor.jar",
         "begin": [
-          "hexsaly -i 0"
+          { 
+            "command": "hexsaly -i 0",
+            "present": true
+          }
         ],
         "end": [
           "apksigner sign --key ~/.Keys/mine.pk8 --cert ~/.Keys/mine.x509.pem src/Game/*.apk"
