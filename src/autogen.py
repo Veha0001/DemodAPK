@@ -846,7 +846,7 @@ def main():
         apk_dir = decoded_dir
 
     # Run pre-modification commands
-    os.environ["PROG"] = apk_dir
+    os.environ["DECODE"] = apk_dir
     if "command" in apk_config and "begin" in apk_config["command"]:
         run_commands(apk_config.get("command", {}).get("begin", []))
 
@@ -903,7 +903,7 @@ def main():
         apkeditor_build(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands
-    os.environ["FAPK"] = output_apk_path
+    os.environ["BASE"] = output_apk_path
     if "command" in apk_config and "end" in apk_config["command"]:
         run_commands(apk_config.get("command", {}).get("end", []))
 
