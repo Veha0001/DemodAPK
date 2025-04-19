@@ -56,12 +56,12 @@ This is a `config.json` example file:
         "editor_jar": "./APKEditor.jar",
         "begin": [
           { 
-            "command": "hexsaly -i 0",
+            "command": "hexsaly -i 0 -b=\"$PROG/root/lib/arm64-v8a/libil2cpp.so;$PROG/root/lib/arm64-v8a/libil2cpp.so\"",
             "present": true
           }
         ],
         "end": [
-          "apksigner sign --key ~/.Keys/mine.pk8 --cert ~/.Keys/mine.x509.pem src/Game/*.apk"
+          "apksigner sign --key ./assets/keys/android.pk8 --cert ./assets/keys/android.x509.pem $FAPK"
         ]
       },
       "level": 0,
@@ -92,6 +92,8 @@ This is a `config.json` example file:
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
+> [!NOTE]  
+> `$PROG` refers to the APK directory, and `$FAPK` is the output `build.apk`.
 
 ## License
 

@@ -580,6 +580,12 @@ def parse_arguments():
         help="Force overwrite the decoded APK directory.",
     )
     parser.add_argument(
+        "-nfb",
+        "--no-facebook",
+        action="store_true",
+        help="No update for Facebook app API."
+    )
+    parser.add_argument(
         "-mv",
         "--move-rename-smali",
         action="store_true",
@@ -840,6 +846,7 @@ def main():
         apk_dir = decoded_dir
 
     # Run pre-modification commands
+    os.environ["PROG"] = apk_dir
     if "command" in apk_config and "begin" in apk_config["command"]:
         run_commands(apk_config.get("command", {}).get("begin", []))
 
@@ -851,7 +858,7 @@ def main():
         android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
 
     # Modify APK contents
-    if facebook_config:
+    if facebook_config and not args.no_facebook:
         update_facebook_app_values(
             value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
         )
@@ -896,6 +903,7 @@ def main():
         apkeditor_build(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands
+    os.environ["FAPK"] = output_apk_path
     if "command" in apk_config and "end" in apk_config["command"]:
         run_commands(apk_config.get("command", {}).get("end", []))
 
