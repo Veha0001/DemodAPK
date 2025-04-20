@@ -118,16 +118,22 @@ class MessagePrinter:
     def progress(self, message, inline=False, bold: bool = False):
         self.print(message, color="blue", bold=bold, inline=inline, prefix="[➜]")
 
-    def input(self, prompt: str, color: Optional[str] = None, bold: bool = False, nextline: bool = False):
+    def input(
+        self,
+        prompt: str,
+        color: Optional[str] = None,
+        bold: bool = False,
+        nextline: bool = False,
+    ):
         """Displays a styled input prompt and returns the user input."""
         color_code = self.colors.get(color or "", "")
         bold_code = self.colors["bold"] if bold else ""
         reset_code = self.colors["reset"]
         if not nextline:
             formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}"
-        else:            
+        else:
             formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}\n> "
-        # Use input() to get user input            
+        # Use input() to get user input
         return input(formatted_prompt)
 
 
@@ -555,9 +561,9 @@ def create_default_config(config_path, default_config):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        prog="demodapk", 
+        prog="demodapk",
         usage="%(prog)s <apk_dir> [options]",
-        description="DemodAPK: APK Modification Script, Made by @Veha0001."
+        description="DemodAPK: APK Modification Script, Made by @Veha0001.",
     )
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory/file")
     parser.add_argument(
@@ -583,7 +589,7 @@ def parse_arguments():
         "-nfb",
         "--no-facebook",
         action="store_true",
-        help="No update for Facebook app API."
+        help="No update for Facebook app API.",
     )
     parser.add_argument(
         "-mv",
@@ -641,7 +647,7 @@ def verify_apk_directory(apk_dir):
 def run_commands(commands):
     """
     Run commands with support for conditional execution based on directory existence.
-    
+
     Args:
         commands: List of commands or list of command dictionaries
         target_dir: Target directory to check for existence (default: None)
@@ -659,12 +665,14 @@ def run_commands(commands):
                 # Dictionary command with potential "present" flag
                 cmd = command.get("command")
                 quiet = command.get("quiet", False)
-                
+
                 if cmd:
                     try:
                         if quiet:
                             msg.progress(f"$ {cmd}")
-                            subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE)
+                            subprocess.run(
+                                cmd, shell=True, check=True, stdout=subprocess.PIPE
+                            )
                         else:
                             subprocess.run(cmd, shell=True, check=True)
                     except subprocess.CalledProcessError as e:
@@ -672,29 +680,29 @@ def run_commands(commands):
                         sys.exit(1)
 
 
-def check_java_installed():
-    try:
-        subprocess.run(
-            ["java", "-version"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-    except FileNotFoundError:
-        return False
+def get_apkeditor_cmd(editor_jar):
+    apkeditor_cmd = shutil.which("apkeditor")
+    if apkeditor_cmd:
+        return "apkeditor"
+    elif editor_jar:
+        return f"java -jar {editor_jar}"
+    else:       
+        msg.error("The selected package does not have command settings.")
+        msg.info("Config: Required \"editor_jar\" in \"commands\". ")
+        msg.info("Cannot decode APK without commands settings.")
+        sys.exit(1)
 
 
 def apkeditor_merge(editor_jar, apk_file, merge_base_apk):
     # New base name of apk_file end with .apk
-    command = f'java -jar {editor_jar} m -i "{apk_file}" -o "{merge_base_apk}"'
+    command = (
+        f'${get_apkeditor_cmd(editor_jar)} m -i "{apk_file}" -o "{merge_base_apk}"'
+    )
     run_commands([command])
 
 
 def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
-    if not check_java_installed():
+    if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
@@ -702,19 +710,21 @@ def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
     if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
         apkeditor_merge(editor_jar, apk_file, merge_base_apk)
         output_dir = merge_base_apk.rsplit(".", 1)[0]
-        command = f'java -jar {editor_jar} d -i "{merge_base_apk}" -o "{output_dir}"'
+        command = f'{get_apkeditor_cmd(editor_jar)} d -i "{merge_base_apk}" -o "{output_dir}"'
     else:
-        command = f'java -jar {editor_jar} d -i "{apk_file}" -o "{output_dir}"'
+        command = (
+            f'{get_apkeditor_cmd(editor_jar)} d -i "{apk_file}" -o "{output_dir}"'
+        )
     if dex:
         command += " -dex"
     run_commands([command])
 
 
 def apkeditor_build(editor_jar, input_dir, output_apk):
-    if not check_java_installed():
+    if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f'java -jar {editor_jar} b -i "{input_dir}" -o "{output_apk}"'
+    command = f'{get_apkeditor_cmd(editor_jar)} b -i "{input_dir}" -o "{output_apk}"'
     run_commands([command])
 
 
@@ -759,13 +769,15 @@ def main():
             sys.exit(1)
 
         if inquirer is None:
-            msg.error("Inquirer package is not installed. Please install it to proceed.")
+            msg.error(
+                "Inquirer package is not installed. Please install it to proceed."
+            )
             sys.exit(1)
 
         # Create the inquirer question
         questions = [
             inquirer.List(
-                'package',
+                "package",
                 message="Select a package configuration for this APK",
                 choices=available_packages,
             )
@@ -774,8 +786,8 @@ def main():
         try:
             # Show the interactive selection menu
             answers = inquirer.prompt(questions)
-            if answers and 'package' in answers:
-                package_orig_name = answers['package']
+            if answers and "package" in answers:
+                package_orig_name = answers["package"]
                 package_orig_path = "L" + package_orig_name.replace(".", "/")
             else:
                 msg.error("No package was selected.")
@@ -789,12 +801,6 @@ def main():
 
         if not apk_config:
             msg.error(f"No configuration found for package: {package_orig_name}")
-            sys.exit(1)
-
-        # Check if the package has command settings
-        if "command" not in apk_config or "editor_jar" not in apk_config["command"]:
-            msg.error("The selected package does not have command settings.")
-            msg.info("Cannot decode APK without command settings.")
             sys.exit(1)
 
         dex_folder_exists = False
@@ -827,7 +833,7 @@ def main():
     fb_login_protocol_scheme = facebook_config.get("login_protocol_scheme", "")
     new_package_name = apk_config.get("package", "")
     new_package_path = "L" + new_package_name.replace(".", "/")
-    editor_jar = apk_config.get("command", {}).get("editor_jar", "")
+    editor_jar = apk_config.get("commands", {}).get("editor_jar", "")
     files_entry = apk_config.get("files", {})
     # Log a warning if dex folder is found
     if log_level and dex_folder_exists:
@@ -846,9 +852,9 @@ def main():
         apk_dir = decoded_dir
 
     # Run pre-modification commands
-    os.environ["DECODE"] = apk_dir
-    if "command" in apk_config and "begin" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("begin", []))
+    os.environ["BASE"] = apk_dir
+    if "commands" in apk_config and "begin" in apk_config["commands"]:
+        run_commands(apk_config.get("commands", {}).get("begin", []))
 
     # Paths
     resources_folder = os.path.join(apk_dir, "resources")
@@ -895,17 +901,13 @@ def main():
     output_apk = os.path.basename(apk_dir.rstrip("/"))
     output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
 
-    if (
-        not os.path.exists(output_apk_path)
-        and "command" in apk_config
-        and "editor_jar" in apk_config["command"]
-    ):
+    if not os.path.exists(output_apk_path) or shutil.which("apkeditor") or "editor_jar" in apk_config["command"]:
         apkeditor_build(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands
-    os.environ["BASE"] = output_apk_path
-    if "command" in apk_config and "end" in apk_config["command"]:
-        run_commands(apk_config.get("command", {}).get("end", []))
+    os.environ["BUILD"] = output_apk_path
+    if "commands" in apk_config and "end" in apk_config["commands"]:
+        run_commands(apk_config.get("commands", {}).get("end", []))
 
     msg.info("APK modification finished!", bold=True)
 

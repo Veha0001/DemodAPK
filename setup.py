@@ -6,7 +6,7 @@ with open("requirements.txt", encoding="utf-8") as f:
 setup(
     name="DemodAPK",
     author="Veha Veha",
-    version="1.1.1",
+    version="1.1.2",
     py_modules=["src.autogen"],
     install_requires=requirements,
     entry_points={

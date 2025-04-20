@@ -52,16 +52,16 @@ This is a `config.json` example file:
     "com.overpower.game": {
       "log": true,
       "dex": true,
-      "command": {
+      "commands": {
         "editor_jar": "./APKEditor.jar",
         "begin": [
           { 
-            "command": "hexsaly -i 0 -b=\"$DECODE/root/lib/arm64-v8a/libil2cpp.so;$DECODE/root/lib/arm64-v8a/libil2cpp.so\"",
+            "command": "hexsaly -i 0 -b=\"$BASE/root/lib/arm64-v8a/libil2cpp.so;$BASE/root/lib/arm64-v8a/libil2cpp.so\"",
             "present": true
           }
         ],
         "end": [
-          "apksigner sign --key ./assets/keys/android.pk8 --cert ./assets/keys/android.x509.pem $BASE"
+          "apksigner sign --key ./assets/keys/android.pk8 --cert ./assets/keys/android.x509.pem $BUILD"
         ]
       },
       "level": 0,
@@ -93,7 +93,7 @@ This is a `config.json` example file:
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
 > [!NOTE]  
-> `$DECODE` refers to the APK directory, and `$BASE` is the output `build.apk`.
+> `$BASE` refers to the APK directory, and `$BUILD` is the output of apk build.
 
 ## License
 
