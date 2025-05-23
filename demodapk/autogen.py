@@ -9,6 +9,8 @@ import shutil
 import argparse
 import subprocess
 from typing import Optional
+from art import text2art
+from termcolor import cprint, colored
 from platformdirs import user_config_dir
 
 try:
@@ -19,74 +21,43 @@ except ImportError:
     pass
 
 try:
-    from art import text2art
-except ImportError:
-    text2art = None
-
-try:
     import inquirer
 except ImportError:
     inquirer = None
 
-# Define base ANSI color codes for the rainbow
-base_rainbow_colors = [31, 33, 32, 36, 34, 35]
+__version__ = "1.1.3"
 
 
-def print_rainbow_art(text, font="smslant", bold=False):
-    if text2art is None:
-        return  # Exit quietly if the art package is not available
+def show_logo(text, font="small"):
+    logo_art = text2art(text, font=font)
+    colors = ["green", "red", "cyan", "yellow", "blue"]
 
-    # Generate ANSI color codes with or without bold
-    rainbow_colors = [
-        f"\033[1;{color}m" if bold else f"\033[{color}m"
-        for color in base_rainbow_colors
-    ]
-
-    # Generate ASCII art using the specified font
-    ascii_art = text2art(text, font=font)
-    # Split the ASCII art into lines
-    if isinstance(ascii_art, str):
-        lines = ascii_art.splitlines()
-        # Apply rainbow colors line by line
-        for i, line in enumerate(lines):
-            color = rainbow_colors[i % len(rainbow_colors)]
-            print(color + line + "\033[0m")  # Reset color after each line
+    if isinstance(logo_art, str):
+        lines = logo_art.splitlines()
+        for line in lines:
+            colored_line = "".join(
+                colored(char, colors[(i // 6) % len(colors)])
+                for i, char in enumerate(line)
+            )
+            print(colored_line)
 
 
 class MessagePrinter:
-    def __init__(self):
-        self.colors = {
-            "green": "\033[92m",
-            "yellow": "\033[93m",
-            "red": "\033[91m",
-            "purple": "\033[95m",
-            "blue": "\033[94m",
-            "cyan": "\033[96m",
-            "bold": "\033[1m",
-            "underline": "\033[4m",
-            "reset": "\033[0m",
-        }
-
     def print(
         self,
         message: str,
         color: Optional[str] = None,
-        bold: bool = False,
-        underline: bool = False,
         inline: bool = False,
+        bold: bool = False,
         prefix: Optional[str] = None,
     ):
-        color_code = self.colors.get(color or "", "")
-        bold_code = self.colors["bold"] if bold else ""
-        underline_code = self.colors["underline"] if underline else ""
-        reset_code = self.colors["reset"]
-
-        formatted_message = f"{bold_code}{color_code}{prefix or ''}{reset_code} {color_code}{bold_code}{underline_code}{message}{reset_code}".strip()
+        formatted_message = f"{prefix or ''} {message}".strip()
+        attrs = ["bold"] if bold else []
 
         if inline:
-            print(f"\r{formatted_message}", end="", flush=True)
+            cprint(f"\r{formatted_message}", color, attrs=attrs, end="")
         else:
-            print(formatted_message)
+            cprint(formatted_message, color, attrs=attrs)
 
     def success(self, message, bold: bool = False, inline=False):
         self.print(message, color="green", bold=bold, inline=inline, prefix="[✔]")
@@ -96,15 +67,12 @@ class MessagePrinter:
         message,
         color: Optional[str] = "yellow",
         bold: bool = False,
-        underline: bool = False,
         inline=False,
     ):
-        # Use the passed color, bold, and underline values
         self.print(
             message,
             color=color,
             bold=bold,
-            underline=underline,
             inline=inline,
             prefix="[⚠]",
         )
@@ -117,24 +85,6 @@ class MessagePrinter:
 
     def progress(self, message, inline=False, bold: bool = False):
         self.print(message, color="blue", bold=bold, inline=inline, prefix="[➜]")
-
-    def input(
-        self,
-        prompt: str,
-        color: Optional[str] = None,
-        bold: bool = False,
-        nextline: bool = False,
-    ):
-        """Displays a styled input prompt and returns the user input."""
-        color_code = self.colors.get(color or "", "")
-        bold_code = self.colors["bold"] if bold else ""
-        reset_code = self.colors["reset"]
-        if not nextline:
-            formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}"
-        else:
-            formatted_prompt = f"{bold_code}{color_code}[?] {prompt}{reset_code}\n> "
-        # Use input() to get user input
-        return input(formatted_prompt)
 
 
 # Example usage
@@ -597,6 +547,13 @@ def parse_arguments():
         action="store_true",
         help="Rename package in smali files and the smali directory.",
     )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=("%(prog)s " + __version__),
+        help="Show version of the program.",
+    )
     return parser
 
 
@@ -684,13 +641,12 @@ def get_apkeditor_cmd(editor_jar):
     apkeditor_cmd = shutil.which("apkeditor")
     if apkeditor_cmd:
         return "apkeditor"
-    elif editor_jar:
+    if editor_jar:
         return f"java -jar {editor_jar}"
-    else:       
-        msg.error("The selected package does not have command settings.")
-        msg.info("Config: Required \"editor_jar\" in \"commands\". ")
-        msg.info("Cannot decode APK without commands settings.")
-        sys.exit(1)
+    msg.error("The selected package does not have command settings.")
+    msg.info('Config: Required "editor_jar" in "commands". ')
+    msg.info("Cannot decode APK without commands settings.")
+    sys.exit(1)
 
 
 def apkeditor_merge(editor_jar, apk_file, merge_base_apk):
@@ -710,11 +666,11 @@ def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
     if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
         apkeditor_merge(editor_jar, apk_file, merge_base_apk)
         output_dir = merge_base_apk.rsplit(".", 1)[0]
-        command = f'{get_apkeditor_cmd(editor_jar)} d -i "{merge_base_apk}" -o "{output_dir}"'
-    else:
         command = (
-            f'{get_apkeditor_cmd(editor_jar)} d -i "{apk_file}" -o "{output_dir}"'
+            f'{get_apkeditor_cmd(editor_jar)} d -i "{merge_base_apk}" -o "{output_dir}"'
         )
+    else:
+        command = f'{get_apkeditor_cmd(editor_jar)} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
     run_commands([command])
@@ -747,7 +703,7 @@ def load_config():
 
 
 def main():
-    print_rainbow_art("DemodAPK", bold=True, font="small")
+    show_logo("DemodAPK")
     parsers = parse_arguments()
     args = parsers.parse_args()
     config = load_config()
@@ -840,7 +796,6 @@ def main():
         msg.warning(
             "Dex folder found. Some functions will be disabled.",
             bold=True,
-            underline=True,
         )
 
     # Decode APK if input is an APK file
@@ -901,7 +856,11 @@ def main():
     output_apk = os.path.basename(apk_dir.rstrip("/"))
     output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
 
-    if not os.path.exists(output_apk_path) or shutil.which("apkeditor") or "editor_jar" in apk_config["command"]:
+    if (
+        not os.path.exists(output_apk_path)
+        or shutil.which("apkeditor")
+        or "editor_jar" in apk_config["command"]
+    ):
         apkeditor_build(editor_jar, apk_dir, output_apk_path)
 
     # Run post-modification commands

@@ -2,14 +2,6 @@
 
 **DemodAPK** is a tool for modifying and editing an **apk** that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor).
 
-## Overview
-
-DemodAPK is a Python-based tool designed to modify decompiled APK files. It enables developers to:
-
-- Update Facebook App credentials (App ID, Client Token, Login Protocol Scheme).
-- Rename package names in the APK manifest and associated files.
-- Apply binary patches with programs like [Hexsaly](https://github.com/Veha0001/Hexsaly).
-
 ## Features
 
 - **Commands**: Automatically decodes and builds APKs, with the ability to run commands after decoding and building.
@@ -20,31 +12,31 @@ DemodAPK is a Python-based tool designed to modify decompiled APK files. It enab
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
 - **For educational purposes**: You're learning how APK files work or exploring reverse engineering ethically.
 
-## Requirements
+### Requirements
 
 - Python v3.x or higher.
 - Java v8 or higher.
 - Necessary libraries specified in `requirements.txt`.
 
-## Install
+### Install
 
 ```sh
 pip install git+https://github.com/Veha0001/DemodAPK
 ```
 
-## Usage
+### Usage
 
 Run the script with the following command:
 
 ```bash
-demodapk [Options] <apk_directory/apk_file> 
+demodapk [Options] <apkdir_decoded/apk_file> 
 ```
 
 For more about options run the command with `-h`.
 
-## Example
+### Example
 
-This is a `config.json` example file:
+<details> <summary>This is a `config.json` example file: </summary>
 
 ```json
 {
@@ -94,6 +86,7 @@ This is a `config.json` example file:
 Follow the prompts to select the APK file and modify its contents according to your preferences.
 > [!NOTE]  
 > `$BASE` refers to the APK directory, and `$BUILD` is the output of apk build.
+</details>
 
 ## License
 
@@ -102,9 +95,3 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or features.
-
-<!--
-## Acknowledgements
-
-- Thanks to all contributors and open-source projects that made this tool possible.
--->
