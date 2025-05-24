@@ -120,6 +120,28 @@ def extract_package_info(manifest_file):
     return package_name, package_path
 
 
+def update_app_name_values(app_name, value_strings):
+    if not os.path.isfile(value_strings):
+        msg.error(f"File not found: {value_strings}")
+        return
+
+    with open(value_strings, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    if '<string name="app_name">' not in content:
+        msg.error("app_name string not found.")
+        return
+
+    new_content = re.sub(r'<string name="app_name">.*?</string>',
+                         f'<string name="app_name">{app_name}</string>',
+                         content)
+
+    with open(value_strings, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+    msg.success(f"Updated AppName to: {app_name}")
+
+
 def update_facebook_app_values(
     strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme
 ):
@@ -795,15 +817,16 @@ def main():
 
     # Extract config values
     log_level = apk_config.get("log", False)
-    dex_option = apk_config.get("dex", False)
     manifest_edit_level = apk_config.get("level", 0)
+    app_name = apk_config.get("app_name", None)
     facebook_config = apk_config.get("facebook", {})
     facebook_appid = facebook_config.get("app_id", "")
     fb_client_token = facebook_config.get("client_token", "")
     fb_login_protocol_scheme = facebook_config.get("login_protocol_scheme", "")
     new_package_name = apk_config.get("package", "")
     new_package_path = "L" + new_package_name.replace(".", "/")
-    editor_jar = apk_config.get("commands", {}).get("editor_jar", "")
+    dex_option = apk_config.get("apkeditor", {}).get("dex", False)
+    editor_jar = apk_config.get("apkeditor", {}).get("jarpath", "")
     files_entry = apk_config.get("files", {})
     # Log a warning if dex folder is found
     if log_level and dex_folder_exists:
@@ -833,6 +856,9 @@ def main():
         android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
 
     # Modify APK contents
+    if app_name is not None:
+        update_app_name_values(app_name, value_strings)
+
     if facebook_config and not args.no_facebook:
         update_facebook_app_values(
             value_strings, facebook_appid, fb_client_token, fb_login_protocol_scheme
@@ -873,7 +899,7 @@ def main():
     if (
         not os.path.exists(output_apk_path)
         or shutil.which("apkeditor")
-        or "editor_jar" in apk_config["command"]
+        or "jarpath" in apk_config["apkeditor"]
     ):
         apkeditor_build(editor_jar, apk_dir, output_apk_path)
 

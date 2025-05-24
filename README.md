@@ -42,10 +42,12 @@ For more about options run the command with `-h`.
 {
   "DemodAPK": {
     "com.overpower.game": {
+      "apkeditor": {
+          "jarpath": "~/.local/libexec/apkeditor.jar",
+          "dex": true
+      },
       "log": true,
-      "dex": true,
       "commands": {
-        "editor_jar": "./APKEditor.jar",
         "begin": [
           { 
             "command": "hexsaly -i 0 -b=\"$BASE/root/lib/arm64-v8a/libil2cpp.so;$BASE/root/lib/arm64-v8a/libil2cpp.so\"",
