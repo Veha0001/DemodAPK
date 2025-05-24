@@ -27,20 +27,29 @@ except ImportError:
 
 __version__ = "1.1.3"
 
-
-def show_logo(text, font="small"):
+def show_logo(text, font="small", color_pattern=None):
     logo_art = text2art(text, font=font)
-    colors = ["green", "red", "cyan", "yellow", "blue"]
+    if color_pattern is None:
+        color_blocks = [("green", 6), ("red", 5), ("cyan", 7), ("yellow", 5), ("blue", 6), ("magenta", 7), ("light_green", 5), ("light_cyan", 6)]
+    else:
+        color_blocks = color_pattern
 
     if isinstance(logo_art, str):
         lines = logo_art.splitlines()
         for line in lines:
-            colored_line = "".join(
-                colored(char, colors[(i // 6) % len(colors)])
-                for i, char in enumerate(line)
-            )
-            print(colored_line)
+            colored_line = ""
+            color_index = 0
+            count_in_block = 0
+            current_color, limit = color_blocks[color_index]
 
+            for char in line:
+                colored_line += colored(char, current_color, attrs=["bold"])
+                count_in_block += 1
+                if count_in_block >= limit:
+                    count_in_block = 0
+                    color_index = (color_index + 1) % len(color_blocks)
+                    current_color, limit = color_blocks[color_index]
+            print(colored_line)
 
 class MessagePrinter:
     def print(
@@ -715,10 +724,15 @@ def main():
     # Initialize android_manifest variable
     android_manifest = None
     package_orig_name, package_orig_path = None, None
+    apk_solo = apk_dir.lower().endswith((".zip",".apk",".apks", ".xapk"))
 
     if os.path.isfile(apk_dir):
         # Extract preconfigured package names
         available_packages = list(config.get("DemodAPK", {}).keys())
+        
+        if not apk_solo:
+            msg.error(f"This: {apk_dir}, is’t an apk type.")
+            sys.exit(1)
 
         if not available_packages:
             msg.error("No preconfigured packages found in config.json.")
