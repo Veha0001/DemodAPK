@@ -27,10 +27,20 @@ except ImportError:
 
 __version__ = "1.1.3"
 
+
 def show_logo(text, font="small", color_pattern=None):
     logo_art = text2art(text, font=font)
     if color_pattern is None:
-        color_blocks = [("green", 6), ("red", 5), ("cyan", 7), ("yellow", 5), ("blue", 6), ("magenta", 7), ("light_green", 5), ("light_cyan", 6)]
+        color_blocks = [
+            ("green", 6),
+            ("red", 5),
+            ("cyan", 7),
+            ("yellow", 5),
+            ("blue", 6),
+            ("magenta", 7),
+            ("light_green", 5),
+            ("light_cyan", 6),
+        ]
     else:
         color_blocks = color_pattern
 
@@ -51,6 +61,7 @@ def show_logo(text, font="small", color_pattern=None):
                     current_color, limit = color_blocks[color_index]
             print(colored_line)
 
+
 class MessagePrinter:
     def print(
         self,
@@ -69,7 +80,7 @@ class MessagePrinter:
             cprint(formatted_message, color, attrs=attrs)
 
     def success(self, message, bold: bool = False, inline=False):
-        self.print(message, color="green", bold=bold, inline=inline, prefix="[✔]")
+        self.print(message, color="green", bold=bold, inline=inline, prefix="[*]")
 
     def warning(
         self,
@@ -83,17 +94,17 @@ class MessagePrinter:
             color=color,
             bold=bold,
             inline=inline,
-            prefix="[⚠]",
+            prefix="[W]",
         )
 
     def error(self, message, inline=False):
-        self.print(message, color="red", inline=inline, prefix="[✖]")
+        self.print(message, color="red", inline=inline, prefix="[X]")
 
     def info(self, message, bold: bool = False, inline=False):
-        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[ℹ]")
+        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[!]")
 
     def progress(self, message, inline=False, bold: bool = False):
-        self.print(message, color="blue", bold=bold, inline=inline, prefix="[➜]")
+        self.print(message, color="blue", bold=bold, inline=inline, prefix="[$]")
 
 
 # Example usage
@@ -132,9 +143,11 @@ def update_app_name_values(app_name, value_strings):
         msg.error("app_name string not found.")
         return
 
-    new_content = re.sub(r'<string name="app_name">.*?</string>',
-                         f'<string name="app_name">{app_name}</string>',
-                         content)
+    new_content = re.sub(
+        r'<string name="app_name">.*?</string>',
+        f'<string name="app_name">{app_name}</string>',
+        content,
+    )
 
     with open(value_strings, "w", encoding="utf-8") as f:
         f.write(new_content)
@@ -632,40 +645,44 @@ def verify_apk_directory(apk_dir):
     return apk_dir
 
 
-def run_commands(commands):
+def run_commands(commands, quietly):
     """
     Run commands with support for conditional execution based on directory existence.
 
     Args:
         commands: List of commands or list of command dictionaries
-        target_dir: Target directory to check for existence (default: None)
+        quietly: Run all commands quietly unless overridden per command
     """
+
+    def run(cmd, quiet_mode):
+        if quiet_mode:
+            msg.progress(f"{cmd}")  # Always show progress in quiet mode
+            subprocess.run(
+                cmd,
+                shell=True,
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            subprocess.run(cmd, shell=True, check=True)
+
     if isinstance(commands, list):
         for command in commands:
-            if isinstance(command, str):
-                # Simple string command - run directly
-                try:
-                    subprocess.run(command, shell=True, check=True)
-                except subprocess.CalledProcessError as e:
-                    msg.error(f"Command failed: {command}\nError: {e}")
-                    sys.exit(1)
-            elif isinstance(command, dict):
-                # Dictionary command with potential "present" flag
-                cmd = command.get("command")
-                quiet = command.get("quiet", False)
-
-                if cmd:
-                    try:
-                        if quiet:
-                            msg.progress(f"$ {cmd}")
-                            subprocess.run(
-                                cmd, shell=True, check=True, stdout=subprocess.PIPE
-                            )
-                        else:
-                            subprocess.run(cmd, shell=True, check=True)
-                    except subprocess.CalledProcessError as e:
-                        msg.error(f"Command failed: {cmd}\nError: {e}")
-                        sys.exit(1)
+            try:
+                if isinstance(command, str):
+                    run(command, quietly)
+                elif isinstance(command, dict):
+                    cmd = command.get("command")
+                    quiet = command.get("quiet", False)
+                    if cmd:
+                        run(cmd, quiet)
+            except subprocess.CalledProcessError as e:
+                failed_cmd = (
+                    command if isinstance(command, str) else command.get("command")
+                )
+                msg.error(f"Command failed: {failed_cmd}\nError: {e}")
+                sys.exit(1)
 
 
 def get_apkeditor_cmd(editor_jar):
@@ -674,28 +691,26 @@ def get_apkeditor_cmd(editor_jar):
         return "apkeditor"
     if editor_jar:
         return f"java -jar {editor_jar}"
-    msg.error("The selected package does not have command settings.")
-    msg.info('Config: Required "editor_jar" in "commands". ')
-    msg.info("Cannot decode APK without commands settings.")
+    msg.error("Cannot decode the apk without APKEditor.")
     sys.exit(1)
 
 
-def apkeditor_merge(editor_jar, apk_file, merge_base_apk):
+def apkeditor_merge(editor_jar, apk_file, merge_base_apk, quietly: bool):
     # New base name of apk_file end with .apk
     command = (
         f'${get_apkeditor_cmd(editor_jar)} m -i "{apk_file}" -o "{merge_base_apk}"'
     )
-    run_commands([command])
+    run_commands([command], quietly)
 
 
-def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
+def apkeditor_decode(editor_jar, apk_file, output_dir, dex: bool, quietly: bool):
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
     # If apk_file is not end with .apk then merge
     if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
-        apkeditor_merge(editor_jar, apk_file, merge_base_apk)
+        apkeditor_merge(editor_jar, apk_file, merge_base_apk, quietly)
         output_dir = merge_base_apk.rsplit(".", 1)[0]
         command = (
             f'{get_apkeditor_cmd(editor_jar)} d -i "{merge_base_apk}" -o "{output_dir}"'
@@ -704,15 +719,15 @@ def apkeditor_decode(editor_jar, apk_file, output_dir, dex=False):
         command = f'{get_apkeditor_cmd(editor_jar)} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
-    run_commands([command])
+    run_commands([command], quietly)
 
 
-def apkeditor_build(editor_jar, input_dir, output_apk):
+def apkeditor_build(editor_jar, input_dir, output_apk, quietly: bool):
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     command = f'{get_apkeditor_cmd(editor_jar)} b -i "{input_dir}" -o "{output_apk}"'
-    run_commands([command])
+    run_commands([command], quietly)
 
 
 def get_config_path():
@@ -746,12 +761,12 @@ def main():
     # Initialize android_manifest variable
     android_manifest = None
     package_orig_name, package_orig_path = None, None
-    apk_solo = apk_dir.lower().endswith((".zip",".apk",".apks", ".xapk"))
+    apk_solo = apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk"))
 
     if os.path.isfile(apk_dir):
         # Extract preconfigured package names
         available_packages = list(config.get("DemodAPK", {}).keys())
-        
+
         if not apk_solo:
             msg.error(f"This: {apk_dir}, is’t an apk type.")
             sys.exit(1)
@@ -828,6 +843,7 @@ def main():
     dex_option = apk_config.get("apkeditor", {}).get("dex", False)
     editor_jar = apk_config.get("apkeditor", {}).get("jarpath", "")
     files_entry = apk_config.get("files", {})
+    command_quietly = apk_config.get("commands", {}).get("quietly", False)
     # Log a warning if dex folder is found
     if log_level and dex_folder_exists:
         msg.warning(
@@ -840,13 +856,15 @@ def main():
         if args.force:
             shutil.rmtree(decoded_dir, ignore_errors=True)
         if not os.path.exists(decoded_dir):
-            apkeditor_decode(editor_jar, apk_dir, decoded_dir, dex=dex_option)
+            apkeditor_decode(
+                editor_jar, apk_dir, decoded_dir, dex_option, command_quietly
+            )
         apk_dir = decoded_dir
 
     # Run pre-modification commands
     os.environ["BASE"] = apk_dir
     if "commands" in apk_config and "begin" in apk_config["commands"]:
-        run_commands(apk_config.get("commands", {}).get("begin", []))
+        run_commands(apk_config.get("commands", {}).get("begin", []), command_quietly)
 
     # Paths
     resources_folder = os.path.join(apk_dir, "resources")
@@ -901,12 +919,12 @@ def main():
         or shutil.which("apkeditor")
         or "jarpath" in apk_config["apkeditor"]
     ):
-        apkeditor_build(editor_jar, apk_dir, output_apk_path)
+        apkeditor_build(editor_jar, apk_dir, output_apk_path, command_quietly)
 
     # Run post-modification commands
     os.environ["BUILD"] = output_apk_path
     if "commands" in apk_config and "end" in apk_config["commands"]:
-        run_commands(apk_config.get("commands", {}).get("end", []))
+        run_commands(apk_config.get("commands", {}).get("end", []), command_quietly)
 
     msg.info("APK modification finished!", bold=True)
 
