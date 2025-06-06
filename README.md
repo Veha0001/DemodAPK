@@ -89,7 +89,8 @@ Follow the prompts to select the APK file and modify its contents according to y
 
 </details>
 
-> [!TIP] > `$BASE` = APK dir, `$BUILD` = output APK
+> [!TIP]
+> `$BASE` = APK dir, `$BUILD` = output APK
 
 ## License
 
