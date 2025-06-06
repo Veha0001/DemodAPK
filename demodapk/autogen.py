@@ -104,7 +104,7 @@ class MessagePrinter:
         self.print(message, color="cyan", bold=bold, inline=inline, prefix="[!]")
 
     def progress(self, message, inline=False, bold: bool = False):
-        self.print(message, color="blue", bold=bold, inline=inline, prefix="[$]")
+        self.print(message, color="magenta", bold=bold, inline=inline, prefix="[$]")
 
 
 # Example usage
@@ -580,6 +580,12 @@ def parse_arguments():
         help="Force overwrite the decoded APK directory.",
     )
     parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="output path of decoded_dir and name.",
+    )
+    parser.add_argument(
         "-nfb",
         "--no-facebook",
         action="store_true",
@@ -685,48 +691,47 @@ def run_commands(commands, quietly):
                 sys.exit(1)
 
 
-def get_apkeditor_cmd(editor_jar):
+def get_apkeditor_cmd(editor_jar, javaopts=""):
     apkeditor_cmd = shutil.which("apkeditor")
     if apkeditor_cmd:
-        return "apkeditor"
+        opts = " ".join(f"-J{opt.lstrip('-')}" for opt in javaopts.split())
+        return f"apkeditor {opts}".strip()
     if editor_jar:
-        return f"java -jar {editor_jar}"
+        return f"java {javaopts} -jar {editor_jar}".strip()
     msg.error("Cannot decode the apk without APKEditor.")
     sys.exit(1)
 
 
-def apkeditor_merge(editor_jar, apk_file, merge_base_apk, quietly: bool):
+def apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly: bool):
     # New base name of apk_file end with .apk
-    command = (
-        f'${get_apkeditor_cmd(editor_jar)} m -i "{apk_file}" -o "{merge_base_apk}"'
-    )
+    command = f'${get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
     run_commands([command], quietly)
 
 
-def apkeditor_decode(editor_jar, apk_file, output_dir, dex: bool, quietly: bool):
+def apkeditor_decode(
+    editor_jar, apk_file, javaopts, output_dir, dex: bool, quietly: bool
+):
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
     # If apk_file is not end with .apk then merge
     if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
-        apkeditor_merge(editor_jar, apk_file, merge_base_apk, quietly)
+        apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly)
         output_dir = merge_base_apk.rsplit(".", 1)[0]
-        command = (
-            f'{get_apkeditor_cmd(editor_jar)} d -i "{merge_base_apk}" -o "{output_dir}"'
-        )
+        command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{merge_base_apk}" -o "{output_dir}"'
     else:
-        command = f'{get_apkeditor_cmd(editor_jar)} d -i "{apk_file}" -o "{output_dir}"'
+        command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
     run_commands([command], quietly)
 
 
-def apkeditor_build(editor_jar, input_dir, output_apk, quietly: bool):
+def apkeditor_build(editor_jar, input_dir, output_apk, javaopts, quietly: bool):
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
-    command = f'{get_apkeditor_cmd(editor_jar)} b -i "{input_dir}" -o "{output_apk}"'
+    command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
     run_commands([command], quietly)
 
 
@@ -840,8 +845,11 @@ def main():
     fb_login_protocol_scheme = facebook_config.get("login_protocol_scheme", "")
     new_package_name = apk_config.get("package", "")
     new_package_path = "L" + new_package_name.replace(".", "/")
-    dex_option = apk_config.get("apkeditor", {}).get("dex", False)
-    editor_jar = apk_config.get("apkeditor", {}).get("jarpath", "")
+    apkeditor = apk_config.get("apkeditor", {})
+    editor_jar = apkeditor.get("jarpath", "")
+    javaopts = apkeditor.get("javaopts", "")
+    dex_option = apkeditor.get("dex", False)
+    to_output = args.output or apkeditor.get("output")
     files_entry = apk_config.get("files", {})
     command_quietly = apk_config.get("commands", {}).get("quietly", False)
     # Log a warning if dex folder is found
@@ -850,6 +858,8 @@ def main():
             "Dex folder found. Some functions will be disabled.",
             bold=True,
         )
+    if to_output:
+        decoded_dir = to_output.removesuffix(".apk")
 
     # Decode APK if input is an APK file
     if os.path.isfile(apk_dir):
@@ -857,7 +867,7 @@ def main():
             shutil.rmtree(decoded_dir, ignore_errors=True)
         if not os.path.exists(decoded_dir):
             apkeditor_decode(
-                editor_jar, apk_dir, decoded_dir, dex_option, command_quietly
+                editor_jar, apk_dir, javaopts, decoded_dir, dex_option, command_quietly
             )
         apk_dir = decoded_dir
 
@@ -911,15 +921,17 @@ def main():
         )
 
     # Build APK if decoded
-    output_apk = os.path.basename(apk_dir.rstrip("/"))
-    output_apk_path = os.path.join(apk_dir, output_apk + ".apk")
+    output_apk = os.path.basename(decoded_dir.rstrip("/"))
+    output_apk_path = os.path.join(decoded_dir, output_apk + ".apk")
 
     if (
         not os.path.exists(output_apk_path)
         or shutil.which("apkeditor")
         or "jarpath" in apk_config["apkeditor"]
     ):
-        apkeditor_build(editor_jar, apk_dir, output_apk_path, command_quietly)
+        apkeditor_build(
+            editor_jar, decoded_dir, output_apk_path, javaopts, command_quietly
+        )
 
     # Run post-modification commands
     os.environ["BUILD"] = output_apk_path

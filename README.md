@@ -29,7 +29,7 @@ pip install git+https://github.com/Veha0001/DemodAPK
 Run the script with the following command:
 
 ```bash
-demodapk [Options] <apkdir_decoded/apk_file> 
+demodapk [Options] <apkdir_decoded/apk_file>
 ```
 
 For more about options run the command with `-h`.
@@ -43,13 +43,15 @@ For more about options run the command with `-h`.
   "DemodAPK": {
     "com.overpower.game": {
       "apkeditor": {
-          "jarpath": "~/.local/libexec/apkeditor.jar",
+          "jarpath": "~/.apkeditor/apkeditor.jar",
+          "javaopts": "-Xmx8G",
+          "output": "StoneFree"
           "dex": true
       },
       "log": true,
       "commands": {
         "begin": [
-          { 
+          {
             "command": "hexsaly -i 0 -b=\"$BASE/root/lib/arm64-v8a/libil2cpp.so;$BASE/root/lib/arm64-v8a/libil2cpp.so\"",
             "present": true
           }
@@ -71,9 +73,6 @@ For more about options run the command with `-h`.
         },
         "copy": {
             "assets/background.png": "res/drawable/background.png"
-        },
-        "base_move": {
-            "root/lib/arm64-v8a/libreal.so": "root/lib/arm64-v8a/libfake.so"
         }
       },
       "manifest": {
@@ -86,8 +85,10 @@ For more about options run the command with `-h`.
 ```
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
-> [!NOTE]  
+
+> [!NOTE]\
 > `$BASE` refers to the APK directory, and `$BUILD` is the output of apk build.
+
 </details>
 
 ## License
