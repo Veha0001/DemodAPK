@@ -45,11 +45,12 @@ For more about options run the command with `-h`.
       "apkeditor": {
           "jarpath": "~/.apkeditor/apkeditor.jar",
           "javaopts": "-Xmx8G",
-          "output": "StoneFree"
+          "output": "./src/StoneFree"
           "dex": true
       },
       "log": true,
       "commands": {
+        "quietly": true,
         "begin": [
           {
             "command": "hexsaly -i 0 -b=\"$BASE/root/lib/arm64-v8a/libil2cpp.so;$BASE/root/lib/arm64-v8a/libil2cpp.so\"",
@@ -86,10 +87,9 @@ For more about options run the command with `-h`.
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
 
-> [!NOTE]\
-> `$BASE` refers to the APK directory, and `$BUILD` is the output of apk build.
-
 </details>
+
+> [!TIP] > `$BASE` = APK dir, `$BUILD` = output APK
 
 ## License
 

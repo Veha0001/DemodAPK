@@ -691,7 +691,7 @@ def run_commands(commands, quietly):
                 sys.exit(1)
 
 
-def get_apkeditor_cmd(editor_jar, javaopts=""):
+def get_apkeditor_cmd(editor_jar: str, javaopts: str):
     apkeditor_cmd = shutil.which("apkeditor")
     if apkeditor_cmd:
         opts = " ".join(f"-J{opt.lstrip('-')}" for opt in javaopts.split())
