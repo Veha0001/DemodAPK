@@ -70,17 +70,21 @@ class MessagePrinter:
         inline: bool = False,
         bold: bool = False,
         prefix: Optional[str] = None,
+        flush: bool = False,
+        inlast: bool = False,
     ):
         formatted_message = f"{prefix or ''} {message}".strip()
         attrs = ["bold"] if bold else []
 
         if inline:
-            cprint(f"\r{formatted_message}", color, attrs=attrs, end="")
+            # Didnt mix it in...
+            cprint(f"\r{formatted_message}", color, attrs=attrs, end=" ", flush=flush)
+            print(" " * 5) if inlast else None
         else:
-            cprint(formatted_message, color, attrs=attrs)
+            cprint(formatted_message, color, attrs=attrs, flush=flush)
 
-    def success(self, message, bold: bool = False, inline=False):
-        self.print(message, color="green", bold=bold, inline=inline, prefix="[*]")
+    def success(self, message, bold: bool = False, inline=False, prefix="[*]"):
+        self.print(message, color="green", bold=bold, inline=inline, prefix=prefix)
 
     def warning(
         self,
@@ -100,8 +104,15 @@ class MessagePrinter:
     def error(self, message, inline=False):
         self.print(message, color="red", inline=inline, prefix="[X]")
 
-    def info(self, message, bold: bool = False, inline=False):
-        self.print(message, color="cyan", bold=bold, inline=inline, prefix="[!]")
+    def info(
+        self,
+        message,
+        color: str = "cyan",
+        bold: bool = False,
+        inline=False,
+        prefix: str = "[!]",
+    ):
+        self.print(message, color=color, bold=bold, inline=inline, prefix=prefix)
 
     def progress(self, message, inline=False, bold: bool = False):
         self.print(message, color="magenta", bold=bold, inline=inline, prefix="[$]")
@@ -651,7 +662,7 @@ def verify_apk_directory(apk_dir):
     return apk_dir
 
 
-def run_commands(commands, quietly):
+def run_commands(commands, quietly, tasker: bool = False):
     """
     Run commands with support for conditional execution based on directory existence.
 
@@ -662,7 +673,8 @@ def run_commands(commands, quietly):
 
     def run(cmd, quiet_mode):
         if quiet_mode:
-            msg.progress(f"{cmd}")  # Always show progress in quiet mode
+            if not tasker:
+                msg.progress(f"{cmd}")
             subprocess.run(
                 cmd,
                 shell=True,
@@ -679,14 +691,12 @@ def run_commands(commands, quietly):
                 if isinstance(command, str):
                     run(command, quietly)
                 elif isinstance(command, dict):
-                    cmd = command.get("command")
+                    cmd = command.get("run")
                     quiet = command.get("quiet", False)
                     if cmd:
                         run(cmd, quiet)
             except subprocess.CalledProcessError as e:
-                failed_cmd = (
-                    command if isinstance(command, str) else command.get("command")
-                )
+                failed_cmd = command if isinstance(command, str) else command.get("run")
                 msg.error(f"Command failed: {failed_cmd}\nError: {e}")
                 sys.exit(1)
 
@@ -705,7 +715,14 @@ def get_apkeditor_cmd(editor_jar: str, javaopts: str):
 def apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly: bool):
     # New base name of apk_file end with .apk
     command = f'${get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
-    run_commands([command], quietly)
+    msg.info(f"Merging: {apk_file}", bold=True, prefix="[APKEditor]")
+    run_commands([command], quietly, tasker=True)
+    msg.info(
+        f"Merged to: {merge_base_apk}",
+        color="green",
+        bold=True,
+        prefix="[APKEditor]",
+    )
 
 
 def apkeditor_decode(
@@ -724,7 +741,14 @@ def apkeditor_decode(
         command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
-    run_commands([command], quietly)
+    msg.info(f"Decoding: {apk_file}", bold=True, prefix="[APKEditor]")
+    run_commands([command], quietly, tasker=True)
+    msg.info(
+        f"Decoded to: {output_dir}",
+        color="green",
+        bold=True,
+        prefix="[APKEditor]",
+    )
 
 
 def apkeditor_build(editor_jar, input_dir, output_apk, javaopts, quietly: bool):
@@ -732,7 +756,14 @@ def apkeditor_build(editor_jar, input_dir, output_apk, javaopts, quietly: bool):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
-    run_commands([command], quietly)
+    msg.info(f"Building: {input_dir}", bold=True, prefix="[APKEditor]")
+    run_commands([command], quietly, tasker=True)
+    msg.info(
+        f"Built to: {output_apk}",
+        color="green",
+        bold=True,
+        prefix="[APKEditor]",
+    )
 
 
 def get_config_path():

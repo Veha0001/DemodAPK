@@ -45,7 +45,7 @@ For more about options run the command with `-h`.
       "apkeditor": {
           "jarpath": "~/.apkeditor/apkeditor.jar",
           "javaopts": "-Xmx8G",
-          "output": "./src/StoneFree"
+          "output": "StoneFree"
           "dex": true
       },
       "log": true,
@@ -53,8 +53,8 @@ For more about options run the command with `-h`.
         "quietly": true,
         "begin": [
           {
-            "command": "hexsaly -i 0 -b=\"$BASE/root/lib/arm64-v8a/libil2cpp.so;$BASE/root/lib/arm64-v8a/libil2cpp.so\"",
-            "present": true
+            "run": "hexsaly open $BASE/root/lib/arm64-v8a/libil2cpp.so -i 1",
+            "quiet": false
           }
         ],
         "end": [
@@ -62,7 +62,7 @@ For more about options run the command with `-h`.
         ]
       },
       "level": 0,
-      "package": "com.yes.game",
+      "package": "com.yesino.gamerpg",
       "facebook": {
         "app_id": "0000000000000",
         "client_token": "dj2025id828018ahzl11",
@@ -89,9 +89,8 @@ Follow the prompts to select the APK file and modify its contents according to y
 
 </details>
 
-> [!TIP]
-> `$BASE`: decode apk_dir
-> 
+> [!TIP] > `$BASE`: decode apk_dir
+>
 > `$BUILD`: output apk_file
 
 ## License
