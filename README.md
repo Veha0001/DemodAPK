@@ -53,12 +53,16 @@ For more about options run the command with `-h`.
         "quietly": true,
         "begin": [
           {
-            "run": "hexsaly open $BASE/root/lib/arm64-v8a/libil2cpp.so -i 1",
+            "run": "hexsaly -c beta.json open $BASE/root/lib/arm64-v8a/libil2cpp.so -i 0",
             "quiet": false
-          }
+          },
+          "rm -r $BASE/root/lib/armeabi-v7a"
         ],
         "end": [
-          "apksigner sign --key ./assets/keys/android.pk8 --cert ./assets/keys/android.x509.pem $BUILD"
+          {
+              "run": "apksigner sign --key ./assets/keys/android.pk8 --cert ./assets/keys/android.x509.pem $BUILD",
+              "title": "Signing Build"
+          }
         ]
       },
       "level": 0,
@@ -85,11 +89,14 @@ For more about options run the command with `-h`.
   }
 ```
 
+<!-- "files" feature is useless now when you use to run commands -->
+
 Follow the prompts to select the APK file and modify its contents according to your preferences.
 
 </details>
 
-> [!TIP] > `$BASE`: decode apk_dir
+> [!TIP]  
+> `$BASE`: decode apk_dir
 >
 > `$BUILD`: output apk_file
 

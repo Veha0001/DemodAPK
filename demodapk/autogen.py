@@ -671,10 +671,11 @@ def run_commands(commands, quietly, tasker: bool = False):
         quietly: Run all commands quietly unless overridden per command
     """
 
-    def run(cmd, quiet_mode):
+    def run(cmd, quiet_mode, title: str = ""):
         if quiet_mode:
             if not tasker:
-                msg.progress(f"{cmd}")
+                msg.progress(title or cmd)
+
             subprocess.run(
                 cmd,
                 shell=True,
@@ -692,9 +693,10 @@ def run_commands(commands, quietly, tasker: bool = False):
                     run(command, quietly)
                 elif isinstance(command, dict):
                     cmd = command.get("run")
-                    quiet = command.get("quiet", False)
+                    title = command.get("title", "")
+                    quiet = command.get("quiet", True)
                     if cmd:
-                        run(cmd, quiet)
+                        run(cmd, quiet, title)
             except subprocess.CalledProcessError as e:
                 failed_cmd = command if isinstance(command, str) else command.get("run")
                 msg.error(f"Command failed: {failed_cmd}\nError: {e}")
@@ -715,13 +717,13 @@ def get_apkeditor_cmd(editor_jar: str, javaopts: str):
 def apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly: bool):
     # New base name of apk_file end with .apk
     command = f'${get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
-    msg.info(f"Merging: {apk_file}", bold=True, prefix="[APKEditor]")
+    msg.info(f"Merging: {apk_file}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
         f"Merged to: {merge_base_apk}",
         color="green",
         bold=True,
-        prefix="[APKEditor]",
+        prefix="[+]",
     )
 
 
@@ -741,13 +743,13 @@ def apkeditor_decode(
         command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{apk_file}" -o "{output_dir}"'
     if dex:
         command += " -dex"
-    msg.info(f"Decoding: {apk_file}", bold=True, prefix="[APKEditor]")
+    msg.info(f"Decoding: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
         f"Decoded to: {output_dir}",
         color="green",
         bold=True,
-        prefix="[APKEditor]",
+        prefix="[+]",
     )
 
 
@@ -756,13 +758,13 @@ def apkeditor_build(editor_jar, input_dir, output_apk, javaopts, quietly: bool):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
     command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
-    msg.info(f"Building: {input_dir}", bold=True, prefix="[APKEditor]")
+    msg.info(f"Building: {input_dir}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
         f"Built to: {output_apk}",
         color="green",
         bold=True,
-        prefix="[APKEditor]",
+        prefix="[+]",
     )
 
 
