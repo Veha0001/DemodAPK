@@ -716,11 +716,11 @@ def get_apkeditor_cmd(editor_jar: str, javaopts: str):
 
 def apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly: bool):
     # New base name of apk_file end with .apk
-    command = f'${get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
+    command = f'{get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
     msg.info(f"Merging: {apk_file}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Merged to: {merge_base_apk}",
+        f"Merged into: {merge_base_apk}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -730,23 +730,22 @@ def apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly: boo
 def apkeditor_decode(
     editor_jar, apk_file, javaopts, output_dir, dex: bool, quietly: bool
 ):
-    if not shutil.which("java"):
-        msg.error("Java is not installed. Please install Java to proceed.")
-        sys.exit(1)
     merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
     # If apk_file is not end with .apk then merge
-    if not apk_file.endswith(".apk") and not os.path.exists(merge_base_apk):
-        apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly)
-        output_dir = merge_base_apk.rsplit(".", 1)[0]
+    if not apk_file.endswith(".apk"):
+        if not os.path.exists(merge_base_apk):
+            apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly)
         command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{merge_base_apk}" -o "{output_dir}"'
+        apk_file = merge_base_apk
     else:
         command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{apk_file}" -o "{output_dir}"'
+
     if dex:
         command += " -dex"
     msg.info(f"Decoding: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Decoded to: {output_dir}",
+        f"Decoded into: {output_dir}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -754,14 +753,11 @@ def apkeditor_decode(
 
 
 def apkeditor_build(editor_jar, input_dir, output_apk, javaopts, quietly: bool):
-    if not shutil.which("java"):
-        msg.error("Java is not installed. Please install Java to proceed.")
-        sys.exit(1)
     command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
     msg.info(f"Building: {input_dir}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Built to: {output_apk}",
+        f"Built into: {output_apk}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -893,6 +889,10 @@ def main():
         )
     if to_output:
         decoded_dir = to_output.removesuffix(".apk")
+
+    if apkeditor and not shutil.which("java"):
+        msg.error("Java is not installed. Please install Java to proceed.")
+        sys.exit(1)
 
     # Decode APK if input is an APK file
     if os.path.isfile(apk_dir):

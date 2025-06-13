@@ -24,6 +24,17 @@
 pip install git+https://github.com/Veha0001/DemodAPK
 ```
 
+#### Build from Source
+
+Clone the repository and install manually:
+
+```sh
+git clone https://github.com/Veha0001/DemodAPK.git
+cd DemodAPK
+# Run git fetch and git pull for latest change.
+pip install .
+```
+
 ### Usage
 
 Run the script with the following command:
@@ -42,10 +53,11 @@ For more about options run the command with `-h`.
 {
   "DemodAPK": {
     "com.overpower.game": {
+      "app_name": "OMYRPG"
       "apkeditor": {
           "jarpath": "~/.apkeditor/apkeditor.jar",
           "javaopts": "-Xmx8G",
-          "output": "StoneFree"
+          "output": "omyrpg"
           "dex": true
       },
       "log": true,
@@ -66,7 +78,7 @@ For more about options run the command with `-h`.
         ]
       },
       "level": 0,
-      "package": "com.yesino.gamerpg",
+        "package": "com.super.gamerpg",
       "facebook": {
         "app_id": "0000000000000",
         "client_token": "dj2025id828018ahzl11",
