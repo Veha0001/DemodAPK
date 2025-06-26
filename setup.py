@@ -11,7 +11,7 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "demodapk = demodapk.autogen:main",
+            "demodapk = demodapk.cli:main",
         ],
     },
 )
