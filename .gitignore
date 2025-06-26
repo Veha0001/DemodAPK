@@ -6,7 +6,6 @@ Unity*
 *.class
 *.smali
 *.cs
-*li*
 beta.py
 Patcher
 Patcher.exe
