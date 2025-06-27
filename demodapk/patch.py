@@ -333,7 +333,7 @@ def update_smali_directory(smali_dir, old_package_path, new_package_path):
         if os.path.isdir(old_dir):
             # Rename the old directory to the new directory
             os.rename(old_dir, new_dir)
-            msg.success(f"Renamed directory {old_dir} to {new_dir}.")
+            msg.success(f"Updated smali with: {new_package_path}")
             renamed = True
         else:
             msg.info(f"Directory {old_dir} does not exist. Skipping renaming.")

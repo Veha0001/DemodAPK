@@ -57,10 +57,10 @@ class ConfigHandler:
         )
 
     def package(self) -> Package:
-        package_name = self.apk_config.get("package", "")
+        name = self.apk_config.get("package", "")
         return Package(
-            name=package_name,
-            path=package_name.replace(".", "/"),
+            name=name,
+            path="L" + name.replace(".", "/"),
         )
 
 
@@ -71,8 +71,13 @@ def get_config_path():
     return os.path.join(user_config_dir("demodapk"), "config.json")
 
 
-def load_config():
-    config_path = get_config_path()
+def load_config(config):
+    if config:
+        config_path = os.path.abspath(os.path.expanduser(config))
+        if os.path.isdir(config_path):
+            config_path = os.path.join(config_path, "config.json")
+    else:
+        config_path = get_config_path()
     if not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as f:

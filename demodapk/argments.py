@@ -1,5 +1,5 @@
 import argparse
-from demodapk.__init__ import __version__
+from demodapk import __version__
 
 
 def parse_arguments():

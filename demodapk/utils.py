@@ -74,11 +74,11 @@ class MessagePrinter:
             color=color,
             bold=bold,
             inline=inline,
-            prefix="[W]",
+            prefix="[w]",
         )
 
     def error(self, message, inline=False):
-        self.print(message, color="red", inline=inline, prefix="[X]")
+        self.print(message, color="red", inline=inline, prefix="[x]")
 
     def info(
         self,

@@ -30,7 +30,7 @@ except ImportError:
 
 parsers = parse_arguments()
 args = parsers.parse_args()
-packer = load_config().get("DemodAPK", {})
+packer = load_config(args.config).get("DemodAPK", {})
 
 
 def get_the_input(config):
@@ -137,10 +137,11 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
     if "commands" in apk_config and "begin" in apk_config["commands"]:
         run_commands(apk_config["commands"]["begin"], conf.command_quietly)
 
+    android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali") if not editor.dex_option else None
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-    return smali_folder, resources_folder, value_strings
+    return android_manifest, smali_folder, resources_folder, value_strings, apk_dir
 
 
 def get_updates(
@@ -214,7 +215,7 @@ def get_updates(
         )
 
 
-def get_finish(conf, decoded_dir, apk_config, output_apk):
+def get_finish(conf, decoded_dir, apk_config):
     editor = conf.apkeditor(args)
     output_apk = os.path.basename(decoded_dir.rstrip("/"))
     output_apk_path = os.path.join(decoded_dir, output_apk + ".apk")
@@ -242,7 +243,6 @@ def get_finish(conf, decoded_dir, apk_config, output_apk):
 
 
 def runsteps():
-    global conf
     (
         apk_config,
         package_orig_name,
@@ -254,12 +254,14 @@ def runsteps():
 
     conf = ConfigHandler(apk_config)
 
-    smali_folder, resources_folder, value_strings = get_demo(
-        conf,
-        apk_dir=args.apk_dir,
-        apk_config=apk_config,
-        isdex=dex_folder_exists,
-        decoded_dir=decoded_dir,
+    android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
+        get_demo(
+            conf,
+            apk_dir=args.apk_dir,
+            apk_config=apk_config,
+            isdex=dex_folder_exists,
+            decoded_dir=decoded_dir,
+        )
     )
 
     get_updates(
@@ -279,5 +281,4 @@ def runsteps():
         conf,
         decoded_dir=decoded_dir,
         apk_config=apk_config,
-        output_apk=None,
     )
