@@ -6,7 +6,7 @@ with open("requirements.txt", encoding="utf-8") as f:
 setup(
     name="DemodAPK",
     author="Veha Veha",
-    version="1.1.3",
+    version="1.1.4",
     packages=["demodapk"],
     install_requires=requirements,
     entry_points={

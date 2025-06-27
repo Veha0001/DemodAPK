@@ -4,6 +4,7 @@ import sys
 
 from demodapk.argments import parse_arguments
 from demodapk.baseconf import (
+    ApkBasic,
     ConfigHandler,
     check_for_dex_folder,
     load_config,
@@ -18,7 +19,6 @@ from demodapk.patch import (
     update_app_name_values,
     update_application_id_in_smali,
     update_facebook_app_values,
-    update_files_from_loaded,
     update_smali_directory,
     update_smali_path_package,
 )
@@ -41,7 +41,6 @@ def get_the_input(config):
         sys.exit(1)
 
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-    package_orig_name, package_orig_path = None, None
     apk_solo = apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk"))
 
     if os.path.isfile(apk_dir):
@@ -99,13 +98,13 @@ def get_the_input(config):
             msg.error(f"No configuration found for package: {package_orig_name}")
             sys.exit(1)
 
-    return (
-        apk_config,
-        package_orig_name,
-        package_orig_path,
-        dex_folder_exists,
-        decoded_dir,
-        android_manifest,
+    return ApkBasic(
+        apk_config=apk_config,
+        package_orig_name=package_orig_name,
+        package_orig_path=package_orig_path,
+        dex_folder_exists=dex_folder_exists,
+        decoded_dir=decoded_dir,
+        android_manifest=android_manifest,
     )
 
 
@@ -148,7 +147,6 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
 def get_updates(
     conf,
     android_manifest,
-    apk_dir,
     apk_config,
     value_strings,
     smali_folder,
@@ -175,9 +173,6 @@ def get_updates(
             fb_client_token=facebook.client_token,
             fb_login_protocol_scheme=facebook.login_protocol_scheme,
         )
-
-    if "files" in apk_config:
-        update_files_from_loaded(conf.files_entry, apk_dir)
 
     if not args.no_rename_package and "package" in apk_config:
         rename_package_in_manifest(
@@ -244,42 +239,34 @@ def get_finish(conf, decoded_dir, apk_config):
 
 
 def runsteps():
-    (
-        apk_config,
-        package_orig_name,
-        package_orig_path,
-        dex_folder_exists,
-        decoded_dir,
-        android_manifest,
-    ) = get_the_input(packer)
+    basic = get_the_input(packer)
 
-    conf = ConfigHandler(apk_config)
+    conf = ConfigHandler(basic.apk_config)
 
     android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
         get_demo(
             conf,
             apk_dir=args.apk_dir,
-            apk_config=apk_config,
-            isdex=dex_folder_exists,
-            decoded_dir=decoded_dir,
+            apk_config=basic.apk_config,
+            isdex=basic.dex_folder_exists,
+            decoded_dir=basic.decoded_dir,
         )
     )
 
     get_updates(
         conf,
         android_manifest=android_manifest,
-        apk_dir=args.apk_dir,
-        apk_config=apk_config,
+        apk_config=basic.apk_config,
         value_strings=value_strings,
         smali_folder=smali_folder,
         resources_folder=resources_folder,
-        package_orig_name=package_orig_name,
-        package_orig_path=package_orig_path,
-        dex_folder_exists=dex_folder_exists,
+        package_orig_name=basic.package_orig_name,
+        package_orig_path=basic.package_orig_path,
+        dex_folder_exists=basic.dex_folder_exists,
     )
 
     get_finish(
         conf,
         decoded_dir=decoded_dir,
-        apk_config=apk_config,
+        apk_config=basic.apk_config,
     )

@@ -3,10 +3,21 @@ import json
 import os
 import subprocess
 import sys
+from typing import Optional
 
 from platformdirs import user_config_dir
 
 from demodapk.utils import msg
+
+
+@dataclasses.dataclass
+class ApkBasic:
+    apk_config: dict
+    package_orig_name: Optional[str] = None
+    package_orig_path: Optional[str] = None
+    dex_folder_exists: bool = False
+    decoded_dir: str = ""
+    android_manifest: str = ""
 
 
 @dataclasses.dataclass
@@ -45,9 +56,9 @@ class ConfigHandler:
         return Apkeditor(
             editor_jar=apkeditor_conf.get("jarpath", ""),
             javaopts=apkeditor_conf.get("javaopts", ""),
-            dex_option=apkeditor_conf.get("dex", False),
+            dex_option=getattr(args, "dex", None) or apkeditor_conf.get("dex", False),
             to_output=getattr(args, "output", None) or apkeditor_conf.get("output"),
-            clean=apkeditor_conf.get("clean"),
+            clean=getattr(args, "clean", None) or apkeditor_conf.get("clean"),
         )
 
     def facebook(self) -> Facebook:
