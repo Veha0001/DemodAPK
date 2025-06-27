@@ -1,27 +1,28 @@
 import os
-import sys
 import shutil
+import sys
+
 from demodapk.argments import parse_arguments
 from demodapk.baseconf import (
     ConfigHandler,
+    check_for_dex_folder,
     load_config,
     verify_apk_directory,
-    check_for_dex_folder,
 )
-from demodapk.utils import msg
+from demodapk.mark import apkeditor_build, apkeditor_decode, run_commands
 from demodapk.patch import (
+    extract_package_info,
+    remove_metadata_from_manifest,
+    rename_package_in_manifest,
+    rename_package_in_resources,
     update_app_name_values,
     update_application_id_in_smali,
     update_facebook_app_values,
     update_files_from_loaded,
     update_smali_directory,
     update_smali_path_package,
-    remove_metadata_from_manifest,
-    extract_package_info,
-    rename_package_in_manifest,
-    rename_package_in_resources,
 )
-from demodapk.mark import run_commands, apkeditor_build, apkeditor_decode
+from demodapk.utils import msg
 
 try:
     import inquirer

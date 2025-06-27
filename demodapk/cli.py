@@ -1,5 +1,5 @@
-from demodapk.utils import show_logo
 from demodapk.mods import runsteps
+from demodapk.utils import show_logo
 
 try:
     from colorama import init

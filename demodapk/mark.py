@@ -1,6 +1,7 @@
+import os
 import shutil
 import sys
-import os
+
 from demodapk.baseconf import run_commands
 from demodapk.utils import msg
 

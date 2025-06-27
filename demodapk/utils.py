@@ -1,6 +1,7 @@
 from typing import Optional
+
 from art import text2art
-from termcolor import cprint, colored
+from termcolor import colored, cprint
 
 
 def show_logo(text, font="small", color_pattern=None):

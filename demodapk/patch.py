@@ -1,7 +1,8 @@
+import glob
 import os
 import re
-import glob
 import shutil
+
 from demodapk.utils import msg
 
 

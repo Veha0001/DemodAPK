@@ -1,9 +1,11 @@
-import os
-import sys
-import json
 import dataclasses
+import json
+import os
 import subprocess
+import sys
+
 from platformdirs import user_config_dir
+
 from demodapk.utils import msg
 
 
