@@ -1,0 +1,26 @@
+[project]
+name = "demodapk"
+description = "DemodAPK CLI for modify APK resources by config"
+requires-python = ">=3.9"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Veha0001" }]
+dependencies = [
+    "art",
+    "colorama",
+    "termcolor",
+    "platformdirs",
+    "inquirer"
+]
+readme = "README.md"
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/Veha0001/DemodAPK"
+Repository = "https://github.com/Veha0001/DemodAPK"
+
+[build-system]
+requires = ["flit_core"]
+build-backend = "flit_core.buildapi"
+
+[project.scripts]
+demodapk = "demodapk.cli:main"
