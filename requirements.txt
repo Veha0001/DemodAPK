@@ -1,6 +1,5 @@
 art
 colorama
 termcolor
-setuptools
 platformdirs
 inquirer
