@@ -41,7 +41,7 @@ def apkeditor_decode(
     output_dir,
     dex: bool,
     quietly: bool,
-    force: bool = False,
+    force: bool,
 ):
     merge_base_apk = apk_file.rsplit(".", 1)[0] + ".apk"
     # If apk_file is not end with .apk then merge
@@ -73,8 +73,8 @@ def apkeditor_build(
     output_apk,
     javaopts,
     quietly: bool,
-    force: bool = False,
-    clean: bool = False,
+    force: bool,
+    clean: bool,
 ):
     command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
     if force:

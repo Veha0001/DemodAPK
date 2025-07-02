@@ -28,6 +28,15 @@ class Apkeditor:
     to_output: str
     clean: bool
 
+    def __bool__(self):
+        return bool(
+            self.editor_jar
+            or self.javaopts
+            or self.dex_option
+            or self.to_output
+            or self.clean
+        )
+
 
 @dataclasses.dataclass
 class Facebook:
@@ -35,11 +44,17 @@ class Facebook:
     client_token: str
     login_protocol_scheme: str
 
+    def __bool__(self):
+        return bool(self.appid or self.client_token)
+
 
 @dataclasses.dataclass
 class Package:
     name: str
     path: str
+
+    def __boo__(self):
+        return bool(self.name)
 
 
 class ConfigHandler:
@@ -48,7 +63,6 @@ class ConfigHandler:
         self.manifest_edit_level = apk_config.get("level", 2)
         self.app_name = apk_config.get("app_name", None)
         self.apk_config = apk_config
-        self.files_entry = apk_config.get("files", {})
         self.command_quietly = apk_config.get("commands", {}).get("quietly", False)
 
     def apkeditor(self, args) -> Apkeditor:
@@ -63,10 +77,11 @@ class ConfigHandler:
 
     def facebook(self) -> Facebook:
         fb = self.apk_config.get("facebook", {})
+        appid = fb.get("app_id", "")
         return Facebook(
-            appid=fb.get("app_id", {}),
-            client_token=fb.get("client_token", {}),
-            login_protocol_scheme=fb.get("login_protocol_scheme", {}),
+            appid=appid,
+            client_token=fb.get("client_token", ""),
+            login_protocol_scheme=fb.get("login_protocol_scheme", f"fb{appid}"),
         )
 
     def package(self) -> Package:

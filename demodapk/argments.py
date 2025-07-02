@@ -23,14 +23,24 @@ def parse_arguments():
         default="config.json",
         help="Path to the JSON configuration file.",
     )
-    parser.add_argument("-dex", action="store_true", help="For decode with raw dex.")
     parser.add_argument(
-        "-cl", "--clean", action="store_true", help="Cleanup the decoded folder."
+        "-dex",
+        action="store_true",
+        default=False,
+        help="For decode with raw dex.",
+    )
+    parser.add_argument(
+        "-cl",
+        "--clean",
+        action="store_true",
+        default=False,
+        help="Cleanup the decoded folder.",
     )
     parser.add_argument(
         "-f",
         "--force",
         action="store_true",
+        default=False,
         help="Force overwrite the decoded APK directory.",
     )
     parser.add_argument(

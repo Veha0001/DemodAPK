@@ -241,7 +241,7 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
         if updated_any:
             msg.success("Updated package name in resource files.")
         else:
-            msg.info("No files with the specified package name were found to update.")
+            msg.info("No matching package found in resource.")
 
     except FileNotFoundError as fnf_error:
         msg.error(str(fnf_error))

@@ -52,15 +52,15 @@ For more about options run the command with `-h`.
 ```json
 {
   "DemodAPK": {
-    "com.overpower.game": {
-      "app_name": "OMYRPG"
+    "com.cotcat.gitboxdemo": {
+      "app_name": "CGitbox"
       "apkeditor": {
           "jarpath": "~/.apkeditor/apkeditor.jar",
           "javaopts": "-Xmx8G",
-          "output": "omyrpg"
+          "output": "./build/CuteGitbox"
+          "clean": false,
           "dex": true
       },
-      "log": true,
       "commands": {
         "quietly": true,
         "begin": [
@@ -68,7 +68,8 @@ For more about options run the command with `-h`.
             "run": "hexsaly -c beta.json open $BASE/root/lib/arm64-v8a/libil2cpp.so -i 0",
             "quiet": false
           },
-          "rm -r $BASE/root/lib/armeabi-v7a"
+          "rm -r $BASE/root/lib/armeabi-v7a",
+          "./scripts/fixbluebutton.sh"
         ],
         "end": [
           {
@@ -78,19 +79,11 @@ For more about options run the command with `-h`.
         ]
       },
       "level": 2,
-        "package": "com.super.gamerpg",
+      "package": "com.cotcat.gitbox",
       "facebook": {
-        "app_id": "0000000000000",
-        "client_token": "dj2025id828018ahzl11",
-        "login_protocol_scheme": "fb0000000000000"
-      },
-      "files": {
-        "replace": {
-            "patches/beta/libil2cpp_patched.so": "root/lib/arm64-v8a/libil2cpp.so"
-        },
-        "copy": {
-            "assets/background.png": "res/drawable/background.png"
-        }
+        "app_id": "2000000000001",
+        "client_token": "dj2025id828018freekun11",
+        "login_protocol_scheme": "fb2000000000001"
       },
       "manifest": {
         "remove_metadata": [
@@ -100,8 +93,6 @@ For more about options run the command with `-h`.
     }
   }
 ```
-
-<!-- "files" feature is useless now when you use to run commands -->
 
 Follow the prompts to select the APK file and modify its contents according to your preferences.
 
