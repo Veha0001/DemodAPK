@@ -133,14 +133,21 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
         )
         apk_dir = decoded_dir
 
-    os.environ["BASE"] = apk_dir
-    if "commands" in apk_config and "begin" in apk_config["commands"]:
-        run_commands(apk_config["commands"]["begin"], conf.command_quietly)
-
+    apk_root_folder = os.path.join(apk_dir, "root")
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     resources_folder = os.path.join(apk_dir, "resources")
     smali_folder = os.path.join(apk_dir, "smali") if not editor.dex_option else None
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
+
+    os.environ["BASE"] = apk_dir
+    os.environ["BASE_ROOT"] = apk_root_folder
+    os.environ["ANDROID_MANIFEST"] = android_manifest
+    os.environ["RESOURCES_FOLDER"] = resources_folder
+    os.environ["VALUE_STRINGS"] = value_strings
+
+    if "commands" in apk_config and "begin" in apk_config["commands"]:
+        run_commands(apk_config["commands"]["begin"], conf.command_quietly)
+
     return android_manifest, smali_folder, resources_folder, value_strings, apk_dir
 
 

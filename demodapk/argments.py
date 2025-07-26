@@ -7,7 +7,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         prog="demodapk",
         usage="%(prog)s <apk_dir> [options]",
-        description="DemodAPK: APK Modification Script, Made by @Veha0001.",
+        description="DemodAPK: APK Modification Script.",
     )
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory/file")
     parser.add_argument(
@@ -65,7 +65,7 @@ def parse_arguments():
         "-v",
         "--version",
         action="version",
-        version=("%(prog)s " + __version__),
+        version=("%(prog)s version: " + __version__),
         help="Show version of the program.",
     )
     return parser

@@ -174,7 +174,7 @@ def run_commands(commands, quietly, tasker: bool = False):
                 stderr=subprocess.DEVNULL,
             )
         else:
-            subprocess.run(cmd, shell=True, check=True)
+            subprocess.run(cmd, shell=True, check=True, env=os.environ)
 
     if isinstance(commands, list):
         for command in commands:

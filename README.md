@@ -7,10 +7,10 @@
 - **Commands**: Automatically decodes and builds APKs, with the ability to run commands after decoding and building.
 - **Package Renaming**: Easily rename package names in APK files.
 - **Resource Modification**: Modify resources in APK files as needed.
-- **Facebook API Updates**: Automatically replaces Facebook App details in the appropriate XML files.
 - **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
 - **Configurable Settings**: Store and manage settings in a JSON configuration file.
-- **For educational purposes**: You're learning how APK files work or exploring reverse engineering ethically.
+- **Facebook Integration Configuration**: Supports updating Facebook App settings in your decoded APK.
+- **For educational purposes**: Intended for learning about Android app structure and reverse engineering in legal, ethical contexts.
 
 ### Requirements
 
@@ -52,12 +52,12 @@ For more about options run the command with `-h`.
 ```json
 {
   "DemodAPK": {
-    "com.cotcat.gitboxdemo": {
-      "app_name": "CGitbox"
+    "com.demodapk.lite": {
+      "app_name": "DemodAPK"
       "apkeditor": {
           "jarpath": "~/.apkeditor/apkeditor.jar",
           "javaopts": "-Xmx8G",
-          "output": "./build/CuteGitbox"
+          "output": "./build/DemodAPK"
           "clean": false,
           "dex": true
       },
@@ -79,10 +79,10 @@ For more about options run the command with `-h`.
         ]
       },
       "level": 2,
-      "package": "com.cotcat.gitbox",
+      "package": "com.demodapk.hyper",
       "facebook": {
         "app_id": "2000000000001",
-        "client_token": "dj2025id828018freekun11",
+        "client_token": "example_client_token",
         "login_protocol_scheme": "fb2000000000001"
       },
       "manifest": {
