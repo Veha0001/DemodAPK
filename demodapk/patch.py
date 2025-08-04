@@ -46,7 +46,7 @@ def update_app_name_values(app_name, value_strings):
     with open(value_strings, "w", encoding="utf-8") as f:
         f.write(new_content)
 
-    msg.success(f"Updated AppName to: {app_name}")
+    msg.success(f"Updated app name to: {app_name}")
 
 
 def update_facebook_app_values(
@@ -75,7 +75,7 @@ def update_facebook_app_values(
 
         with open(strings_file, "w", encoding="utf-8") as file:
             file.write(content)
-        msg.success("Updated Facebook App values")
+        msg.success("Updated facebook app values")
     else:
         msg.error(f"File: {strings_file}, does not exists.")
 
@@ -171,7 +171,7 @@ def rename_package_in_manifest(
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.write(content)
 
-        msg.success("Updated package name in AndroidManifest.xml")
+        msg.success(f"Updated package name to: {new_package_name}")
 
     except FileNotFoundError:
         msg.error(f"The manifest file '{manifest_file}' was not found.")
@@ -234,7 +234,7 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
                         updated_any = True
 
                 except UnicodeDecodeError:
-                    msg.warning(f"File {file_path} is not UTF-8 encoded, skipping.")
+                    msg.warning(f"File {file_path} is not UTF-8 encoded.")
                 except (OSError, IOError) as e:
                     msg.error(f"Failed to process file: {file_path}. Error: {e}")
 
@@ -271,15 +271,15 @@ def update_smali_directory(smali_dir, old_package_path, new_package_path):
             msg.success(f"Updated smali with: {new_package_path}")
             renamed = True
         else:
-            msg.info(f"Directory {old_dir} does not exist. Skipping renaming.")
+            msg.info(f"Directory {old_dir} does not exist.")
 
     if not renamed:
-        msg.info(
-            f"No directories matching {old_package_path} were found. Skipping renaming."
-        )
+        msg.info(f"No match for {old_package_path}.")
 
 
-def update_application_id_in_smali(smali_dir, old_package_name, new_package_name):
+def update_application_id_in_smali(
+    smali_dir, old_package_name, new_package_name, strict=False
+):
     try:
         # Check if smali directory exists
         if not os.path.isdir(smali_dir):
@@ -316,11 +316,11 @@ def update_application_id_in_smali(smali_dir, old_package_name, new_package_name
                     except (OSError, IOError) as e:
                         msg.error(f"Failed to update {file_path}: {e}")
 
-        if not buildconfig_found:
+        if not buildconfig_found and strict:
             raise FileNotFoundError(
                 "No BuildConfig.smali files found in the provided smali directory."
             )
-        if not updated_any:
+        if not updated_any and strict:
             raise ValueError(
                 "No BuildConfig.smali file contained the specified old APPLICATION_ID."
             )

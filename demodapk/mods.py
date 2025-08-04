@@ -87,16 +87,35 @@ def get_the_input(config):
 
         dex_folder_exists = False
         decoded_dir = apk_dir.rsplit(".", 1)[0]
+
     else:
         apk_dir = verify_apk_directory(apk_dir)
         dex_folder_exists = check_for_dex_folder(apk_dir)
         decoded_dir = apk_dir
 
-        package_orig_name, package_orig_path = extract_package_info(android_manifest)
-        apk_config = config.get(package_orig_name)
-        if not apk_config:
-            msg.error(f"No configuration found for package: {package_orig_name}")
+        current_package_name, _ = extract_package_info(android_manifest)
+
+        # Match the current package name to a config key or a config["package"]
+        matched_key = None
+        for key, value in config.items():
+            if key == current_package_name:
+                matched_key = key
+                break
+            elif (
+                isinstance(value, dict) and value.get("package") == current_package_name
+            ):
+                matched_key = key
+                break
+
+        if not matched_key:
+            msg.error(
+                f"No matching configuration found for package: {current_package_name}"
+            )
             sys.exit(1)
+
+        package_orig_name = matched_key
+        package_orig_path = "L" + package_orig_name.replace(".", "/")
+        apk_config = config[matched_key]
 
     return ApkBasic(
         apk_config=apk_config,
@@ -141,9 +160,10 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
 
     os.environ["BASE"] = apk_dir
     os.environ["BASE_ROOT"] = apk_root_folder
-    os.environ["ANDROID_MANIFEST"] = android_manifest
-    os.environ["RESOURCES_FOLDER"] = resources_folder
-    os.environ["VALUE_STRINGS"] = value_strings
+    os.environ["BASE_MANIFEST"] = android_manifest
+    os.environ["BASE_RESOURCES"] = resources_folder
+    os.environ["BASE_VALUE"] = value_strings
+    os.environ["BASE_RESDIR"] = os.path.join(resources_folder, "package_1/res")
 
     if "commands" in apk_config and "begin" in apk_config["commands"]:
         run_commands(apk_config["commands"]["begin"], conf.command_quietly)
