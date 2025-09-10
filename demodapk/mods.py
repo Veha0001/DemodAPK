@@ -34,6 +34,12 @@ args = parsers.parse_args()
 packer = load_config(args.config).get("DemodAPK", {})
 
 
+def setup_env(ref: dict):
+    for key, path in ref.items():
+        os.environ[key] = path
+    return ref
+
+
 def get_the_input(config):
     apk_dir = args.apk_dir
     if apk_dir is None:
@@ -101,9 +107,7 @@ def get_the_input(config):
             if key == current_package_name:
                 matched_key = key
                 break
-            elif (
-                isinstance(value, dict) and value.get("package") == current_package_name
-            ):
+            if isinstance(value, dict) and value.get("package") == current_package_name:
                 matched_key = key
                 break
 
@@ -155,15 +159,20 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
     apk_root_folder = os.path.join(apk_dir, "root")
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     resources_folder = os.path.join(apk_dir, "resources")
-    smali_folder = os.path.join(apk_dir, "smali") if not editor.dex_option else None
+    smali_folder = os.path.join(apk_dir, "smali") if not editor.dex_option else ""
     value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
 
-    os.environ["BASE"] = apk_dir
-    os.environ["BASE_ROOT"] = apk_root_folder
-    os.environ["BASE_MANIFEST"] = android_manifest
-    os.environ["BASE_RESOURCES"] = resources_folder
-    os.environ["BASE_VALUE"] = value_strings
-    os.environ["BASE_RESDIR"] = os.path.join(resources_folder, "package_1/res")
+    begin_paths = {
+        "BASE": apk_dir,
+        "BASE_ROOT": apk_root_folder,
+        "BASE_MANIFEST": android_manifest,
+        "BASE_RESOURCES": resources_folder,
+        "BASE_VALUE": value_strings,
+        "BASE_SMALI": smali_folder,
+        "BASE_RESDIR": os.path.join(resources_folder, "package_1/res"),
+        "BASE_LIB": os.path.join(apk_root_folder, "lib"),
+    }
+    setup_env(begin_paths)
 
     if "commands" in apk_config and "begin" in apk_config["commands"]:
         run_commands(apk_config["commands"]["begin"], conf.command_quietly)
@@ -258,7 +267,7 @@ def get_finish(conf, decoded_dir, apk_config):
             clean=editor.clean,
         )
 
-    os.environ["BUILD"] = output_apk_path
+    setup_env({"BUILD": output_apk_path})
     if "commands" in apk_config and "end" in apk_config["commands"]:
         run_commands(apk_config["commands"]["end"], conf.command_quietly)
 

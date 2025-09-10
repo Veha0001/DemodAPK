@@ -92,20 +92,16 @@ class ConfigHandler:
         )
 
 
-def get_config_path():
-    local_config = "config.json"
-    if os.path.exists(local_config):
-        return local_config
-    return os.path.join(user_config_dir("demodapk"), "config.json")
+def get_config_path(config: str):
+    return os.path.join(user_config_dir("demodapk"), config)
 
 
-def load_config(config):
-    if config:
-        config_path = os.path.abspath(os.path.expanduser(config))
-        if os.path.isdir(config_path):
-            config_path = os.path.join(config_path, "config.json")
-    else:
-        config_path = get_config_path()
+def load_config(config: str = "config.json"):
+    config_path = os.path.abspath(os.path.expanduser(config))
+    if os.path.isdir(config_path):
+        config_path = os.path.join(config_path, config)
+    if not os.path.exists(config_path):
+        config_path = get_config_path(config)
     if not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as f:
