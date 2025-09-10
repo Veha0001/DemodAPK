@@ -46,7 +46,7 @@ For more about options run the command with `-h`.
 
 ### Example
 
-<details> <summary>`config.json`</summary>
+<details> <summary>config.json</summary>
 
 ```json
 {

@@ -1,4 +1,5 @@
 """
+pull from https://github.com/textualize/rich/blob/master/examples/downloader.py
 APKEditor Downloader with Rich progress bars and version checking.
 """
 
@@ -20,11 +21,14 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 
-from demodapk.utils import msg
+# from demodapk.utils import msg
 
 # === Rich progress setup ===
 progress = Progress(
-    TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
+    TextColumn(
+        "[bold blue]{task.fields[filename]}",
+        justify="right",
+    ),
     BarColumn(bar_width=None),
     "[progress.percentage]{task.percentage:>3.1f}%",
     "•",
@@ -49,7 +53,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 # === File download function ===
 def copy_url(task_id: TaskID, url: str, path: str) -> None:
     """Copy data from a url to a local file."""
-    # msg.info(f"Requesting {url}")
+    progress.console.log(f"Requesting {url}")
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urlopen(req) as response:
         # Break if content length is missing
@@ -64,7 +68,7 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
                 progress.update(task_id, advance=len(data))
                 if done_event.is_set():
                     return
-    msg.success(f"Downloaded {path}")
+    progress.console.log(f"Downloaded {path}")
 
 
 def download(urls, dest_dir="."):
@@ -98,8 +102,8 @@ def get_latest_version():
 def download_apkeditor(dest_path):
     latest_version = get_latest_version()
     if latest_version:
-        msg.info(f"Latest APKEditor version: {latest_version}")
+        progress.console.log(f"Latest APKEditor version: {latest_version}")
         jar_url = f"https://github.com/REAndroid/APKEditor/releases/download/V{latest_version}/APKEditor-{latest_version}.jar"
         download([jar_url], dest_path)
     else:
-        msg.error("Could not determine the latest version.")
+        progress.console.log("Could not determine the latest version.")

@@ -47,7 +47,7 @@ def setup_env(ref: dict):
 
 def get_the_input(config):
     apk_dir = args.apk_dir
-    if args.command in ("update-apkeditor", "ua"):
+    if args.update_apkeditor:
         update_apkeditor()
         sys.exit(0)
     if apk_dir is None:

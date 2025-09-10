@@ -9,7 +9,6 @@ def parse_arguments():
         usage="%(prog)s <apk_dir> [options]",
         description="DemodAPK: APK Modification Script.",
     )
-    subparser = parser.add_subparsers(dest="command")
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory/file")
     parser.add_argument(
         "-n",
@@ -44,13 +43,11 @@ def parse_arguments():
         default=False,
         help="Force overwrite the decoded APK directory.",
     )
-    subparser.add_parser(
-        "update-apkeditor",
-        help="Update APKEditor latest version.",
-    )
-    subparser.add_parser(
-        "ua",
-        help="Alias for update-apkeditor.",
+    parser.add_argument(
+        "-ua",
+        "--update-apkeditor",
+        action="store_true",
+        help="Update APKEditor latest version",
     )
     parser.add_argument(
         "-o",
