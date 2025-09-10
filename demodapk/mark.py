@@ -1,20 +1,84 @@
 import os
+import re
 import shutil
 import sys
 
+from platformdirs import user_config_path
+
 from demodapk.baseconf import run_commands
+from demodapk.tool import download_apkeditor, get_latest_version
 from demodapk.utils import msg
 
 
-def get_apkeditor_cmd(editor_jar: str, javaopts: str):
+def update_apkeditor():
+    """
+    Ensure the latest APKEditor jar is present in the user config folder.
+    Deletes older versions and downloads the latest.
+    Returns the path to the latest jar.
+    """
+    config_dir = user_config_path("demodapk")
+    os.makedirs(config_dir, exist_ok=True)
+
+    latest_version = get_latest_version()
+    if not latest_version:
+        msg.error("Could not fetch the latest APKEditor version.")
+        return None
+
+    # Remove all existing APKEditor jars
+    for fname in os.listdir(config_dir):
+        if re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname):
+            path = os.path.join(config_dir, fname)
+            try:
+                os.remove(path)
+                msg.info(f"Deleted: {fname}")
+            except Exception:
+                pass
+
+    download_apkeditor(config_dir)
+    latest_jar = os.path.join(config_dir, f"APKEditor-{latest_version}.jar")
+
+    if os.path.exists(latest_jar):
+        return latest_jar
+
+    msg.error("Failed to download APKEditor.")
+    return None
+
+
+def get_apkeditor_cmd(editor_jar: str, javaopts: str = ""):
+    """
+    Return the command to run APKEditor.
+    - Use system `apkeditor` if available.
+    - Otherwise, use the provided jar or pick the latest jar from config.
+    - If missing, download the latest jar and prompt to rerun.
+    """
+    # Use system apkeditor if available
     apkeditor_cmd = shutil.which("apkeditor")
     if apkeditor_cmd:
         opts = " ".join(f"-J{opt.lstrip('-')}" for opt in javaopts.split())
         return f"apkeditor {opts}".strip()
-    if editor_jar:
-        return f"java {javaopts} -jar {editor_jar}".strip()
-    msg.error("Cannot decode the apk without APKEditor.")
-    sys.exit(1)
+
+    config_dir = user_config_path("demodapk")
+    os.makedirs(config_dir, exist_ok=True)
+
+    # Look for existing jars
+    if not editor_jar:
+        jars = []
+        for fname in os.listdir(config_dir):
+            match = re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname)
+            if match:
+                version = tuple(int(x) for x in match.group(1).split("."))
+                jars.append((version, os.path.join(config_dir, fname)))
+        if jars:
+            jars.sort(reverse=True)
+            editor_jar = jars[0][1]
+
+    # If jar doesn't exist, update/download latest
+    if not editor_jar or not os.path.exists(editor_jar):
+        update_apkeditor()
+        msg.warning("Download complete! Run the command again to proceed.")
+        sys.exit(0)
+
+    return f"java {javaopts} -jar {editor_jar}".strip()
 
 
 def apkeditor_merge(

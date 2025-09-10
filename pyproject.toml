@@ -6,6 +6,7 @@ license = "GPL-3.0-or-later"
 authors = [{ name = "Veha0001" }]
 dependencies = [
     "art",
+    "rich",
     "colorama",
     "termcolor",
     "platformdirs",

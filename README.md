@@ -4,13 +4,12 @@
 
 ## Features
 
-- **Commands**: Automatically decodes and builds APKs, with the ability to run commands after decoding and building.
-- **Package Renaming**: Easily rename package names in APK files.
-- **Resource Modification**: Modify resources in APK files as needed.
-- **Metadata Adjustment**: Update application metadata in the AndroidManifest.xml file.
-- **Configurable Settings**: Store and manage settings in a JSON configuration file.
-- **Facebook Integration Configuration**: Supports updating Facebook App settings in your decoded APK.
-- **For educational purposes**: Intended for learning about Android app structure and reverse engineering in legal, ethical contexts.
+- Decode and build APKs with custom commands.
+- Rename packages and modify resources.
+- Update AndroidManifest metadata.
+- Manage settings via JSON config.
+- Configure Facebook App integration.
+- For educational and ethical learning purposes.
 
 ### Requirements
 
@@ -28,7 +27,7 @@ pip install demodapk
 
 Clone the repository and install manually:
 
-```sh
+```bash
 git clone https://github.com/Veha0001/DemodAPK.git
 cd DemodAPK
 # Run git fetch and git pull for latest change.

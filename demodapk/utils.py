@@ -75,7 +75,7 @@ class MessagePrinter:
             color=color,
             bold=bold,
             inline=inline,
-            prefix="[w]",
+            prefix="[~]",
         )
 
     def error(self, message, inline=False):

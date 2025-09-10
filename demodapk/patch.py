@@ -249,29 +249,29 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
         msg.error(f"An unexpected error occurred: {e}")
 
 
-def update_smali_directory(smali_dir, old_package_path, new_package_path):
-    # Use glob to find all directories in the smali_dir that match the old
-    old_package_pattern = os.path.join(
-        smali_dir, "**", old_package_path.strip("L")
-    )  # Use '**' to search in subdirectories
-    # Recursively find all matching directories
-    old_dirs = glob.glob(old_package_pattern, recursive=True)
+def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
+    # Normalize paths (remove leading L)
+    old_package_path = old_package_path.strip("L")
+    new_package_path = new_package_path.strip("L")
 
-    renamed = False  # Track if any directory was renamed
+    renamed = False
 
-    for old_dir in old_dirs:
-        # Create the new directory path based on the found old directory
-        new_dir = old_dir.replace(
-            old_package_path.strip("L"), new_package_path.strip("L")
-        )
+    # Loop through smali, smali_classes2, smali_classes3, ...
+    for root, _, _ in os.walk(smali_base_dir):
+        if os.path.basename(root).startswith("smali"):
+            # Search recursively in this smali folder
+            old_package_pattern = os.path.join(root, "**", old_package_path)
+            old_dirs = glob.glob(old_package_pattern, recursive=True)
 
-        if os.path.isdir(old_dir):
-            # Rename the old directory to the new directory
-            os.rename(old_dir, new_dir)
-            msg.success(f"Updated smali with: {new_package_path}")
-            renamed = True
-        else:
-            msg.info(f"Directory {old_dir} does not exist.")
+            for old_dir in old_dirs:
+                if os.path.isdir(old_dir):
+                    new_dir = old_dir.replace(old_package_path, new_package_path)
+                    os.makedirs(
+                        os.path.dirname(new_dir), exist_ok=True
+                    )  # Ensure parent dir exists
+                    os.rename(old_dir, new_dir)
+                    msg.success(f"Updated smali with: {new_package_path}")
+                    renamed = True
 
     if not renamed:
         msg.info(f"No match for {old_package_path}.")

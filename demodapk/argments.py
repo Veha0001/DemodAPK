@@ -44,6 +44,13 @@ def parse_arguments():
         help="Force overwrite the decoded APK directory.",
     )
     parser.add_argument(
+        "-up",
+        "--update",
+        action="store_true",
+        default=False,
+        help="Update APKEditor latest version.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         type=str,

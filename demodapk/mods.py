@@ -10,7 +10,12 @@ from demodapk.baseconf import (
     load_config,
     verify_apk_directory,
 )
-from demodapk.mark import apkeditor_build, apkeditor_decode, run_commands
+from demodapk.mark import (
+    apkeditor_build,
+    apkeditor_decode,
+    run_commands,
+    update_apkeditor,
+)
 from demodapk.patch import (
     extract_package_info,
     remove_metadata_from_manifest,
@@ -42,9 +47,13 @@ def setup_env(ref: dict):
 
 def get_the_input(config):
     apk_dir = args.apk_dir
+    if args.update:
+        update_apkeditor()
+        sys.exit(0)
+
     if apk_dir is None:
         parsers.print_help()
-        sys.exit(1)
+        sys.exit(0)
 
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     apk_solo = apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk"))
@@ -278,7 +287,6 @@ def runsteps():
     basic = get_the_input(packer)
 
     conf = ConfigHandler(basic.apk_config)
-
     android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
         get_demo(
             conf,

@@ -1,4 +1,5 @@
 art
+rich
 colorama
 termcolor
 platformdirs
