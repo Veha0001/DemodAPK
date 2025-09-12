@@ -27,7 +27,7 @@ from demodapk.patch import (
     update_smali_directory,
     update_smali_path_package,
 )
-from demodapk.utils import msg
+from demodapk.utils import console, msg
 
 try:
     import inquirer
@@ -45,15 +45,20 @@ def setup_env(ref: dict):
     return ref
 
 
-def get_the_input(config):
-    apk_dir = args.apk_dir
+def whatargs():
     if args.update_apkeditor:
         update_apkeditor()
         sys.exit(0)
+
+    apk_dir = getattr(args, "apk_dir", None)
     if apk_dir is None:
         parsers.print_help()
         sys.exit(0)
 
+    return apk_dir
+
+
+def get_the_input(config, apk_dir):
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     apk_solo = apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk"))
 
@@ -146,7 +151,7 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
         msg.warning("Dex folder found. Some functions will be disabled.", bold=True)
 
     if editor.to_output:
-        decoded_dir = editor.to_output.removesuffix(".apk")
+        decoded_dir = os.path.expanduser(editor.to_output.removesuffix(".apk"))
 
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
@@ -258,7 +263,7 @@ def get_updates(
 def get_finish(conf, decoded_dir, apk_config):
     editor = conf.apkeditor(args)
     output_apk = os.path.basename(decoded_dir.rstrip("/"))
-    output_apk_path = os.path.join(decoded_dir, output_apk + ".apk")
+    output_apk_path = os.path.expanduser(os.path.join(decoded_dir, output_apk + ".apk"))
 
     if (
         not os.path.exists(output_apk_path)
@@ -278,38 +283,39 @@ def get_finish(conf, decoded_dir, apk_config):
     setup_env({"BUILD": output_apk_path})
     if "commands" in apk_config and "end" in apk_config["commands"]:
         run_commands(apk_config["commands"]["end"], conf.command_quietly)
-
     msg.info("APK modification finished!", bold=True)
 
 
 def runsteps():
-    basic = get_the_input(packer)
-
+    apk_dir = whatargs()
+    basic = get_the_input(packer, apk_dir)
     conf = ConfigHandler(basic.apk_config)
-    android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
-        get_demo(
-            conf,
-            apk_dir=args.apk_dir,
-            apk_config=basic.apk_config,
-            isdex=basic.dex_folder_exists,
-            decoded_dir=basic.decoded_dir,
+
+    with console.status("[bold green]Processing... ", spinner="point") as status:
+        android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
+            get_demo(
+                conf,
+                apk_dir=args.apk_dir,
+                apk_config=basic.apk_config,
+                isdex=basic.dex_folder_exists,
+                decoded_dir=basic.decoded_dir,
+            )
         )
-    )
-
-    get_updates(
-        conf,
-        android_manifest=android_manifest,
-        apk_config=basic.apk_config,
-        value_strings=value_strings,
-        smali_folder=smali_folder,
-        resources_folder=resources_folder,
-        package_orig_name=basic.package_orig_name,
-        package_orig_path=basic.package_orig_path,
-        dex_folder_exists=basic.dex_folder_exists,
-    )
-
-    get_finish(
-        conf,
-        decoded_dir=decoded_dir,
-        apk_config=basic.apk_config,
-    )
+        status.update("[bold orange_red1]Modifying...")
+        get_updates(
+            conf,
+            android_manifest=android_manifest,
+            apk_config=basic.apk_config,
+            value_strings=value_strings,
+            smali_folder=smali_folder,
+            resources_folder=resources_folder,
+            package_orig_name=basic.package_orig_name,
+            package_orig_path=basic.package_orig_path,
+            dex_folder_exists=basic.dex_folder_exists,
+        )
+        status.update("[bold green]Finishing Build")
+        get_finish(
+            conf,
+            decoded_dir=decoded_dir,
+            apk_config=basic.apk_config,
+        )

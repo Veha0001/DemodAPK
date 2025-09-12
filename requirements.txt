@@ -1,6 +1,5 @@
 art
 rich
-colorama
-termcolor
+rich-argparse
 platformdirs
 inquirer

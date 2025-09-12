@@ -1,5 +1,7 @@
 import argparse
 
+from rich_argparse import RawTextRichHelpFormatter
+
 from demodapk import __version__
 
 
@@ -8,64 +10,67 @@ def parse_arguments():
         prog="demodapk",
         usage="%(prog)s <apk_dir> [options]",
         description="DemodAPK: APK Modification Script.",
+        formatter_class=RawTextRichHelpFormatter,
     )
     parser.add_argument("apk_dir", nargs="?", help="Path to the APK directory/file")
-    parser.add_argument(
-        "-n",
-        "--no-rename-package",
-        action="store_true",
-        help="Run the script without renaming the package",
-    )
     parser.add_argument(
         "-c",
         "--config",
         type=str,
         default="config.json",
-        help="Path to the JSON configuration file.",
+        metavar="<file>",
+        help="Path to the JSON configuration file.\n(default: %(default)s)",
     )
     parser.add_argument(
-        "-dex",
+        "-S",
+        "--single-apk",
         action="store_true",
         default=False,
-        help="For decode with raw dex.",
-    )
-    parser.add_argument(
-        "-cl",
-        "--clean",
-        action="store_true",
-        default=False,
-        help="Cleanup the decoded folder.",
+        help="Keep only the rebuilt APK.",
     )
     parser.add_argument(
         "-f",
         "--force",
         action="store_true",
         default=False,
-        help="Force overwrite the decoded APK directory.",
-    )
-    parser.add_argument(
-        "-ua",
-        "--update-apkeditor",
-        action="store_true",
-        help="Update APKEditor latest version",
+        help="Force to overwrite.",
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
-        help="output path of decoded_dir and name.",
+        metavar="<file/path>",
+        help="Path to decode and build",
+    )
+    parser.add_argument(
+        "-ua",
+        "--update-apkeditor",
+        action="store_true",
+        help="Update APKEditor latest version.",
+    )
+    parser.add_argument(
+        "-dex",
+        action="store_true",
+        default=False,
+        help="Decode with raw dex.",
+    )
+    parser.add_argument(
+        "-n",
+        "--no-rename-package",
+        action="store_true",
+        help="Skip rename package.",
     )
     parser.add_argument(
         "-nfb",
         "--no-facebook",
         action="store_true",
-        help="No update for Facebook app API.",
+        help="Skip Facebook API update.",
     )
     parser.add_argument(
-        "-mv",
-        "--move-rename-smali",
+        "-nsd",
+        "--rename-smali",
         action="store_true",
-        help="Rename package in smali files and the smali directory.",
+        help="Rename package in smali files and directories.",
     )
     parser.add_argument(
         "-v",

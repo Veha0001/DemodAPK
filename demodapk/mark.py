@@ -75,7 +75,6 @@ def get_apkeditor_cmd(editor_jar: str, javaopts: str = ""):
     # If jar doesn't exist, update/download latest
     if not editor_jar or not os.path.exists(editor_jar):
         update_apkeditor()
-        msg.warning("Download complete! Run the command again to proceed.")
         sys.exit(0)
 
     return f"java {javaopts} -jar {editor_jar}".strip()
@@ -91,7 +90,7 @@ def apkeditor_merge(
     msg.info(f"Merging: {apk_file}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Merged into: {merge_base_apk}",
+        f"Merged into: {os.path.relpath(merge_base_apk)}",
         color="green",
         bold=True,
         prefix="[+]",

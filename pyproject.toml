@@ -1,14 +1,13 @@
 [project]
 name = "demodapk"
-description = "DemodAPK CLI for modify APK resources by config"
+description = "A Demo CLI for modifying APK resources via config"
 requires-python = ">=3.9"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Veha0001" }]
 dependencies = [
     "art",
     "rich",
-    "colorama",
-    "termcolor",
+    "rich-argparse",
     "platformdirs",
     "inquirer"
 ]

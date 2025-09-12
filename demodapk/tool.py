@@ -1,11 +1,11 @@
 """
-pull from https://github.com/textualize/rich/blob/master/examples/downloader.py
-APKEditor Downloader with Rich progress bars and version checking.
+- https://github.com/textualize/rich/blob/master/examples/downloader.py
 """
 
 import json
 import os
 import signal
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from threading import Event
@@ -95,14 +95,15 @@ def get_latest_version():
                 # Remove leading 'V' if present
                 return tag_name.lstrip("Vv")
     except Exception as e:
-        return e
+        progress.console.log(e)
+        sys.exit(1)
     return None
 
 
 def download_apkeditor(dest_path):
     latest_version = get_latest_version()
     if latest_version:
-        progress.console.log(f"Latest APKEditor version: {latest_version}")
+        progress.console.log(f"APKEditor latest version: {latest_version}")
         jar_url = f"https://github.com/REAndroid/APKEditor/releases/download/V{latest_version}/APKEditor-{latest_version}.jar"
         download([jar_url], dest_path)
     else:

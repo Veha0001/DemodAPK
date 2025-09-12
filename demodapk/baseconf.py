@@ -72,7 +72,7 @@ class ConfigHandler:
             javaopts=apkeditor_conf.get("javaopts", ""),
             dex_option=getattr(args, "dex", None) or apkeditor_conf.get("dex", False),
             to_output=getattr(args, "output", None) or apkeditor_conf.get("output"),
-            clean=getattr(args, "clean", None) or apkeditor_conf.get("clean"),
+            clean=getattr(args, "single_apk", None) or apkeditor_conf.get("clean"),
         )
 
     def facebook(self) -> Facebook:
@@ -99,7 +99,7 @@ def get_config_path(config: str):
 def load_config(config: str = "config.json"):
     config_path = os.path.abspath(os.path.expanduser(config))
     if os.path.isdir(config_path):
-        config_path = os.path.join(config_path, config)
+        config_path = os.path.join(config_path, "config.json")
     if not os.path.exists(config_path):
         config_path = get_config_path(config)
     if not os.path.exists(config_path):
@@ -168,6 +168,7 @@ def run_commands(commands, quietly, tasker: bool = False):
                 check=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                env=os.environ,
             )
         else:
             subprocess.run(cmd, shell=True, check=True, env=os.environ)
