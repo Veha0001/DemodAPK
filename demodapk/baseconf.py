@@ -68,6 +68,8 @@ class Package:
 
 
 class ConfigHandler:
+    """ConfigHandler"""
+
     def __init__(self, apk_config):
         self.log_level = apk_config.get("log", False)
         self.manifest_edit_level = apk_config.get("level", 2)
