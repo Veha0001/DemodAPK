@@ -32,6 +32,16 @@
                 "dex": {
                   "type": "boolean",
                   "default": false,
+                  "oneOf": [
+                    {
+                      "const": true,
+                      "description": "Copy raw dex files."
+                    },
+                    {
+                      "const": false,
+                      "description": "Make baksmali files."
+                    }
+                  ],
                   "description": "Whether to include dex folder processing."
                 },
                 "clean": {
@@ -52,6 +62,17 @@
               "properties": {
                 "quietly": {
                   "type": "boolean",
+                  "default": false,
+                  "oneOf": [
+                    {
+                      "const": true,
+                      "description": "Every commands run quietly in background."
+                    },
+                    {
+                      "const": false,
+                      "description": "Normal output from any commands run."
+                    }
+                  ],
                   "description": "If true, suppress output of commands."
                 },
                 "begin": {
@@ -77,6 +98,16 @@
                           },
                           "quiet": {
                             "type": "boolean",
+                            "anyOf": [
+                              {
+                                "const": true,
+                                "description": "Run the command in quiet mode (no output will be shown)."
+                              },
+                              {
+                                "const": false,
+                                "description": "Run the command in normal mode (output will be displayed)."
+                              }
+                            ],
                             "description": "Override quiet mode for this command."
                           }
                         },
@@ -102,6 +133,16 @@
                       },
                       "quiet": {
                         "type": "boolean",
+                        "anyOf": [
+                          {
+                            "const": true,
+                            "description": "Run the command in quiet mode (no output will be shown)."
+                          },
+                          {
+                            "const": false,
+                            "description": "Run the command in normal mode (output will be displayed)."
+                          }
+                        ],
                         "description": "Override quiet mode for this command."
                       }
                     },
@@ -116,6 +157,28 @@
               "type": "integer",
               "default": 2,
               "enum": [0, 1, 2, 3, 4],
+              "anyOf": [
+                {
+                  "const": 0,
+                  "description": "Basic replacements only (package name, android:name, authorities)."
+                },
+                {
+                  "const": 1,
+                  "description": "Basic replacements + clear android:taskAffinity."
+                },
+                {
+                  "const": 2,
+                  "description": "Basic replacements + update android:taskAffinity to new package name."
+                },
+                {
+                  "const": 3,
+                  "description": "Level 2 changes + update android:host and cct.android:host with new package name."
+                },
+                {
+                  "const": 4,
+                  "description": "Level 1 changes + update android:host and cct.android:host with new package name."
+                }
+              ],
               "description": "Configuration manifest level edit or priority for the app."
             },
             "package": {
