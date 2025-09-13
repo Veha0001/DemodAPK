@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DemoAPK Landing</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Font JetBrains Mono -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        font-family: "JetBrains Mono", monospace;
+        background-color: #ffffff;
+        color: #1f2937;
+        overflow-x: hidden;
+      }
+
+      /* Container */
+      .container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+
+      /* Grid */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        max-width: 800px;
+        width: 100%;
+      }
+      @media (min-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      /* Minecraft-style block card */
+      .card {
+        position: relative;
+        perspective: 600px;
+        cursor: pointer;
+      }
+
+      .block {
+        width: 100%;
+        background-color: #22c55e; /* top green */
+        border-top: 4px solid #16a34a; /* slightly darker top edge */
+        border-left: 4px solid #15803d; /* left side */
+        border-right: 4px solid #15803d; /* right side */
+        border-bottom: 4px solid #166534; /* bottom face darker */
+        box-shadow:
+          0 10px 0 #166534,
+          0 12px 15px rgba(0, 0, 0, 0.2); /* shadow under block */
+        padding: 2rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .card:hover .block {
+        transform: translateY(-10px);
+        box-shadow:
+          0 20px 0 #166534,
+          0 25px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Title & text */
+      .block h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #f8fafc;
+      }
+      .block p {
+        margin-bottom: 1rem;
+        color: #f0fdf4;
+      }
+      .block a {
+        color: #d9f99d;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .block a:hover {
+        color: #a3e635;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="grid">
+        <div class="card">
+          <div class="block">
+            <h2>JSON Schema</h2>
+            <p>Official JSON schema file for DemoAPK configuration.</p>
+            <a href="dev_schema.json">View JSON</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="block">
+            <h2>GitHub Repository</h2>
+            <p>Explore the source code, contributions, and releases.</p>
+            <a href="https://github.com/Veha0001/DemodAPK" target="_blank"
+              >Visit Repository</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

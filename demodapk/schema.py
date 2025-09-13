@@ -12,6 +12,7 @@ SCHEMA_URL = (
     "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/demodapk"
     "/doc/dev_schema.json"
 )
+SCHEMA_NETLIFY = "https://demodapk.netlify.app/dev_schema.json"
 CONFIG_FILE = "config.json"
 
 
@@ -20,7 +21,8 @@ def ask_schema():
         inquirer.List(
             "schema_index",
             message="Select a way of JSON Schema",
-            choices=["path", "url"],
+            choices=["pack", "netlify", "githubusercontent"],
+            default="netlify",
         )
     ]
 
@@ -59,8 +61,11 @@ def ensure_config(schema_value):
 
 
 def re_schema(i: str):
-    if i == "path":
+    if i == "pack":
         ensure_config(SCHEMA_PATH)
-    else:
+    elif i == "githubusercontent":
         ensure_config(SCHEMA_URL)
+    else:
+        ensure_config(SCHEMA_NETLIFY)
+
     sys.exit(0)
