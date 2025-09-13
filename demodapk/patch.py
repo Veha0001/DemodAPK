@@ -245,8 +245,6 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
 
     except FileNotFoundError as fnf_error:
         msg.error(str(fnf_error))
-    except Exception as e:
-        msg.error(f"An unexpected error occurred: {e}")
 
 
 def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
@@ -277,60 +275,60 @@ def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
         msg.info(f"No match for {old_package_path}.")
 
 
+def update_buildconfig_file(file_path, old_package_name, new_package_name):
+    """Update APPLICATION_ID in a single BuildConfig.smali file."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        target = f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"'
+        if target in content:
+            new_content = content.replace(
+                target,
+                f' APPLICATION_ID:Ljava/lang/String; = "{new_package_name}"',
+            )
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            return True
+    except (OSError, IOError) as e:
+        msg.error(f"Failed to update {file_path}: {e}")
+    return False
+
+
 def update_application_id_in_smali(
     smali_dir, old_package_name, new_package_name, strict=False
 ):
-    try:
-        # Check if smali directory exists
-        if not os.path.isdir(smali_dir):
-            raise FileNotFoundError(
-                f"The smali directory '{smali_dir}' does not exist."
-            )
+    """Update APPLICATION_ID in all BuildConfig.smali files under smali_dir."""
+    if not os.path.isdir(smali_dir):
+        msg.error(f"The smali directory '{smali_dir}' does not exist.")
+        return
 
-        buildconfig_found = False
-        updated_any = False
+    buildconfig_found = False
+    updated_any = False
 
-        for root, _, files in os.walk(smali_dir):
-            for file in files:
-                if file.endswith("BuildConfig.smali"):
-                    buildconfig_found = True
-                    file_path = os.path.join(root, file)
-                    try:
-                        with open(file_path, "r", encoding="utf-8") as f:
-                            content = f.read()
+    for root, _, files in os.walk(smali_dir):
+        for file in files:
+            if file.endswith("BuildConfig.smali"):
+                buildconfig_found = True
+                file_path = os.path.join(root, file)
+                if update_buildconfig_file(
+                    file_path, old_package_name, new_package_name
+                ):
+                    updated_any = True
 
-                        # Check if old APPLICATION_ID exists in the file
-                        if (
-                            f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"'
-                            in content
-                        ):
-                            # Replace APPLICATION_ID
-                            new_content = content.replace(
-                                f' APPLICATION_ID:Ljava/lang/String; = "{old_package_name}"',
-                                f' APPLICATION_ID:Ljava/lang/String; = "{new_package_name}"',
-                            )
-                            with open(file_path, "w", encoding="utf-8") as f:
-                                f.write(new_content)
-                            updated_any = True
-
-                    except (OSError, IOError) as e:
-                        msg.error(f"Failed to update {file_path}: {e}")
-
-        if not buildconfig_found and strict:
-            raise FileNotFoundError(
+    if strict:
+        if not buildconfig_found:
+            msg.error(
                 "No BuildConfig.smali files found in the provided smali directory."
             )
-        if not updated_any and strict:
-            raise ValueError(
+            return
+        if not updated_any:
+            msg.error(
                 "No BuildConfig.smali file contained the specified old APPLICATION_ID."
             )
-    except FileNotFoundError as fnf_error:
-        msg.error(str(fnf_error))
-    except ValueError as val_error:
-        msg.error(str(val_error))
-    except Exception as e:
-        msg.error(f"An unexpected error occurred: {e}")
-    else:
+            return
+
+    if updated_any:
         msg.success("Updated APPLICATION_ID in smali files.")
 
 

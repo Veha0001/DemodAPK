@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from rich_argparse import RawTextRichHelpFormatter
 
@@ -16,10 +17,15 @@ def parse_arguments():
     parser.add_argument(
         "-c",
         "--config",
-        type=str,
-        default="config.json",
+        default=Path("config.json"),
         metavar="<file>",
         help="Path to the JSON configuration file.\n(default: %(default)s)",
+    )
+    parser.add_argument(
+        "-sc",
+        "--schema",
+        action="store_true",
+        help="Apply schema to the config.",
     )
     parser.add_argument(
         "-S",

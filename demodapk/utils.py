@@ -1,5 +1,3 @@
-from typing import Optional
-
 from art import text2art
 from rich.console import Console
 from rich.text import Text
@@ -44,18 +42,17 @@ def show_logo(text, font="small", color_pattern=None):
 
 
 class MessagePrinter:
-    def print(
-        self,
-        message: str,
-        color: Optional[str] = None,
-        inline: bool = False,
-        bold: bool = False,
-        prefix: Optional[str] = None,
-        inlast: bool = False,
-    ):
+    def print(self, message, **kwargs):
+        color = kwargs.pop("color", None)
+        bold = kwargs.pop("bold", False)
+        inline = kwargs.pop("inline", False)
+        prefix = kwargs.pop("prefix", None)
+        inlast = kwargs.pop("inlast", False)
+
         styled_message = Text()
         if prefix:
             styled_message.append(f"{prefix} ", style="bold")
+
         style_str = f"bold {color}" if bold and color else color or "default"
         styled_message.append(message, style=style_str)
 
@@ -66,33 +63,30 @@ class MessagePrinter:
         else:
             console.print(styled_message, soft_wrap=True, justify="left")
 
-    def success(self, message, bold: bool = False, inline=False, prefix="[*]"):
-        self.print(message, color="green", bold=bold, inline=inline, prefix=prefix)
+    def success(self, message, **kwargs):
+        kwargs.setdefault("color", "green")
+        kwargs.setdefault("prefix", "[*]")
+        self.print(message, **kwargs)
 
-    def warning(
-        self,
-        message,
-        color: Optional[str] = "yellow",
-        bold: bool = False,
-        inline=False,
-    ):
-        self.print(message, color=color, bold=bold, inline=inline, prefix="[~]")
+    def warning(self, message, **kwargs):
+        kwargs.setdefault("color", "yellow")
+        kwargs.setdefault("prefix", "[~]")
+        self.print(message, **kwargs)
 
-    def error(self, message, inline=False):
-        self.print(message, color="red", inline=inline, prefix="[x]")
+    def error(self, message, **kwargs):
+        kwargs.setdefault("color", "red")
+        kwargs.setdefault("prefix", "[x]")
+        self.print(message, **kwargs)
 
-    def info(
-        self,
-        message,
-        color: str = "cyan",
-        bold: bool = False,
-        inline=False,
-        prefix: str = "[!]",
-    ):
-        self.print(message, color=color, bold=bold, inline=inline, prefix=prefix)
+    def info(self, message, **kwargs):
+        kwargs.setdefault("color", "cyan")
+        kwargs.setdefault("prefix", "[!]")
+        self.print(message, **kwargs)
 
-    def progress(self, message, inline=False, bold: bool = False):
-        self.print(message, color="magenta", bold=bold, inline=inline, prefix="[$]")
+    def progress(self, message, **kwargs):
+        kwargs.setdefault("color", "magenta")
+        kwargs.setdefault("prefix", "[$]")
+        self.print(message, **kwargs)
 
 
 msg = MessagePrinter()

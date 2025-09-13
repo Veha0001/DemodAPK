@@ -5,7 +5,7 @@ import sys
 
 from platformdirs import user_config_path
 
-from demodapk.baseconf import run_commands
+from demodapk.baseconf import Apkeditor, run_commands
 from demodapk.tool import download_apkeditor, get_latest_version
 from demodapk.utils import msg
 
@@ -31,7 +31,7 @@ def update_apkeditor():
             try:
                 os.remove(path)
                 msg.info(f"Deleted: {fname}")
-            except Exception:
+            except (PermissionError, shutil.Error):
                 pass
 
     download_apkeditor(config_dir)
@@ -44,13 +44,15 @@ def update_apkeditor():
     return None
 
 
-def get_apkeditor_cmd(editor_jar: str, javaopts: str = ""):
+def get_apkeditor_cmd(cfg: Apkeditor):
     """
     Return the command to run APKEditor.
     - Use system `apkeditor` if available.
     - Otherwise, use the provided jar or pick the latest jar from config.
     - If missing, download the latest jar and prompt to rerun.
     """
+    editor_jar = cfg.editor_jar
+    javaopts = cfg.javaopts
     # Use system apkeditor if available
     apkeditor_cmd = shutil.which("apkeditor")
     if apkeditor_cmd:
@@ -81,10 +83,10 @@ def get_apkeditor_cmd(editor_jar: str, javaopts: str = ""):
 
 
 def apkeditor_merge(
-    editor_jar, apk_file, javaopts, merge_base_apk, quietly: bool, force: bool = False
+    cfg: Apkeditor, apk_file, merge_base_apk, quietly: bool, force: bool = False
 ):
     # New base name of apk_file end with .apk
-    command = f'{get_apkeditor_cmd(editor_jar, javaopts)} m -i "{apk_file}" -o "{merge_base_apk}"'
+    command = f'{get_apkeditor_cmd(cfg)} m -i "{apk_file}" -o "{merge_base_apk}"'
     if force:
         command += " -f"
     msg.info(f"Merging: {apk_file}", bold=True, prefix="[-]")
@@ -98,11 +100,9 @@ def apkeditor_merge(
 
 
 def apkeditor_decode(
-    editor_jar,
+    cfg: Apkeditor,
     apk_file,
-    javaopts,
     output_dir,
-    dex: bool,
     quietly: bool,
     force: bool,
 ):
@@ -110,20 +110,20 @@ def apkeditor_decode(
     # If apk_file is not end with .apk then merge
     if not apk_file.endswith(".apk"):
         if not os.path.exists(merge_base_apk):
-            apkeditor_merge(editor_jar, apk_file, javaopts, merge_base_apk, quietly)
-        command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{merge_base_apk}" -o "{output_dir}"'
+            apkeditor_merge(cfg, apk_file, merge_base_apk, quietly)
+        command = f'{get_apkeditor_cmd(cfg)} d -i "{merge_base_apk}" -o "{output_dir}"'
         apk_file = merge_base_apk
     else:
-        command = f'{get_apkeditor_cmd(editor_jar, javaopts)} d -i "{apk_file}" -o "{output_dir}"'
+        command = f'{get_apkeditor_cmd(cfg)} d -i "{apk_file}" -o "{output_dir}"'
 
-    if dex:
+    if cfg.dex_option:
         command += " -dex"
     if force:
         command += " -f"
     msg.info(f"Decoding: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Decoded into: {output_dir}",
+        f"Decoded into: {cfg.to_output}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -131,20 +131,18 @@ def apkeditor_decode(
 
 
 def apkeditor_build(
-    editor_jar,
+    cfg: Apkeditor,
     input_dir,
     output_apk,
-    javaopts,
     quietly: bool,
     force: bool,
-    clean: bool,
 ):
-    command = f'{get_apkeditor_cmd(editor_jar, javaopts)} b -i "{input_dir}" -o "{output_apk}"'
+    command = f'{get_apkeditor_cmd(cfg)} b -i "{input_dir}" -o "{output_apk}"'
     if force:
         command += " -f"
     msg.info(f"Building: {input_dir}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
-    if clean:
+    if cfg.clean:
         output_apk = cleanup_apk_build(input_dir, output_apk)
     msg.info(
         f"Built into: {output_apk}",

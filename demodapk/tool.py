@@ -9,6 +9,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from threading import Event
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from rich.progress import (
@@ -94,7 +95,7 @@ def get_latest_version():
             if tag_name:
                 # Remove leading 'V' if present
                 return tag_name.lstrip("Vv")
-    except Exception as e:
+    except (URLError, HTTPError) as e:
         progress.console.log(e)
         sys.exit(1)
     return None
@@ -104,7 +105,10 @@ def download_apkeditor(dest_path):
     latest_version = get_latest_version()
     if latest_version:
         progress.console.log(f"APKEditor latest version: {latest_version}")
-        jar_url = f"https://github.com/REAndroid/APKEditor/releases/download/V{latest_version}/APKEditor-{latest_version}.jar"
+        jar_url = (
+            "https://github.com/REAndroid/APKEditor/releases/download/"
+            f"V{latest_version}/APKEditor-{latest_version}.jar"
+        )
         download([jar_url], dest_path)
     else:
         progress.console.log("Could not determine the latest version.")

@@ -39,6 +39,16 @@ class Apkeditor:
 
 
 @dataclasses.dataclass
+class UpdateContext:
+    value_strings: str
+    smali_folder: str
+    resources_folder: str
+    package_orig_name: Optional[str]
+    package_orig_path: Optional[str]
+    dex_folder_exists: bool
+
+
+@dataclasses.dataclass
 class Facebook:
     appid: str
     client_token: str
@@ -140,7 +150,8 @@ def verify_apk_directory(apk_dir):
         os.path.isdir(os.path.join(apk_dir, folder)) for folder in optional_folders
     ):
         msg.error(
-            f"At least one of the following folders is required in {apk_dir}: {', '.join(optional_folders)}."
+            "At least one of the following folders is required in"
+            f" {apk_dir}: {', '.join(optional_folders)}."
         )
         sys.exit(1)
 
