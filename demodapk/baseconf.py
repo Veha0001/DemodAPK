@@ -68,7 +68,7 @@ class Package:
 
 
 class ConfigHandler:
-    """ConfigHandler"""
+    """Handles application configuration and provides structured access to settings."""
 
     def __init__(self, apk_config):
         self.log_level = apk_config.get("log", False)
