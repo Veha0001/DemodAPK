@@ -13,6 +13,8 @@ patcher.exe
 patcher
 patch_li
 *.json
+!settings.json
+!schema.json
 !dev_schema.json
 # Byte-compiled / optimized / DLL files
 __pycache__/

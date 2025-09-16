@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/doc/dev_schema.json",
+  "title": "DemodAPK Config",
+  "description": "Schema for demodapk configuration JSON",
+  "type": "object",
+  "properties": {
+    "DemodAPK": {
+      "type": "object",
+      "description": "Main container for all app configurations, keyed by package name.",
+      "patternProperties": {
+        "^[a-zA-Z0-9_.]+$": {
+          "type": "object",
+          "description": "Configuration for a single app, identified by its package name.",
+          "properties": {
+            "apkeditor": {
+              "type": "object",
+              "description": "Configuration for APKEditor behavior.",
+              "properties": {
+                "javaopts": {
+                  "type": "string",
+                  "description": "Options passed to Java when running APK tool (e.g. memory settings)."
+                },
+                "jarpath": {
+                  "type": "string",
+                  "description": "Path to APKEditor.jar"
+                },
+                "output": {
+                  "type": "string",
+                  "description": "Directory path where decoded/build output is stored."
+                },
+                "dex": {
+                  "type": "boolean",
+                  "default": false,
+                  "oneOf": [
+                    {
+                      "const": true,
+                      "description": "Copy raw dex files."
+                    },
+                    {
+                      "const": false,
+                      "description": "Make baksmali files."
+                    }
+                  ],
+                  "description": "Whether to include dex folder processing."
+                },
+                "clean": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Keep only the rebuilt APK."
+                }
+              },
+              "additionalProperties": false
+            },
+            "app_name": {
+              "type": "string",
+              "description": "The name of the app."
+            },
+            "commands": {
+              "type": "object",
+              "description": "Commands to run at different stages of the build process.",
+              "properties": {
+                "quietly": {
+                  "type": "boolean",
+                  "default": false,
+                  "oneOf": [
+                    {
+                      "const": true,
+                      "description": "Every commands run quietly in background."
+                    },
+                    {
+                      "const": false,
+                      "description": "Normal output from any commands run."
+                    }
+                  ],
+                  "description": "If true, suppress output of commands."
+                },
+                "begin": {
+                  "type": "array",
+                  "description": "Commands to execute at the beginning of processing.",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "description": "A raw shell command string."
+                      },
+                      {
+                        "type": "object",
+                        "description": "Structured command definition.",
+                        "properties": {
+                          "run": {
+                            "type": "string",
+                            "description": "The command to run."
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "A descriptive label for this command."
+                          },
+                          "quiet": {
+                            "type": "boolean",
+                            "anyOf": [
+                              {
+                                "const": true,
+                                "description": "Run the command in quiet mode (no output will be shown)."
+                              },
+                              {
+                                "const": false,
+                                "description": "Run the command in normal mode (output will be displayed)."
+                              }
+                            ],
+                            "description": "Override quiet mode for this command."
+                          }
+                        },
+                        "required": ["run"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "end": {
+                  "type": "array",
+                  "description": "Commands to execute at the end of processing.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "run": {
+                        "type": "string",
+                        "description": "The command to run."
+                      },
+                      "title": {
+                        "type": "string",
+                        "description": "A descriptive label for this command."
+                      },
+                      "quiet": {
+                        "type": "boolean",
+                        "anyOf": [
+                          {
+                            "const": true,
+                            "description": "Run the command in quiet mode (no output will be shown)."
+                          },
+                          {
+                            "const": false,
+                            "description": "Run the command in normal mode (output will be displayed)."
+                          }
+                        ],
+                        "description": "Override quiet mode for this command."
+                      }
+                    },
+                    "required": ["run"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "level": {
+              "type": "integer",
+              "default": 2,
+              "enum": [0, 1, 2, 3, 4],
+              "anyOf": [
+                {
+                  "const": 0,
+                  "description": "Basic replacements only (package name, android:name, authorities)."
+                },
+                {
+                  "const": 1,
+                  "description": "Basic replacements + clear android:taskAffinity."
+                },
+                {
+                  "const": 2,
+                  "description": "Basic replacements + update android:taskAffinity to new package name."
+                },
+                {
+                  "const": 3,
+                  "description": "Level 2 changes + update android:host and cct.android:host with new package name."
+                },
+                {
+                  "const": 4,
+                  "description": "Level 1 changes + update android:host and cct.android:host with new package name."
+                }
+              ],
+              "description": "Configuration manifest level edit or priority for the app."
+            },
+            "package": {
+              "type": "string",
+              "description": "The new package name to assign to the app."
+            },
+            "facebook": {
+              "type": "object",
+              "description": "Facebook SDK configuration values.",
+              "properties": {
+                "app_id": {
+                  "type": "string",
+                  "description": "Facebook application ID."
+                },
+                "client_token": {
+                  "type": "string",
+                  "description": "Facebook client token."
+                },
+                "login_protocol_scheme": {
+                  "type": "string",
+                  "default": "fb",
+                  "description": "Facebook login protocol scheme"
+                }
+              },
+              "additionalProperties": false
+            },
+            "manifest": {
+              "type": "object",
+              "description": "Configuration for modifying AndroidManifest.xml.",
+              "properties": {
+                "remove_metadata": {
+                  "type": "array",
+                  "description": "List of metadata keys to remove from the manifest.",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["DemodAPK"],
+  "additionalProperties": true
+}
