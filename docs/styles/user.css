@@ -1,0 +1,31 @@
+h1 {
+  background: linear-gradient(
+    10deg,
+    #ff6e7f 0%,
+    /* warm pink/red */ #f5b27f 40%,
+    /* soft peach */ #8aadf4 75%,
+    /* calm blue */ #5e81ac 100% /* deeper blue */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h2 {
+  background: -webkit-linear-gradient(10deg, #bd34fe 5%, #e43498 15%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h3 {
+  background: linear-gradient(
+    45deg,
+    #34d1fe 0%,
+    /* bright cyan */ #34fe9e 50%,
+    /* mint green */ #fef534 100% /* sunny yellow */
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

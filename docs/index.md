@@ -1,6 +1,14 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # DemodAPK
 
-**DemodAPK** is a tool for modifying and editing an **apk** that has been decoded by [APKEditor](https://github.com/REAndroid/APKEditor).
+![Planet of Lana](https://raw.githubusercontent.com/D3Ext/aesthetic-wallpapers/main/images/lana_silhouette.png)
+
+A tool for modifying and editing an **apk** that has been decoded by :simple-androidstudio: [APKEditor](https://github.com/REAndroid/APKEditor).
 
 ## Features
 
@@ -50,6 +58,7 @@ For more about options run the command with `-h`.
 
 ```json
 {
+  "$schema": "https://demodapk.netlify.app/schema.json"
   "DemodAPK": {
     "com.demodapk.lite": {
       "app_name": "DemodAPK"
@@ -97,10 +106,7 @@ Follow the prompts to select the APK file and modify its contents according to y
 
 </details>
 
-## License
+[View JSON Schema](schema.json){ .md-button .md-button--primary }
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or features.
+> [!NOTE] Logo
+> Android is a trademark of Google LLC.

@@ -3,3 +3,6 @@ rich
 rich-argparse
 platformdirs
 inquirer
+mkdocs
+mkdocs-material
+mkdocs-github-admonitions-plugin

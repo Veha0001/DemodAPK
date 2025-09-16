@@ -166,36 +166,47 @@ def run_commands(commands, quietly, tasker: bool = False):
     Args:
         commands: List of commands or list of command dictionaries
         quietly: Run all commands quietly unless overridden per command
+        tasker: If True, disables progress messages
     """
 
     def run(cmd, quiet_mode, title: str = ""):
-        if quiet_mode:
-            if not tasker:
-                msg.progress(title or cmd)
-
-            subprocess.run(
-                cmd,
-                shell=True,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                env=os.environ,
-            )
-        else:
-            subprocess.run(cmd, shell=True, check=True, env=os.environ)
+        try:
+            if quiet_mode:
+                if not tasker and title:
+                    msg.progress(title)
+                subprocess.run(
+                    cmd,
+                    shell=True,
+                    check=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=os.environ,
+                )
+            else:
+                subprocess.run(cmd, shell=True, check=True, env=os.environ)
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 130:
+                msg.warning("Execution cancelled by user (Ctrl+C).")
+                sys.exit(2)
+            else:
+                msg.warning(f"Command failed: {cmd}")
+                msg.error(e)
+                sys.exit(1)
+        except KeyboardInterrupt:
+            msg.warning("Execution cancelled by user.")
+            sys.exit(2)  # Custom exit code for cancel
+        except Exception as e:
+            msg.error(f"Unexpected error running command: {cmd}")
+            msg.error(e)
+            sys.exit(1)
 
     if isinstance(commands, list):
         for command in commands:
-            try:
-                if isinstance(command, str):
-                    run(command, quietly)
-                elif isinstance(command, dict):
-                    cmd = command.get("run")
-                    title = command.get("title", "")
-                    quiet = command.get("quiet", True)
-                    if cmd:
-                        run(cmd, quiet, title)
-            except subprocess.CalledProcessError as e:
-                failed_cmd = command if isinstance(command, str) else command.get("run")
-                msg.error(f"Command failed: {failed_cmd}\nError: {e}")
-                sys.exit(1)
+            if isinstance(command, str):
+                run(command, quietly)
+            elif isinstance(command, dict):
+                cmd = command.get("run")
+                title = command.get("title", "")
+                quiet = command.get("quiet", quietly)
+                if cmd:
+                    run(cmd, quiet, title)

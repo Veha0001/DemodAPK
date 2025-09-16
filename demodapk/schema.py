@@ -7,12 +7,12 @@ import inquirer
 import demodapk
 from demodapk.utils import console
 
-SCHEMA_PATH = os.path.join(os.path.dirname(demodapk.__file__), "doc", "dev_schema.json")
+SCHEMA_PATH = os.path.join(os.path.dirname(demodapk.__file__), "schema.json")
 SCHEMA_URL = (
     "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/demodapk"
-    "/doc/dev_schema.json"
+    "/schema.json"
 )
-SCHEMA_NETLIFY = "https://demodapk.netlify.app/dev_schema.json"
+SCHEMA_NETLIFY = "https://demodapk.netlify.app/schema.json"
 CONFIG_FILE = "config.json"
 
 
