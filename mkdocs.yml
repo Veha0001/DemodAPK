@@ -5,6 +5,7 @@ repo_name: Veha0001/DemodAPK
 repo_url: https://github.com/Veha0001/DemodAPK
 
 theme:
+  custom_dir: docs/.overrides
   font:
     text: Kdam Thmor Pro
     code: JetBrains Mono
@@ -108,5 +109,11 @@ extra:
       link: https://github.com/Veha0001
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/demodapk/
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/LongVE980
+    - icon: fontawesome/brands/youtube
+      link: https://www.youtube.com/@Veha0001
+    - icon: simple/kofi
+      link: https://ko-fi.com/veha0001
 
 copyright: Copyright &copy; 2025-present Veha0001
