@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "$id": "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/doc/dev_schema.json",
+  "$id": "https://demodapk.netlify.app/schema.json",
   "title": "DemodAPK Config",
   "description": "Schema for demodapk configuration JSON",
   "type": "object",
@@ -111,7 +111,9 @@
                             "description": "Override quiet mode for this command."
                           }
                         },
-                        "required": ["run"],
+                        "required": [
+                          "run"
+                        ],
                         "additionalProperties": false
                       }
                     ]
@@ -146,7 +148,9 @@
                         "description": "Override quiet mode for this command."
                       }
                     },
-                    "required": ["run"],
+                    "required": [
+                      "run"
+                    ],
                     "additionalProperties": false
                   }
                 }
@@ -156,7 +160,13 @@
             "level": {
               "type": "integer",
               "default": 2,
-              "enum": [0, 1, 2, 3, 4],
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ],
               "anyOf": [
                 {
                   "const": 0,
@@ -224,8 +234,221 @@
         }
       },
       "additionalProperties": false
+    },
+    "Hexsaly": {
+      "type": "object",
+      "description": "An hex binary editor that supports replacement and insertion from a configuration file, including wildcard pattern scanning.",
+      "properties": {
+        "menu": {
+          "type": "boolean",
+          "description": "The menu selection files mode.",
+          "anyOf": [
+            {
+              "const": true,
+              "description": "Enable"
+            },
+            {
+              "const": false,
+              "description": "Disable"
+            }
+          ]
+        },
+        "style": {
+          "type": "boolean",
+          "description": "Toggle styled output for logging.",
+          "anyOf": [
+            {
+              "const": true,
+              "description": "Enable (use tags like [Found], [Patch], etc...)"
+            },
+            {
+              "const": false,
+              "description": "Disable (uses plain messages)"
+            }
+          ]
+        },
+        "files": {
+          "type": "array",
+          "description": "List of files to patch.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Custom name in menu selection."
+              },
+              "dump_cs": {
+                "type": "string",
+                "description": "The output file from Il2cppDumper."
+              },
+              "open": {
+                "type": "string",
+                "description": "Open and write directly, no need for input or output paths."
+              },
+              "input": {
+                "type": "string",
+                "description": "Path to the input binary file."
+              },
+              "output": {
+                "type": "string",
+                "description": "Path to the output binary file."
+              },
+              "require": {
+                "type": "boolean",
+                "description": "Whether this file is required before processing.",
+                "anyOf": [
+                  {
+                    "const": true,
+                    "description": "Enable"
+                  },
+                  {
+                    "const": false,
+                    "description": "Disable"
+                  }
+                ]
+              },
+              "patches": {
+                "type": "array",
+                "description": "Patch definitions applied to the file.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "method_name": {
+                      "type": "string",
+                      "description": "The name of the method to patch when using Il2cppDumper references."
+                    },
+                    "offset": {
+                      "type": "string",
+                      "pattern": "^0x[0-9A-Fa-f]+$",
+                      "description": "Hexadecimal memory/file offset where the patch should be applied. Must begin with 0x."
+                    },
+                    "wildcard": {
+                      "type": "string",
+                      "description": "A wildcard byte pattern (e.g., ?? ?? ??) to scan for in the binary."
+                    },
+                    "hex_replace": {
+                      "type": "string",
+                      "pattern": "^([0-9A-Fa-f?]{2}\\s?)+$",
+                      "description": "Sequence of hex bytes (with optional wildcards) to overwrite existing data. Example: 20 00 80 D2 C0 03 5F D6."
+                    },
+                    "hex_insert": {
+                      "type": "string",
+                      "pattern": "^([0-9A-Fa-f]{2}\\s?)+$",
+                      "description": "Sequence of hex bytes to insert in place of a match. Example: 00"
+                    }
+                  },
+                  "minProperties": 2,
+                  "maxProperties": 2,
+                  "additionalProperties": false,
+                  "anyOf": [
+                    {
+                      "description": "Patch by method name with a hex replacement.",
+                      "required": [
+                        "method_name",
+                        "hex_replace"
+                      ]
+                    },
+                    {
+                      "description": "Patch by method name with a hex insertion.",
+                      "required": [
+                        "method_name",
+                        "hex_insert"
+                      ]
+                    },
+                    {
+                      "description": "Patch by file offset with a hex replacement.",
+                      "required": [
+                        "offset",
+                        "hex_replace"
+                      ]
+                    },
+                    {
+                      "description": "Patch by file offset with a hex insertion.",
+                      "required": [
+                        "offset",
+                        "hex_insert"
+                      ]
+                    },
+                    {
+                      "description": "Patch by wildcard pattern with a hex insertion.",
+                      "required": [
+                        "wildcard",
+                        "hex_insert"
+                      ]
+                    },
+                    {
+                      "description": "Patch by wildcard pattern with a hex replacement.",
+                      "required": [
+                        "wildcard",
+                        "hex_replace"
+                      ]
+                    }
+                  ],
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "method_name",
+                          "offset"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "method_name",
+                          "wildcard"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "offset",
+                          "wildcard"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "hex_replace",
+                          "hex_insert"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "anyOf": [
+                  {
+                    "required": [
+                      "open"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "input"
+                    ]
+                  }
+                ]
+              },
+              {
+                "not": {
+                  "required": [
+                    "open",
+                    "input"
+                  ]
+                }
+              }
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "menu",
+        "files"
+      ],
+      "additionalProperties": false
     }
   },
-  "required": ["DemodAPK"],
   "additionalProperties": true
 }
