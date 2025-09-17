@@ -4,6 +4,8 @@ site_url: https://demodapk.netlify.app
 repo_name: Veha0001/DemodAPK
 repo_url: https://github.com/Veha0001/DemodAPK
 
+edit_uri_template: "blob/main/docs/{path}"
+
 theme:
   custom_dir: docs/.overrides
   font:
