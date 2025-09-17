@@ -6,7 +6,10 @@ hide:
 
 # DemodAPK
 
-![Planet of Lana](https://raw.githubusercontent.com/D3Ext/aesthetic-wallpapers/main/images/lana_silhouette.png)
+<figure class="flameshot" markdown="span">
+  ![Lana Silhouette](https://raw.githubusercontent.com/D3Ext/aesthetic-wallpapers/main/images/lana_silhouette.png){ width="600" }
+  <figcaption>Planet of Lana</figcaption>
+</figure>
 
 A tool for modifying and editing an **apk** that has been decoded by :simple-androidstudio: [APKEditor](https://github.com/REAndroid/APKEditor).
 
