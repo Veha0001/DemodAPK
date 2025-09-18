@@ -263,17 +263,18 @@ def runsteps():
     basic = get_the_input(packer, apk_dir)
     conf = ConfigHandler(basic.apk_config)
 
-    with console.status("[bold green]Processing... ", spinner="point") as status:
-        android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
-            get_demo(
-                conf,
-                apk_dir=args.apk_dir,
-                apk_config=basic.apk_config,
-                isdex=basic.dex_folder_exists,
-                decoded_dir=basic.decoded_dir,
-            )
+    android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
+        get_demo(
+            conf,
+            apk_dir=args.apk_dir,
+            apk_config=basic.apk_config,
+            isdex=basic.dex_folder_exists,
+            decoded_dir=basic.decoded_dir,
         )
-        status.update("[bold orange_red1]Modifying...")
+    )
+    with console.status(
+        "[bold orange_red1]Modifying...", spinner="point", spinner_style="orange_red1"
+    ):
         ctx = UpdateContext(
             value_strings=value_strings,
             smali_folder=smali_folder,
@@ -283,9 +284,8 @@ def runsteps():
             dex_folder_exists=basic.dex_folder_exists,
         )
         get_updates(conf, android_manifest, basic.apk_config, ctx)
-        status.update("[bold green]Finishing Build")
-        get_finish(
-            conf,
-            decoded_dir=decoded_dir,
-            apk_config=basic.apk_config,
-        )
+    get_finish(
+        conf,
+        decoded_dir=decoded_dir,
+        apk_config=basic.apk_config,
+    )
