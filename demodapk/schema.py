@@ -16,27 +16,6 @@ SCHEMA_NETLIFY = "https://demodapk.netlify.app/schema.json"
 CONFIG_FILE = "config.json"
 
 
-def ask_schema():
-    questions = [
-        inquirer.List(
-            "schema_index",
-            message="Select a way of JSON Schema",
-            choices=["pack", "netlify", "githubusercontent"],
-            default="netlify",
-        )
-    ]
-
-    ans = inquirer.prompt(questions)
-    choice = ans.get("schema_index") if ans else None
-
-    if choice:
-        console.log(f"[bold green]You selected Schema {choice}:[/bold green]")
-        return choice
-
-    console.print("[red]No selection made[/red]")
-    sys.exit(1)
-
-
 def ensure_config(schema_value):
     """Open or create config.json and set $schema at the top."""
     config = {}
@@ -60,10 +39,28 @@ def ensure_config(schema_value):
     console.log("Add selected $schema to ./config.json")
 
 
-def re_schema(i: str):
-    if i == "pack":
+def get_schema():
+    questions = [
+        inquirer.List(
+            "schema_index",
+            message="Select a way of JSON Schema",
+            choices=["pack", "netlify", "githubusercontent"],
+            default="netlify",
+        )
+    ]
+
+    ans = inquirer.prompt(questions)
+    choice = ans.get("schema_index") if ans else None
+
+    if choice:
+        console.log(f"[bold green]You selected Schema {choice}:[/bold green]")
+    else:
+        console.print("[red]No selection made[/red]")
+        sys.exit(1)
+
+    if choice == "pack":
         ensure_config(SCHEMA_PATH)
-    elif i == "githubusercontent":
+    elif choice == "githubusercontent":
         ensure_config(SCHEMA_URL)
     else:
         ensure_config(SCHEMA_NETLIFY)
