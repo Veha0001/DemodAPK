@@ -1,7 +1,6 @@
 import dataclasses
 import json
 import os
-import subprocess
 import sys
 from typing import Optional
 
@@ -25,7 +24,7 @@ class Apkeditor:
     editor_jar: str
     javaopts: str
     dex_option: bool
-    to_output: str
+    to_output: Optional[str]
     clean: bool
 
     def __bool__(self):
@@ -82,7 +81,7 @@ class ConfigHandler:
             javaopts=apkeditor_conf.get("javaopts", ""),
             dex_option=getattr(args, "dex", None) or apkeditor_conf.get("dex", False),
             to_output=getattr(args, "output", None) or apkeditor_conf.get("output"),
-            clean=getattr(args, "single_apk", None) or apkeditor_conf.get("clean"),
+            clean=getattr(args, "single_apk", False) or apkeditor_conf.get("clean"),
         )
 
     def facebook(self) -> Facebook:
@@ -157,56 +156,3 @@ def verify_apk_directory(apk_dir):
 
     msg.info(f"APK directory verified: {apk_dir}")
     return apk_dir
-
-
-def run_commands(commands, quietly, tasker: bool = False):
-    """
-    Run commands with support for conditional execution based on directory existence.
-
-    Args:
-        commands: List of commands or list of command dictionaries
-        quietly: Run all commands quietly unless overridden per command
-        tasker: If True, disables progress messages
-    """
-
-    def run(cmd, quiet_mode, title: str = ""):
-        try:
-            if quiet_mode:
-                if not tasker and title:
-                    msg.progress(title)
-                subprocess.run(
-                    cmd,
-                    shell=True,
-                    check=True,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    env=os.environ,
-                )
-            else:
-                subprocess.run(cmd, shell=True, check=True, env=os.environ)
-        except subprocess.CalledProcessError as e:
-            if e.returncode == 130:
-                msg.warning("Execution cancelled by user (Ctrl+C).")
-                sys.exit(2)
-            else:
-                msg.warning(f"Command failed: {cmd}")
-                msg.error(e)
-                sys.exit(1)
-        except KeyboardInterrupt:
-            msg.warning("Execution cancelled by user.")
-            sys.exit(2)  # Custom exit code for cancel
-        except Exception as e:
-            msg.error(f"Unexpected error running command: {cmd}")
-            msg.error(e)
-            sys.exit(1)
-
-    if isinstance(commands, list):
-        for command in commands:
-            if isinstance(command, str):
-                run(command, quietly)
-            elif isinstance(command, dict):
-                cmd = command.get("run")
-                title = command.get("title", "")
-                quiet = command.get("quiet", quietly)
-                if cmd:
-                    run(cmd, quiet, title)

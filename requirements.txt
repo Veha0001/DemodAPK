@@ -1,6 +1,6 @@
 art
 rich
-rich-argparse
+rich-click
 platformdirs
 inquirer
 mkdocs

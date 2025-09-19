@@ -46,7 +46,7 @@ def update_app_name_values(app_name, value_strings):
     with open(value_strings, "w", encoding="utf-8") as f:
         f.write(new_content)
 
-    msg.success(f"Updated app name to: {app_name}")
+    msg.success(f"Updated app name to: [reset]{app_name}")
 
 
 def update_facebook_app_values(
@@ -171,7 +171,7 @@ def rename_package_in_manifest(
         with open(manifest_file, "w", encoding="utf-8") as file:
             file.write(content)
 
-        msg.success(f"Updated package name to: {new_package_name}")
+        msg.success(f"Updated package name to: [reset]{new_package_name}")
 
     except FileNotFoundError:
         msg.error(f"The manifest file '{manifest_file}' was not found.")
@@ -268,11 +268,11 @@ def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
                         os.path.dirname(new_dir), exist_ok=True
                     )  # Ensure parent dir exists
                     os.rename(old_dir, new_dir)
-                    msg.success(f"Updated smali with: {new_package_path}")
+                    msg.success(f"Updated smali with: [reset]{new_package_path}")
                     renamed = True
 
     if not renamed:
-        msg.info(f"No match for {old_package_path}.")
+        msg.info(f"No match for [reset]{old_package_path}.")
 
 
 def update_buildconfig_file(file_path, old_package_name, new_package_name):

@@ -7,7 +7,7 @@ authors = [{ name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.
 dependencies = [
     "art",
     "rich",
-    "rich-argparse",
+    "rich-click",
     "platformdirs",
     "inquirer"
 ]

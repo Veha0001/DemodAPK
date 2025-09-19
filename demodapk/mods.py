@@ -2,21 +2,14 @@ import os
 import shutil
 import sys
 
-from demodapk.argments import parse_arguments
 from demodapk.baseconf import (
     ApkBasic,
     ConfigHandler,
     UpdateContext,
     check_for_dex_folder,
-    load_config,
     verify_apk_directory,
 )
-from demodapk.mark import (
-    apkeditor_build,
-    apkeditor_decode,
-    run_commands,
-    update_apkeditor,
-)
+from demodapk.mark import apkeditor_build, apkeditor_decode, update_apkeditor
 from demodapk.patch import (
     extract_package_info,
     remove_metadata_from_manifest,
@@ -28,40 +21,32 @@ from demodapk.patch import (
     update_smali_directory,
     update_smali_path_package,
 )
-from demodapk.schema import ask_schema, re_schema
-from demodapk.utils import console, msg
+from demodapk.schema import get_schema
+from demodapk.utils import console, msg, run_commands
 
 try:
     import inquirer
 except ImportError:
     inquirer = None
 
-parsers = parse_arguments()
-args = parsers.parse_args()
-packer = load_config(args.config).get("DemodAPK", {})
+
+def dowhat(args, click):
+    if args.update_apkeditor:
+        update_apkeditor()
+        sys.exit(0)
+    if args.schema:
+        get_schema()
+    apk_dir = getattr(args, "apk_dir", None)
+    if apk_dir is None:
+        ctx = click.get_current_context()
+        click.echo(ctx.get_help())
+        sys.exit(0)
 
 
 def setup_env(ref: dict):
     for key, path in ref.items():
         os.environ[key] = path
     return ref
-
-
-def whatargs():
-    if args.update_apkeditor:
-        update_apkeditor()
-        sys.exit(0)
-
-    if args.schema:
-        do_schema = ask_schema()
-        re_schema(do_schema)
-
-    apk_dir = getattr(args, "apk_dir", None)
-    if apk_dir is None:
-        parsers.print_help()
-        sys.exit(0)
-
-    return apk_dir
 
 
 def select_config_for_apk(config):
@@ -87,7 +72,7 @@ def select_config_for_apk(config):
         name = answers["package"]
         return name, config.get(name)
 
-    msg.warning("No package was selected or configuration missing.")
+    msg.warning("No package was selected.")
     sys.exit(0)
 
 
@@ -105,16 +90,16 @@ def match_config_by_manifest(config, android_manifest):
     sys.exit(1)
 
 
-def get_the_input(config, apk_dir):
+def get_the_input(config, apk_dir: str):
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
 
     if os.path.isfile(apk_dir):  # APK file case
-        if not apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk")):
+        if not str(apk_dir).lower().endswith((".zip", ".apk", ".apks", ".xapk")):
             msg.error(f"This: {apk_dir}, isn’t an apk type.")
             sys.exit(1)
 
         package_name, apk_config = select_config_for_apk(config)
-        decoded_dir, dex_folder_exists = apk_dir.rsplit(".", 1)[0], False
+        decoded_dir, dex_folder_exists = str(apk_dir).rsplit(".", 1)[0], False
 
     else:  # Decoded directory case
         apk_dir = verify_apk_directory(apk_dir)
@@ -135,21 +120,32 @@ def get_the_input(config, apk_dir):
     )
 
 
-def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
+def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
+    apk_dir = args.apk_dir
+    apk_config = basic.apk_config
+    isdex = basic.dex_folder_exists
+    decoded_dir = basic.decoded_dir
+
     editor = conf.apkeditor(args)
     if conf.log_level and isdex:
         msg.warning("Dex folder found. Some functions will be disabled.", bold=True)
 
-    if editor.to_output:
-        decoded_dir = os.path.expanduser(editor.to_output.removesuffix(".apk"))
-
+    decoded_dir = (
+        os.path.expanduser(os.path.splitext(editor.to_output)[0])
+        if editor.to_output
+        else decoded_dir
+    )
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
         sys.exit(1)
 
     if os.path.isfile(apk_dir):
         apkeditor_decode(
-            editor, apk_dir, decoded_dir, conf.command_quietly, force=args.force
+            editor,
+            apk_dir,
+            output_dir=decoded_dir,
+            quietly=conf.command_quietly,
+            force=args.force,
         )
         apk_dir = decoded_dir
 
@@ -177,7 +173,7 @@ def get_demo(conf, apk_dir, apk_config, isdex: bool, decoded_dir):
     return android_manifest, smali_folder, resources_folder, value_strings, apk_dir
 
 
-def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext):
+def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
     editor = conf.apkeditor(args)
     package = conf.package()
     facebook = conf.facebook()
@@ -234,7 +230,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext):
         )
 
 
-def get_finish(conf, decoded_dir, apk_config):
+def get_finish(conf, decoded_dir, apk_config, args):
     editor = conf.apkeditor(args)
     output_apk = os.path.basename(decoded_dir.rstrip("/"))
     output_apk_path = os.path.expanduser(os.path.join(decoded_dir, output_apk + ".apk"))
@@ -258,22 +254,19 @@ def get_finish(conf, decoded_dir, apk_config):
     msg.info("APK modification finished!", bold=True)
 
 
-def runsteps():
-    apk_dir = whatargs()
-    basic = get_the_input(packer, apk_dir)
+def runsteps(args, packer):
+    basic = get_the_input(packer, args.apk_dir)
     conf = ConfigHandler(basic.apk_config)
 
     android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
         get_demo(
             conf,
-            apk_dir=args.apk_dir,
-            apk_config=basic.apk_config,
-            isdex=basic.dex_folder_exists,
-            decoded_dir=basic.decoded_dir,
+            basic,
+            args=args,
         )
     )
     with console.status(
-        "[bold orange_red1]Modifying...", spinner="point", spinner_style="orange_red1"
+        "[bold orange_red1]Modifying...", spinner_style="orange_red1", spinner="point"
     ):
         ctx = UpdateContext(
             value_strings=value_strings,
@@ -283,9 +276,5 @@ def runsteps():
             package_orig_path=basic.package_orig_path,
             dex_folder_exists=basic.dex_folder_exists,
         )
-        get_updates(conf, android_manifest, basic.apk_config, ctx)
-    get_finish(
-        conf,
-        decoded_dir=decoded_dir,
-        apk_config=basic.apk_config,
-    )
+        get_updates(conf, android_manifest, basic.apk_config, ctx, args=args)
+    get_finish(conf, decoded_dir=decoded_dir, apk_config=basic.apk_config, args=args)
