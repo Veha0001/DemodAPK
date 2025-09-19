@@ -1,4 +1,5 @@
-from pathlib import Path
+"""DemodAPK CLI"""
+
 from types import SimpleNamespace
 
 import rich_click as click
@@ -14,14 +15,14 @@ from demodapk.utils import show_logo
 @click.argument(
     "apk_dir",
     required=False,
-    type=click.Path(exists=False, file_okay=True, dir_okay=True, path_type=Path),
+    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=str),
     metavar="<apk>",
 )
 @click.option(
     "-c",
     "--config",
-    default=Path("config.json"),
-    type=click.Path(exists=False, file_okay=True, dir_okay=True, path_type=Path),
+    default="config.json",
+    type=click.Path(exists=False, file_okay=True, dir_okay=True, path_type=str),
     metavar="<json>",
     show_default=True,
     help="Path to the configuration file.",
@@ -49,9 +50,9 @@ from demodapk.utils import show_logo
 @click.option(
     "-o",
     "--output",
-    type=str,
+    type=click.Path(exists=False, file_okay=True, dir_okay=True, path_type=str),
     metavar="<path>",
-    help="Path to decode and build.",
+    help="Path to writes decode and build.",
 )
 @click.option(
     "-ua",

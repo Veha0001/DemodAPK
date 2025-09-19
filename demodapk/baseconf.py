@@ -126,7 +126,8 @@ def verify_apk_directory(apk_dir):
     if not os.path.exists(apk_dir):
         msg.error(f"The directory {apk_dir} does not exist.")
         sys.exit(1)
-
+    apk_dir = os.path.abspath(apk_dir)
+    dir_name = os.path.basename(apk_dir)
     # Check for required files and folders
     required_files = ["AndroidManifest.xml"]
     required_folders = ["resources", "root"]
@@ -135,13 +136,13 @@ def verify_apk_directory(apk_dir):
     # Check for required files
     for req_file in required_files:
         if not os.path.isfile(os.path.join(apk_dir, req_file)):
-            msg.error(f"Missing required file '{req_file}' in {apk_dir}.")
+            msg.error(f"Missing required file '{req_file}' in {dir_name}.")
             sys.exit(1)
 
     # Check for required folders
     for req_folder in required_folders:
         if not os.path.isdir(os.path.join(apk_dir, req_folder)):
-            msg.error(f"Missing required folder '{req_folder}' in {apk_dir}.")
+            msg.error(f"Missing required folder '{req_folder}' in {dir_name}.")
             sys.exit(1)
 
     # Check for at least one optional folder
@@ -150,9 +151,9 @@ def verify_apk_directory(apk_dir):
     ):
         msg.error(
             "At least one of the following folders is required in"
-            f" {apk_dir}: {', '.join(optional_folders)}."
+            f" {dir_name}: {', '.join(optional_folders)}."
         )
         sys.exit(1)
 
-    msg.info(f"APK directory verified: {apk_dir}")
+    msg.info(f"APK directory verified: {os.path.basename(dir_name)}")
     return apk_dir

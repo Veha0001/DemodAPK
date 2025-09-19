@@ -2,7 +2,7 @@ import os
 import re
 import shutil
 import sys
-from pathlib import Path
+from os.path import abspath, basename
 
 from platformdirs import user_config_path
 
@@ -86,19 +86,19 @@ def get_apkeditor_cmd(cfg: Apkeditor):
 
 def apkeditor_merge(
     cfg: Apkeditor,
-    apk_file: Path,
-    merge_base_apk: Path,
+    apk_file: str,
+    merge_base_apk: str,
     quietly: bool,
     force: bool = False,
 ):
     # New base name of apk_file end with .apk
-    command = f'{get_apkeditor_cmd(cfg)} m -i "{apk_file}" -o "{merge_base_apk}"'
+    command = f'{get_apkeditor_cmd(cfg)} m -i "{os.path.abspath(apk_file)}" -o "{os.path.abspath(merge_base_apk)}"'
     if force:
         command += " -f"
-    msg.info(f"Merging: {apk_file}", bold=True, prefix="[-]")
+    msg.info(f"Merging: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     msg.info(
-        f"Merged into: {os.path.relpath(merge_base_apk)}",
+        f"Merged into: {os.path.basename(merge_base_apk)}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -107,14 +107,15 @@ def apkeditor_merge(
 
 def apkeditor_decode(
     cfg: Apkeditor,
-    apk_file: Path,
-    output_dir: str | Path,
+    apk_file: str,
+    output_dir: str,
     quietly: bool,
     force: bool,
 ):
-    merge_base_apk = apk_file.with_suffix(".apk")
+    output_dir = abspath(output_dir)
+    merge_base_apk = abspath(os.path.splitext(apk_file)[0] + ".apk")
     # If apk_file is not end with .apk then merge
-    if apk_file.suffix.lower() != ".apk":
+    if apk_file.lower() != ".apk":
         if not os.path.exists(merge_base_apk):
             apkeditor_merge(cfg, apk_file, merge_base_apk, quietly)
         command = f'{get_apkeditor_cmd(cfg)} d -i "{merge_base_apk}" -o "{output_dir}"'
@@ -126,7 +127,11 @@ def apkeditor_decode(
         command += " -dex"
     if force:
         command += " -f"
-    msg.info(f"Decoding: [blue underline]{apk_file.name}", bold=True, prefix="[-]")
+    msg.info(
+        f"Decoding: [royal_blue1 underline]{basename(apk_file)}",
+        bold=True,
+        prefix="[-]",
+    )
     run_commands([command], quietly, tasker=True)
     msg.info(
         f"Decoded into: {cfg.to_output}",
@@ -138,20 +143,22 @@ def apkeditor_decode(
 
 def apkeditor_build(
     cfg: Apkeditor,
-    input_dir: Path,
-    output_apk: Path,
+    input_dir: str,
+    output_apk: str,
     quietly: bool,
     force: bool,
 ):
+    input_dir = abspath(input_dir)
+    output_apk = abspath(output_apk)
     command = f'{get_apkeditor_cmd(cfg)} b -i "{input_dir}" -o "{output_apk}"'
     if force:
         command += " -f"
-    msg.info(f"Building: {input_dir}", bold=True, prefix="[-]")
+    msg.info(f"Building: {basename(input_dir)}", bold=True, prefix="[-]")
     run_commands([command], quietly, tasker=True)
     if cfg.clean:
         output_apk = cleanup_apk_build(input_dir, output_apk)
     msg.info(
-        f"Built into: {output_apk}",
+        f"Built into: {basename(output_apk)}",
         color="green",
         bold=True,
         prefix="[+]",
@@ -159,9 +166,9 @@ def apkeditor_build(
     return output_apk
 
 
-def cleanup_apk_build(input_dir, output_apk):
+def cleanup_apk_build(input_dir: str, output_apk: str):
     dest_file = input_dir + ".apk"
     shutil.move(output_apk, dest_file)
-    msg.info(f"Clean: {input_dir}")
+    msg.info(f"Clean: {basename(input_dir)}")
     shutil.rmtree(input_dir, ignore_errors=True)
     return dest_file

@@ -53,7 +53,7 @@ def select_config_for_apk(config):
     """Handle APK file case: prompt user to select a package config."""
     available_packages = list(config.keys())
     if not available_packages:
-        msg.error("No preconfigured packages found in config.json.")
+        msg.error("No preconfigured packages found.")
         sys.exit(1)
 
     if inquirer is None:
@@ -92,14 +92,14 @@ def match_config_by_manifest(config, android_manifest):
 
 def get_the_input(config, apk_dir: str):
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-
+    apk_dir = os.path.abspath(apk_dir)
     if os.path.isfile(apk_dir):  # APK file case
-        if not str(apk_dir).lower().endswith((".zip", ".apk", ".apks", ".xapk")):
+        if not apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk")):
             msg.error(f"This: {apk_dir}, isn’t an apk type.")
             sys.exit(1)
 
         package_name, apk_config = select_config_for_apk(config)
-        decoded_dir, dex_folder_exists = str(apk_dir).rsplit(".", 1)[0], False
+        decoded_dir, dex_folder_exists = apk_dir.rsplit(".", 1)[0], False
 
     else:  # Decoded directory case
         apk_dir = verify_apk_directory(apk_dir)
@@ -232,8 +232,9 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
 
 def get_finish(conf, decoded_dir, apk_config, args):
     editor = conf.apkeditor(args)
-    output_apk = os.path.basename(decoded_dir.rstrip("/"))
-    output_apk_path = os.path.expanduser(os.path.join(decoded_dir, output_apk + ".apk"))
+    decoded_dir = os.path.abspath(decoded_dir)
+    output_apk_name = os.path.basename(decoded_dir.rstrip("/"))
+    output_apk_path = os.path.join(decoded_dir, output_apk_name + ".apk")
 
     if (
         not os.path.exists(output_apk_path)
