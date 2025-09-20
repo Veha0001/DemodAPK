@@ -2,13 +2,14 @@ import os
 import re
 import shutil
 import sys
+from contextlib import nullcontext
 from os.path import abspath, basename
 
 from platformdirs import user_config_path
 
 from demodapk.baseconf import Apkeditor
 from demodapk.tool import download_apkeditor, get_latest_version
-from demodapk.utils import msg, run_commands
+from demodapk.utils import console, msg, run_commands
 
 
 def update_apkeditor():
@@ -96,7 +97,14 @@ def apkeditor_merge(
     if force:
         command += " -f"
     msg.info(f"Merging: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
-    run_commands([command], quietly, tasker=True)
+    with (
+        console.status(
+            "[bold blue]Processing...", spinner="point", spinner_style="blue"
+        )
+        if quietly
+        else nullcontext()
+    ):
+        run_commands([command], quietly, tasker=True)
     msg.info(
         f"Merged into: {os.path.basename(merge_base_apk)}",
         color="green",
@@ -128,11 +136,16 @@ def apkeditor_decode(
     if force:
         command += " -f"
     msg.info(
-        f"Decoding: [royal_blue1 underline]{basename(apk_file)}",
+        f"Decoding: [magenta underline]{basename(apk_file)}",
         bold=True,
         prefix="[-]",
     )
-    run_commands([command], quietly, tasker=True)
+    with (
+        console.status("[bold green]Processing...", spinner="point")
+        if quietly
+        else nullcontext()
+    ):
+        run_commands([command], quietly, tasker=True)
     msg.info(
         f"Decoded into: {cfg.to_output}",
         color="green",
@@ -154,7 +167,12 @@ def apkeditor_build(
     if force:
         command += " -f"
     msg.info(f"Building: {basename(input_dir)}", bold=True, prefix="[-]")
-    run_commands([command], quietly, tasker=True)
+    with (
+        console.status("[bold green]Finishing Build...", spinner="point")
+        if quietly
+        else nullcontext()
+    ):
+        run_commands([command], quietly, tasker=True)
     if cfg.clean:
         output_apk = cleanup_apk_build(input_dir, output_apk)
     msg.info(
