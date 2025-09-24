@@ -22,7 +22,7 @@ from rich.progress import (
     TransferSpeedColumn,
 )
 
-# from demodapk.utils import msg
+from demodapk.utils import log
 
 # === Rich progress setup ===
 progress = Progress(
@@ -45,6 +45,7 @@ done_event = Event()
 
 def handle_sigint(signum, frame):
     _ = signum, frame
+    log.critical("Canceling download...")
     done_event.set()
 
 
@@ -54,7 +55,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 # === File download function ===
 def copy_url(task_id: TaskID, url: str, path: str) -> None:
     """Copy data from a url to a local file."""
-    progress.console.log(f"Requesting {url}")
+    log.info("Requesting: %s", url)
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urlopen(req) as response:
         # Break if content length is missing
@@ -69,7 +70,7 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
                 progress.update(task_id, advance=len(data))
                 if done_event.is_set():
                     return
-    progress.console.log(f"Downloaded {path}")
+    log.info("Downloaded: %s", path)
 
 
 def download(urls, dest_dir="."):
@@ -96,7 +97,7 @@ def get_latest_version():
                 # Remove leading 'V' if present
                 return tag_name.lstrip("Vv")
     except (URLError, HTTPError) as e:
-        progress.console.log(e)
+        log.error(e)
         sys.exit(1)
     return None
 
@@ -104,11 +105,11 @@ def get_latest_version():
 def download_apkeditor(dest_path):
     latest_version = get_latest_version()
     if latest_version:
-        progress.console.log(f"APKEditor latest version: {latest_version}")
+        log.info("APKEditor latest version: %s", latest_version)
         jar_url = (
             "https://github.com/REAndroid/APKEditor/releases/download/"
             f"V{latest_version}/APKEditor-{latest_version}.jar"
         )
         download([jar_url], dest_path)
     else:
-        progress.console.log("Could not determine the latest version.")
+        log.critical("Could not determine the latest version.")

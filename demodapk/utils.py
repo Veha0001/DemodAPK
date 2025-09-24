@@ -1,14 +1,25 @@
+import logging
 import os
 import subprocess
 import sys
 
 from art import text2art
 from rich.console import Console
+from rich.logging import RichHandler
 from rich.text import Text
 from rich.traceback import install
 
 install(show_locals=True)
 console = Console()
+
+logging.basicConfig(
+    level="NOTSET",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[
+        RichHandler(rich_tracebacks=True, markup=True, show_path=False, show_time=False)
+    ],
+)
 
 
 def show_logo(text, font="small", color_pattern=None):
@@ -154,3 +165,4 @@ class MessagePrinter:
 
 
 msg = MessagePrinter()
+log = logging.getLogger("demodapk")

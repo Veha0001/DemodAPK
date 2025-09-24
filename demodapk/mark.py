@@ -9,7 +9,7 @@ from platformdirs import user_config_path
 
 from demodapk.baseconf import Apkeditor
 from demodapk.tool import download_apkeditor, get_latest_version
-from demodapk.utils import console, msg, run_commands
+from demodapk.utils import console, log, msg, run_commands
 
 
 def update_apkeditor():
@@ -23,7 +23,7 @@ def update_apkeditor():
 
     latest_version = get_latest_version()
     if not latest_version:
-        msg.error("Could not fetch the latest APKEditor version.")
+        log.error("Could not fetch the latest APKEditor version.")
         return None
 
     # Remove all existing APKEditor jars
@@ -32,7 +32,7 @@ def update_apkeditor():
             path = os.path.join(config_dir, fname)
             try:
                 os.remove(path)
-                msg.info(f"Deleted: {fname}")
+                log.warning("Deleted: %s", path)
             except (PermissionError, shutil.Error):
                 pass
 
@@ -42,7 +42,7 @@ def update_apkeditor():
     if os.path.exists(latest_jar):
         return latest_jar
 
-    msg.error("Failed to download APKEditor.")
+    log.error("Failed to download APKEditor.")
     return None
 
 
@@ -54,15 +54,10 @@ def get_apkeditor_cmd(cfg: Apkeditor):
     """
     editor_jar = cfg.editor_jar
     javaopts = cfg.javaopts
-    # Use system apkeditor if available
-    # apkeditor_cmd = shutil.which("apkeditor")
-    # if apkeditor_cmd:
-    # opts = " ".join(f"-J{opt.lstrip('-')}" for opt in javaopts.split())
-    # return f"apkeditor {opts}".strip()
+
     config_dir = user_config_path("demodapk")
     os.makedirs(config_dir, exist_ok=True)
 
-    # Look for existing jars
     if editor_jar:
         if not os.path.exists(editor_jar):
             msg.error(f"Specified editor jar does not exist: {editor_jar}")
@@ -78,10 +73,15 @@ def get_apkeditor_cmd(cfg: Apkeditor):
             jars.sort(reverse=True)
             editor_jar = jars[0][1]
 
+    if os.path.isfile(editor_jar) and os.path.getsize(editor_jar) > 0:
+        log.error("The APKEditor JAR is faulty.")
+        update_apkeditor()
+        sys.exit(0)
     # If jar  doesn't exist, update/download latest
     if not editor_jar or not os.path.exists(editor_jar):
         update_apkeditor()
         sys.exit(0)
+
     return f"java {javaopts} -jar {editor_jar}".strip()
 
 
