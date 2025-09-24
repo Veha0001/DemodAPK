@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.text import Text
 from rich.traceback import install
+from rich_gradient import Gradient
 
 install(show_locals=True)
 console = Console()
@@ -22,38 +23,13 @@ logging.basicConfig(
 )
 
 
-def show_logo(text, font="small", color_pattern=None):
+def show_logo(text, font="small", style="bold", ptb=1):
     logo_art = text2art(text, font=font)
-    if color_pattern is None:
-        color_blocks = [
-            ("green1", 6),
-            ("red1", 5),
-            ("cyan2", 7),
-            ("yellow2", 5),
-            ("dodger_blue1", 6),
-            ("medium_orchid1", 7),
-            ("light_green", 5),
-            ("orange_red1", 6),
-        ]
-    else:
-        color_blocks = color_pattern
-
     if isinstance(logo_art, str):
-        lines = logo_art.splitlines()
-        for line in lines:
-            colored_line = Text()
-            color_index = 0
-            count_in_block = 0
-            current_color, limit = color_blocks[color_index]
-
-            for char in line:
-                colored_line.append(char, style=f"bold {current_color}")
-                count_in_block += 1
-                if count_in_block >= limit:
-                    count_in_block = 0
-                    color_index = (color_index + 1) % len(color_blocks)
-                    current_color, limit = color_blocks[color_index]
-            console.print(colored_line)
+        lines = str(logo_art).splitlines()
+        artlol = Gradient(lines)
+        console.print(artlol, style=style)
+        console.line(ptb)
 
 
 def run_commands(commands, quietly, tasker: bool = False):

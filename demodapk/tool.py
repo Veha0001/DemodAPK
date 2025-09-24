@@ -45,7 +45,7 @@ done_event = Event()
 
 def handle_sigint(signum, frame):
     _ = signum, frame
-    log.critical("Canceling download...")
+    log.fatal("Canceling download...")
     done_event.set()
 
 

@@ -73,7 +73,7 @@ def get_apkeditor_cmd(cfg: Apkeditor):
             jars.sort(reverse=True)
             editor_jar = jars[0][1]
 
-    if os.path.isfile(editor_jar) and os.path.getsize(editor_jar) > 0:
+    if os.path.getsize(editor_jar) == 0:
         log.error("The APKEditor JAR is faulty.")
         update_apkeditor()
         sys.exit(0)
