@@ -94,7 +94,6 @@ def main(**kwargs):
     """DemodAPK: APK Modification Script"""
     # kwargs will contain all arguments/options
     args = SimpleNamespace(**kwargs)
-    # click.echo(kwargs)
     packer = load_config(args.config).get("DemodAPK", {})
     show_logo("DemodAPK")
     dowhat(args, click)
