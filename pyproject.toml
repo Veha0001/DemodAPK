@@ -8,6 +8,7 @@ dependencies = [
     "art",
     "rich",
     "rich-click",
+    "rich-gradient",
     "platformdirs",
     "inquirer"
 ]
@@ -16,8 +17,9 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/Veha0001/DemodAPK"
+Documentation = "https://demodapk.netlify.app"
 Repository = "https://github.com/Veha0001/DemodAPK"
-
+Issues = "https://github.com/Veha0001/DemodAPK/issues"
 [build-system]
 requires = ["flit_core"]
 build-backend = "flit_core.buildapi"

@@ -1,6 +1,7 @@
 art
 rich
 rich-click
+rich-gradient
 platformdirs
 inquirer
 mkdocs
