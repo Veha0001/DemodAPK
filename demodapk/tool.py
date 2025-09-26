@@ -1,5 +1,13 @@
 """
-- https://github.com/textualize/rich/blob/master/examples/downloader.py
+APK tool utilities module.
+
+This module provides functionality for:
+- Downloading files with progress tracking
+- Managing APKEditor downloads
+- Handling GitHub releases
+- Progress bar visualization
+
+Based on: https://github.com/textualize/rich/blob/master/examples/downloader.py
 """
 
 import json
@@ -43,9 +51,9 @@ progress = Progress(
 done_event = Event()
 
 
-def handle_sigint(signum, frame):
+def handle_sigint(*_):
+    """Handle SIGINT (Ctrl+C) signal to stop downloads gracefully."""
     done_event.set()
-    _ = signum, frame
 
 
 signal.signal(signal.SIGINT, handle_sigint)
@@ -53,7 +61,22 @@ signal.signal(signal.SIGINT, handle_sigint)
 
 # === File download function ===
 def copy_url(task_id: TaskID, url: str, path: str) -> None:
-    """Copy data from a url to a local file."""
+    """
+    Copy data from a URL to a local file with progress tracking.
+
+    Args:
+        task_id (TaskID): Progress bar task identifier
+        url (str): Source URL to download from
+        path (str): Destination file path
+
+    Returns:
+        None
+
+    Raises:
+        URLError: If URL cannot be accessed
+        HTTPError: If HTTP request fails
+        OSError: If file cannot be written
+    """
     log.info("Requesting: %s", url)
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urlopen(req) as response:
@@ -72,8 +95,23 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
     log.info("Downloaded: %s", path)
 
 
-def download(urls, dest_dir="."):
-    """Download multiple files to the given directory."""
+def download(urls: list[str], dest_dir: str = ".") -> None:
+    """
+    Download multiple files to the specified directory.
+
+    Downloads files in parallel using a thread pool and displays
+    progress for each download.
+
+    Args:
+        urls (list[str]): List of URLs to download
+        dest_dir (str, optional): Destination directory. Defaults to current directory.
+
+    Returns:
+        None
+
+    Raises:
+        OSError: If destination directory cannot be created
+    """
     os.makedirs(dest_dir, exist_ok=True)
     with progress:
         with ThreadPoolExecutor(max_workers=4) as pool:
@@ -84,8 +122,19 @@ def download(urls, dest_dir="."):
                 pool.submit(copy_url, task_id, url, dest_path)
 
 
-def get_latest_version():
-    """Get the latest version of APKEditor from GitHub API."""
+def get_latest_version() -> str | None:
+    """
+    Get the latest version of APKEditor from GitHub API.
+
+    Queries the GitHub releases API to get the most recent version tag.
+    Handles version strings with or without leading 'V'/'v' prefix.
+
+    Returns:
+        str | None: Version string without prefix, or None if version cannot be determined
+
+    Raises:
+        SystemExit: If GitHub API request fails
+    """
     url = "https://api.github.com/repos/reandroid/apkeditor/releases/latest"
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     try:
@@ -101,7 +150,22 @@ def get_latest_version():
     return None
 
 
-def download_apkeditor(dest_path):
+def download_apkeditor(dest_path: str) -> None:
+    """
+    Download the latest version of APKEditor.
+
+    Gets the latest version number and downloads the corresponding JAR file.
+    Shows download progress using rich progress bars.
+
+    Args:
+        dest_path (str): Directory to save the APKEditor JAR
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If version cannot be determined or download fails
+    """
     latest_version = get_latest_version()
     if latest_version:
         log.info("APKEditor latest version: %s", latest_version)

@@ -1,3 +1,10 @@
+"""
+APK modification utilities using APKEditor.
+
+This module provides functions for managing and executing APKEditor operations
+including updating, decoding, building and merging APK files.
+"""
+
 import os
 import re
 import shutil
@@ -36,7 +43,7 @@ def update_apkeditor():
             except (PermissionError, shutil.Error):
                 pass
 
-    download_apkeditor(config_dir)
+    download_apkeditor(str(config_dir))
     latest_jar = os.path.join(config_dir, f"APKEditor-{latest_version}.jar")
 
     if os.path.exists(latest_jar):
@@ -92,8 +99,24 @@ def apkeditor_merge(
     quietly: bool,
     force: bool = False,
 ):
+    """
+    Merge an APK file with a base APK using APKEditor.
+
+    Args:
+        cfg (Apkeditor): APKEditor configuration object
+        apk_file (str): Path to the APK file to merge
+        merge_base_apk (str): Path to output the merged APK
+        quietly (bool): Run in quiet mode if True
+        force (bool, optional): Force overwrite existing files. Defaults to False.
+
+    Returns:
+        None
+    """
     # New base name of apk_file end with .apk
-    command = f'{get_apkeditor_cmd(cfg)} m -i "{os.path.abspath(apk_file)}" -o "{os.path.abspath(merge_base_apk)}"'
+    command = (
+        f'{get_apkeditor_cmd(cfg)} m -i "{os.path.abspath(apk_file)}"'
+        f' -o "{os.path.abspath(merge_base_apk)}"'
+    )
     if force:
         command += " -f"
     msg.info(f"Merging: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
@@ -120,6 +143,19 @@ def apkeditor_decode(
     quietly: bool,
     force: bool,
 ):
+    """
+    Decode an APK file using APKEditor.
+
+    Args:
+        cfg (Apkeditor): APKEditor configuration object
+        apk_file (str): Path to the APK file to decode
+        output_dir (str): Directory to output decoded files
+        quietly (bool): Run in quiet mode if True
+        force (bool): Force overwrite existing files
+
+    Returns:
+        None
+    """
     output_dir = abspath(output_dir)
     merge_base_apk = abspath(os.path.splitext(apk_file)[0] + ".apk")
     # If apk_file is not end with .apk then merge
@@ -161,6 +197,19 @@ def apkeditor_build(
     quietly: bool,
     force: bool,
 ):
+    """
+    Build an APK from decoded files using APKEditor.
+
+    Args:
+        cfg (Apkeditor): APKEditor configuration object
+        input_dir (str): Directory containing decoded APK files
+        output_apk (str): Path to output the built APK
+        quietly (bool): Run in quiet mode if True
+        force (bool): Force overwrite existing files
+
+    Returns:
+        str: Path to the built APK file
+    """
     input_dir = abspath(input_dir)
     output_apk = abspath(output_apk)
     command = f'{get_apkeditor_cmd(cfg)} b -i "{input_dir}" -o "{output_apk}"'
@@ -185,6 +234,16 @@ def apkeditor_build(
 
 
 def cleanup_apk_build(input_dir: str, output_apk: str):
+    """
+    Clean up temporary files after APK build.
+
+    Args:
+        input_dir (str): Directory containing decoded APK files
+        output_apk (str): Path to the built APK file
+
+    Returns:
+        str: Path to the final APK file after cleanup
+    """
     dest_file = input_dir + ".apk"
     shutil.move(output_apk, dest_file)
     msg.info(f"Clean: {basename(input_dir)}")

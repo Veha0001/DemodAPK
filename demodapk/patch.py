@@ -1,3 +1,15 @@
+"""
+APK patching utilities module.
+
+This module provides functions for modifying APK components including:
+- Package name updates in manifest and resources
+- App name modifications
+- Facebook integration settings
+- Smali code modifications
+- Build configuration updates
+- Metadata management
+"""
+
 import glob
 import os
 import re
@@ -6,6 +18,20 @@ from demodapk.utils import msg
 
 
 def extract_package_info(manifest_file):
+    """
+    Extract package name and path from AndroidManifest.xml.
+
+    Args:
+        manifest_file (str): Path to AndroidManifest.xml file
+
+    Returns:
+        tuple: (package_name, package_path) where:
+            - package_name (str): Android package name
+            - package_path (str): Package path in smali format
+
+    Raises:
+        FileNotFoundError: If manifest file doesn't exist
+    """
     package_name = None
     package_path = None
 
@@ -26,6 +52,16 @@ def extract_package_info(manifest_file):
 
 
 def update_app_name_values(app_name, value_strings):
+    """
+    Update application name in strings.xml resource file.
+
+    Args:
+        app_name (str): New application name
+        value_strings (str): Path to strings.xml resource file
+
+    Returns:
+        None
+    """
     if not os.path.isfile(value_strings):
         msg.error(f"File not found: {value_strings}")
         return
@@ -52,6 +88,18 @@ def update_app_name_values(app_name, value_strings):
 def update_facebook_app_values(
     strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme
 ):
+    """
+    Update Facebook integration settings in strings.xml.
+
+    Args:
+        strings_file (str): Path to strings.xml file
+        fb_app_id (str): Facebook application ID
+        fb_client_token (str): Facebook client token
+        fb_login_protocol_scheme (str): Facebook login protocol scheme
+
+    Returns:
+        None
+    """
     if os.path.isfile(strings_file):
         with open(strings_file, "r", encoding="utf-8") as file:
             content = file.read()
@@ -83,6 +131,22 @@ def update_facebook_app_values(
 def rename_package_in_manifest(
     manifest_file, old_package_name, new_package_name, level=0
 ):
+    """
+    Update package name references in AndroidManifest.xml.
+
+    Args:
+        manifest_file (str): Path to AndroidManifest.xml
+        old_package_name (str): Original package name
+        new_package_name (str): New package name to use
+        level (int): Modification level (0-4) controlling which elements to update
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If manifest file doesn't exist
+        IOError: If file read/write fails
+    """
     if not os.path.isfile(manifest_file):
         msg.error("AndroidManifest.xml was not found.")
         return
@@ -182,6 +246,17 @@ def rename_package_in_manifest(
 
 
 def update_smali_path_package(smali_dir, old_package_path, new_package_path):
+    """
+    Update package paths in smali files.
+
+    Args:
+        smali_dir (str): Directory containing smali files
+        old_package_path (str): Original package path
+        new_package_path (str): New package path to use
+
+    Returns:
+        None
+    """
     for root, _, files in os.walk(smali_dir):
         for file in files:
             file_path = os.path.join(root, file)
@@ -199,6 +274,20 @@ def update_smali_path_package(smali_dir, old_package_path, new_package_path):
 
 
 def rename_package_in_resources(resources_dir, old_package_name, new_package_name):
+    """
+    Update package name references in resource files.
+
+    Args:
+        resources_dir (str): Directory containing resource files
+        old_package_name (str): Original package name
+        new_package_name (str): New package name to use
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If resources directory doesn't exist
+    """
     try:
         # Check if resources directory exists
         if not os.path.isdir(resources_dir):
@@ -248,6 +337,17 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
 
 
 def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
+    """
+    Rename smali directories to match new package path.
+
+    Args:
+        smali_base_dir (str): Base directory containing smali folders
+        old_package_path (str): Original package path
+        new_package_path (str): New package path to use
+
+    Returns:
+        None
+    """
     # Normalize paths (remove leading L)
     old_package_path = old_package_path.strip("L")
     new_package_path = new_package_path.strip("L")
@@ -298,7 +398,21 @@ def update_buildconfig_file(file_path, old_package_name, new_package_name):
 def update_application_id_in_smali(
     smali_dir, old_package_name, new_package_name, strict=False
 ):
-    """Update APPLICATION_ID in all BuildConfig.smali files under smali_dir."""
+    """
+    Update APPLICATION_ID in BuildConfig.smali files.
+
+    Args:
+        smali_dir (str): Directory containing smali files
+        old_package_name (str): Original package name
+        new_package_name (str): New package name
+        strict (bool): Enable strict validation of updates
+
+    Returns:
+        None
+
+    Raises:
+        FileNotFoundError: If smali directory doesn't exist
+    """
     if not os.path.isdir(smali_dir):
         msg.error(f"The smali directory '{smali_dir}' does not exist.")
         return
@@ -333,6 +447,16 @@ def update_application_id_in_smali(
 
 
 def remove_metadata_from_manifest(manifest_file, config_file):
+    """
+    Remove specified metadata entries from AndroidManifest.xml.
+
+    Args:
+        manifest_file (str): Path to AndroidManifest.xml
+        config_file (list): List of metadata entries to remove
+
+    Returns:
+        None
+    """
     # Filter out any empty strings in metadata_to_remove
     metadata_to_remove = [
         meta for meta in config_file if isinstance(meta, str) and meta.strip()

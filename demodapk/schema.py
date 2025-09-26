@@ -1,3 +1,12 @@
+"""
+JSON Schema configuration module.
+
+This module provides functionality for managing JSON schema configuration:
+- Schema selection and application
+- Config file creation and updates
+- Remote schema fetching
+"""
+
 import json
 import os
 import sys
@@ -7,6 +16,7 @@ import inquirer
 import demodapk
 from demodapk.utils import console
 
+# Schema configuration constants
 SCHEMA_PATH = os.path.join(os.path.dirname(demodapk.__file__), "schema.json")
 SCHEMA_URL = (
     "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/demodapk"
@@ -16,8 +26,23 @@ SCHEMA_NETLIFY = "https://demodapk.netlify.app/schema.json"
 CONFIG_FILE = "config.json"
 
 
-def ensure_config(schema_value):
-    """Open or create config.json and set $schema at the top."""
+def ensure_config(schema_value: str) -> None:
+    """
+    Open or create config.json and set $schema at the top.
+
+    Reads existing config file if present, otherwise creates new one.
+    Places schema reference at the start of the JSON configuration.
+
+    Args:
+        schema_value (str): URL or path to JSON schema
+
+    Returns:
+        None
+
+    Raises:
+        IOError: If unable to write config file
+        JSONDecodeError: If existing config contains invalid JSON
+    """
     config = {}
 
     if os.path.exists(CONFIG_FILE):
@@ -39,7 +64,22 @@ def ensure_config(schema_value):
     console.log("Add selected $schema to ./config.json")
 
 
-def get_schema():
+def get_schema() -> None:
+    """
+    Interactive schema selection and configuration.
+
+    Prompts user to select schema source and updates config file.
+    Options include:
+    - Local package schema
+    - Netlify hosted schema
+    - GitHub hosted schema
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: After schema selection and config update
+    """
     questions = [
         inquirer.List(
             "schema_index",

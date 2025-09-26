@@ -1,4 +1,10 @@
-"""DemodAPK CLI"""
+"""
+DemodAPK CLI module.
+
+This module provides the command-line interface for the DemodAPK tool,
+which handles APK modification tasks including decoding, rebuilding,
+and various customization options.
+"""
 
 from types import SimpleNamespace
 
@@ -92,7 +98,6 @@ from demodapk.utils import show_logo
 )
 def main(**kwargs):
     """DemodAPK: APK Modification Script"""
-    # kwargs will contain all arguments/options
     args = SimpleNamespace(**kwargs)
     packer = load_config(args.config).get("DemodAPK", {})
     show_logo("DemodAPK")

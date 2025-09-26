@@ -1,3 +1,7 @@
+"""
+DemodAPK: baseconf.py
+"""
+
 import dataclasses
 import json
 import os
@@ -11,6 +15,8 @@ from demodapk.utils import msg
 
 @dataclasses.dataclass
 class ApkBasic:
+    """Basic information about the APK."""
+
     apk_config: dict
     package_orig_name: Optional[str] = None
     package_orig_path: Optional[str] = None
@@ -21,6 +27,8 @@ class ApkBasic:
 
 @dataclasses.dataclass
 class Apkeditor:
+    """Configuration for the APK editor."""
+
     editor_jar: str
     javaopts: str
     dex_option: bool
@@ -39,6 +47,8 @@ class Apkeditor:
 
 @dataclasses.dataclass
 class UpdateContext:
+    """Context for updating the APK."""
+
     value_strings: str
     smali_folder: str
     resources_folder: str
@@ -49,6 +59,8 @@ class UpdateContext:
 
 @dataclasses.dataclass
 class Facebook:
+    """Configuration for Facebook integration."""
+
     appid: str
     client_token: str
     login_protocol_scheme: str
@@ -59,6 +71,8 @@ class Facebook:
 
 @dataclasses.dataclass
 class Package:
+    """Package information."""
+
     name: str
     path: str
 
@@ -67,7 +81,10 @@ class Package:
 
 
 class ConfigHandler:
+    """Handles configuration for the APK."""
+
     def __init__(self, apk_config):
+        """Initialize with the given APK configuration."""
         self.log_level = apk_config.get("log", False)
         self.manifest_edit_level = apk_config.get("level", 2)
         self.app_name = apk_config.get("app_name", None)
@@ -75,6 +92,7 @@ class ConfigHandler:
         self.command_quietly = apk_config.get("commands", {}).get("quietly", False)
 
     def apkeditor(self, args) -> Apkeditor:
+        """Get the APK editor configuration."""
         apkeditor_conf = self.apk_config.get("apkeditor", {})
         return Apkeditor(
             editor_jar=apkeditor_conf.get("jarpath", ""),
@@ -86,6 +104,7 @@ class ConfigHandler:
         )
 
     def facebook(self) -> Facebook:
+        """Get the Facebook configuration."""
         fb = self.apk_config.get("facebook", {})
         appid = fb.get("app_id", "")
         return Facebook(
@@ -95,6 +114,7 @@ class ConfigHandler:
         )
 
     def package(self) -> Package:
+        """Get the package information."""
         name = self.apk_config.get("package", "")
         return Package(
             name=name,
@@ -103,10 +123,16 @@ class ConfigHandler:
 
 
 def get_config_path(config: str):
+    """
+    Get the configuration path for the given config file.
+    """
     return os.path.join(user_config_dir("demodapk"), config)
 
 
 def load_config(config: str = "config.json"):
+    """
+    Load the configuration from the specified JSON file.
+    """
     config_path = os.path.abspath(os.path.expanduser(config))
     if os.path.isdir(config_path):
         config_path = os.path.join(config_path, "config.json")
@@ -119,11 +145,17 @@ def load_config(config: str = "config.json"):
 
 
 def check_for_dex_folder(apk_dir):
+    """
+    Check if the dex folder exists in the given APK directory.
+    """
     dex_folder_path = os.path.join(apk_dir, "dex")  # Adjust the path if necessary
     return os.path.isdir(dex_folder_path)
 
 
 def verify_apk_directory(apk_dir):
+    """
+    Verify the structure of the APK directory.
+    """
     if not os.path.exists(apk_dir):
         msg.error(f"The directory {apk_dir} does not exist.")
         sys.exit(1)

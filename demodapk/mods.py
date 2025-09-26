@@ -1,3 +1,14 @@
+"""
+APK modification workflow module.
+
+This module implements the core workflow for modifying APK files, including:
+- APK decoding and building
+- Package name modifications
+- Resource updates
+- Command execution
+- Configuration handling
+"""
+
 import os
 import shutil
 import sys
@@ -31,6 +42,16 @@ except ImportError:
 
 
 def dowhat(args, click):
+    """
+    Process initial command line arguments and perform preliminary actions.
+
+    Args:
+        args: Namespace object containing command line arguments
+        click: Click context object for CLI handling
+
+    Returns:
+        None
+    """
     if args.update_apkeditor:
         update_apkeditor()
         sys.exit(0)
@@ -44,13 +65,33 @@ def dowhat(args, click):
 
 
 def setup_env(ref: dict):
+    """
+    Set up environment variables for the modification process.
+
+    Args:
+        ref (dict): Dictionary mapping environment variable names to paths
+
+    Returns:
+        dict: The reference dictionary that was used to set up the environment
+    """
     for key, path in ref.items():
         os.environ[key] = path
     return ref
 
 
 def select_config_for_apk(config):
-    """Handle APK file case: prompt user to select a package config."""
+    """
+    Handle APK file case by prompting user to select a package configuration.
+
+    Args:
+        config (dict): Configuration dictionary containing package options
+
+    Returns:
+        tuple: Selected package name and its configuration
+
+    Raises:
+        SystemExit: If no configuration is selected or inquirer is not installed
+    """
     available_packages = list(config.keys())
     if not available_packages:
         msg.error("No preconfigured packages found.")
@@ -77,7 +118,19 @@ def select_config_for_apk(config):
 
 
 def match_config_by_manifest(config, android_manifest):
-    """Handle decoded directory case: match package from manifest."""
+    """
+    Match package configuration using the package name from AndroidManifest.xml.
+
+    Args:
+        config (dict): Configuration dictionary containing package options
+        android_manifest (str): Path to AndroidManifest.xml file
+
+    Returns:
+        tuple: Matched package name and its configuration
+
+    Raises:
+        SystemExit: If no matching configuration is found
+    """
     current_package_name, _ = extract_package_info(android_manifest)
 
     for key, value in config.items():
@@ -91,6 +144,19 @@ def match_config_by_manifest(config, android_manifest):
 
 
 def get_the_input(config, apk_dir: str):
+    """
+    Process input APK/directory and get configuration details.
+
+    Args:
+        config (dict): Configuration dictionary
+        apk_dir (str): Path to APK file or decoded directory
+
+    Returns:
+        ApkBasic: Object containing basic APK configuration details
+
+    Raises:
+        SystemExit: If input validation fails
+    """
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     apk_dir = os.path.abspath(apk_dir)
     if os.path.isfile(apk_dir):  # APK file case
@@ -121,6 +187,20 @@ def get_the_input(config, apk_dir: str):
 
 
 def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
+    """
+    Set up demo environment and decode APK if needed.
+
+    Args:
+        conf (ConfigHandler): Configuration handler object
+        basic (ApkBasic): Basic APK configuration
+        args: Command line arguments
+
+    Returns:
+        tuple: Paths to manifest, smali, resources, values and decoded directory
+
+    Raises:
+        SystemExit: If Java is not installed
+    """
     apk_dir = args.apk_dir
     apk_config = basic.apk_config
     isdex = basic.dex_folder_exists
@@ -174,6 +254,22 @@ def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
 
 
 def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
+    """
+    Apply updates to the APK based on configuration.
+
+    Args:
+        conf (ConfigHandler): Configuration handler
+        android_manifest (str): Path to AndroidManifest.xml
+        apk_config (dict): APK configuration dictionary
+        ctx (UpdateContext): Update context object
+        args: Command line arguments
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: If AndroidManifest.xml is not found
+    """
     editor = conf.apkeditor(args)
     package = conf.package()
     facebook = conf.facebook()
@@ -231,6 +327,18 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
 
 
 def get_finish(conf, decoded_dir, apk_config, args):
+    """
+    Complete APK modification process and build final APK.
+
+    Args:
+        conf (ConfigHandler): Configuration handler
+        decoded_dir (str): Path to decoded APK directory
+        apk_config (dict): APK configuration dictionary
+        args: Command line arguments
+
+    Returns:
+        None
+    """
     editor = conf.apkeditor(args)
     decoded_dir = os.path.abspath(decoded_dir)
     output_apk_name = os.path.basename(decoded_dir.rstrip("/"))
@@ -256,6 +364,16 @@ def get_finish(conf, decoded_dir, apk_config, args):
 
 
 def runsteps(args, packer):
+    """
+    Execute the complete APK modification workflow.
+
+    Args:
+        args: Command line arguments
+        packer (dict): Package configuration dictionary
+
+    Returns:
+        None
+    """
     basic = get_the_input(packer, args.apk_dir)
     conf = ConfigHandler(basic.apk_config)
 
