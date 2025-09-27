@@ -19,7 +19,7 @@ A tool for modifying and editing an **apk** that has been decoded by :simple-and
 
 ### Requirements
 
-- Python v3.9 or higher.
+- Python v3.10.* or higher.
 - Java v8 or higher.
 - Necessary libraries specified in `requirements.txt`.
 
@@ -27,6 +27,12 @@ A tool for modifying and editing an **apk** that has been decoded by :simple-and
 
 ```sh
 pip install demodapk
+```
+
+Or from source:
+
+```sh
+pip install git+https://github.com/Veha0001/DemodAPK
 ```
 
 #### Build from Source

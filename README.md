@@ -13,7 +13,7 @@
 
 ### Requirements
 
-- Python v3.9 or higher.
+- Python v3.10.\* or higher.
 - Java v8 or higher.
 - Necessary libraries specified in `requirements.txt`.
 

@@ -1,7 +1,7 @@
 [project]
 name = "demodapk"
 description = "A Demo CLI for modifying APK resources via config"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }]
 dependencies = [
@@ -20,6 +20,7 @@ Homepage = "https://github.com/Veha0001/DemodAPK"
 Documentation = "https://demodapk.netlify.app"
 Repository = "https://github.com/Veha0001/DemodAPK"
 Issues = "https://github.com/Veha0001/DemodAPK/issues"
+
 [build-system]
 requires = ["flit_core"]
 build-backend = "flit_core.buildapi"
