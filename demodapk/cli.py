@@ -25,6 +25,15 @@ from demodapk.utils import show_logo
     metavar="<apk>",
 )
 @click.option(
+    "-i",
+    "--in",
+    "index",
+    type=int,
+    default=None,
+    metavar="<int>",
+    help="Index of package configured.",
+)
+@click.option(
     "-c",
     "--config",
     default="config.json",

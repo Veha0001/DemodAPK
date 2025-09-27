@@ -12,9 +12,12 @@ import logging
 import os
 import subprocess
 import sys
+
 from art import text2art
+from rich import box
 from rich.console import Console
 from rich.logging import RichHandler
+from rich.table import Table
 from rich.text import Text
 from rich.traceback import install
 from rich_gradient import Gradient
@@ -271,6 +274,21 @@ def run_commands(commands: list, quietly: bool, tasker: bool = False) -> None:
                 quiet = command.get("quiet", quietly)
                 if cmd:
                     run(cmd, quiet, title)
+
+
+def showbox_packages(available_packages, selected_idx=None):
+    """Print table of Packages in rich styling"""
+    table = Table(title="Available Packages", box=box.ROUNDED, show_lines=True)
+    table.add_column("Index", style="cyan", justify="right")
+    table.add_column("Package Name", style="magenta")
+
+    for i, name in enumerate(available_packages):
+        if i == selected_idx:
+            table.add_row(str(i), f"[bold green]{name}[/bold green]")
+        else:
+            table.add_row(str(i), name)
+
+    console.print(table)
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ from demodapk.patch import (
     update_smali_path_package,
 )
 from demodapk.schema import get_schema
-from demodapk.utils import console, msg, run_commands
+from demodapk.utils import console, msg, run_commands, showbox_packages
 
 try:
     import inquirer
@@ -79,7 +79,7 @@ def setup_env(ref: dict):
     return ref
 
 
-def select_config_for_apk(config):
+def select_config_for_apk(config, args):
     """
     Handle APK file case by prompting user to select a package configuration.
 
@@ -96,6 +96,17 @@ def select_config_for_apk(config):
     if not available_packages:
         msg.error("No preconfigured packages found.")
         sys.exit(1)
+
+    if getattr(args, "index", None) is not None:
+        idx = args.index
+        if idx < 0 or idx >= len(available_packages):
+            showbox_packages(available_packages, idx)
+            msg.error(
+                f"Invalid index {idx}, must be between 0 and {len(available_packages) - 1}."
+            )
+            sys.exit(1)
+        name = available_packages[idx]
+        return name, config[name]
 
     if inquirer is None:
         msg.error("Inquirer package is not installed. Please install it to proceed.")
@@ -143,13 +154,12 @@ def match_config_by_manifest(config, android_manifest):
     sys.exit(1)
 
 
-def get_the_input(config, apk_dir: str):
+def get_the_inputs(config, args):
     """
     Process input APK/directory and get configuration details.
 
     Args:
         config (dict): Configuration dictionary
-        apk_dir (str): Path to APK file or decoded directory
 
     Returns:
         ApkBasic: Object containing basic APK configuration details
@@ -157,14 +167,15 @@ def get_the_input(config, apk_dir: str):
     Raises:
         SystemExit: If input validation fails
     """
+    apk_input = args.apk_dir
+    apk_dir = os.path.abspath(apk_input)
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-    apk_dir = os.path.abspath(apk_dir)
     if os.path.isfile(apk_dir):  # APK file case
         if not apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk")):
             msg.error(f"This: {apk_dir}, isn’t an apk type.")
             sys.exit(1)
 
-        package_name, apk_config = select_config_for_apk(config)
+        package_name, apk_config = select_config_for_apk(config, args)
         decoded_dir, dex_folder_exists = apk_dir.rsplit(".", 1)[0], False
 
     else:  # Decoded directory case
@@ -374,7 +385,7 @@ def runsteps(args, packer):
     Returns:
         None
     """
-    basic = get_the_input(packer, args.apk_dir)
+    basic = get_the_inputs(packer, args)
     conf = ConfigHandler(basic.apk_config)
 
     android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
