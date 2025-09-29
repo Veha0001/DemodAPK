@@ -219,7 +219,7 @@ def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
 
     editor = conf.apkeditor(args)
     if conf.log_level and isdex:
-        msg.warning("Dex folder found. Some functions will be disabled.", bold=True)
+        msg.warning("Dex folder found. Some functions will be disabled.")
 
     decoded_dir = (
         os.path.expanduser(os.path.splitext(editor.to_output)[0])
@@ -371,7 +371,7 @@ def get_finish(conf, decoded_dir, apk_config, args):
     setup_env({"BUILD": output_apk_path})
     if "commands" in apk_config and "end" in apk_config["commands"]:
         run_commands(apk_config["commands"]["end"], conf.command_quietly)
-    msg.info("APK modification finished!", bold=True)
+    msg.info("APK modification finished!")
 
 
 def runsteps(args, packer):

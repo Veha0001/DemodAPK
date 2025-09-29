@@ -8,31 +8,20 @@ This module provides utility functions and classes for:
 - Logo display with gradient effects
 """
 
-import logging
 import os
 import subprocess
 import sys
+from typing import Any, Optional
 
 from art import text2art
 from rich import box
 from rich.console import Console
-from rich.logging import RichHandler
 from rich.table import Table
-from rich.text import Text
 from rich.traceback import install
 from rich_gradient import Gradient
 
 install(show_locals=True)
-console = Console()
-
-logging.basicConfig(
-    level="NOTSET",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[
-        RichHandler(rich_tracebacks=True, markup=True, show_path=False, show_time=False)
-    ],
-)
+console = Console(log_path=False)
 
 
 def show_logo(
@@ -58,164 +47,49 @@ def show_logo(
         console.line(ptb)
 
 
-class MessagePrinter:
-    """
-    Formatted message printer with colored output and prefix icons.
+class CLIprinter:
+    """RICH Style, Text Printer"""
 
-    Provides methods for printing:
-    - Success messages (green with [*] prefix)
-    - Warning messages (yellow with [~] prefix)
-    - Error messages (red with [x] prefix)
-    - Info messages (cyan with [!] prefix)
-    - Progress messages (magenta with [$] prefix)
-    """
+    def __call__(self) -> None:
+        """Caller pass nothing"""
 
-    def print(self, message: str, **kwargs) -> None:
-        """
-        Print formatted message with optional styling.
+    def print(
+        self,
+        value: str | Any = "",
+        style: Optional[str] = "bold",
+        prefix: Optional[str] = "?",
+    ):
+        """Print using rich console"""
+        fix = f"\\[[{style}]{prefix}[reset]] "
+        console.print(
+            f"{fix}[{style}]{value}",
+            markup=True,
+            highlight=True,
+            soft_wrap=True,
+        )
 
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
+    def info(self, value: Any, style: str = "bold cyan", prefix: str = "!"):
+        """Level Info"""
+        self.print(value=value, style=style, prefix=prefix)
 
-        Returns:
-            None
-        """
-        color = kwargs.pop("color", None)
-        bold = kwargs.pop("bold", True)
-        inline = kwargs.pop("inline", False)
-        prefix = kwargs.pop("prefix", None)
-        inlast = kwargs.pop("inlast", False)
-        styled_message = Text()
-        if prefix:
-            styled_message.append(f"{prefix} ", style="bold")
+    def error(self, value: Any, style: str = "bold red", prefix: str = "x"):
+        """Level Error"""
+        self.print(value=value, style=style, prefix=prefix)
 
-        style_str = f"bold {color}" if bold and color else color or ""
-        styled_message.append(Text.from_markup(message, style=style_str))
+    def warning(self, value: Any, style: str = "bold yellow", prefix: str = "~"):
+        """Level Warning"""
+        self.print(value=value, style=style, prefix=prefix)
 
-        if inline:
-            console.print(
-                styled_message, end=" ", soft_wrap=True, highlight=True, markup=True
-            )
-            if inlast:
-                console.print(" " * 5)
-        else:
-            console.print(
-                styled_message,
-                soft_wrap=True,
-                markup=True,
-                justify="left",
-                highlight=True,
-            )
+    def progress(self, value: Any, style: str = "bold magenta", prefix: str = "$"):
+        """Level Progress"""
+        self.print(value=value, style=style, prefix=prefix)
 
-    def success(self, message, **kwargs) -> None:
-        """
-        Print success message in green with [*] prefix.
-
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
-
-        Returns:
-            None
-        """
-        kwargs.setdefault("color", "green")
-        kwargs.setdefault("prefix", "[*]")
-        self.print(message, **kwargs)
-
-    def warning(self, message, **kwargs) -> None:
-        """
-        Print warning message in yellow with [~] prefix.
-
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
-
-        Returns:
-            None
-        """
-        kwargs.setdefault("color", "yellow")
-        kwargs.setdefault("prefix", "[~]")
-        self.print(message, **kwargs)
-
-    def error(self, message, **kwargs) -> None:
-        """
-        Print error message in red with [x] prefix.
-
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
-
-        Returns:
-            None
-        """
-        kwargs.setdefault("color", "red")
-        kwargs.setdefault("prefix", "[x]")
-        self.print(message, **kwargs)
-
-    def info(self, message, **kwargs) -> None:
-        """
-        Print info message in cyan with [!] prefix.
-
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
-
-        Returns:
-            None
-        """
-        kwargs.setdefault("color", "cyan")
-        kwargs.setdefault("prefix", "[!]")
-        self.print(message, **kwargs)
-
-    def progress(self, message, **kwargs) -> None:
-        """
-        Print progress message in magenta with [$] prefix.
-
-        Args:
-            message (str): Message text to print
-            **kwargs: Optional styling parameters:
-                color (str): Text color name
-                bold (bool): Make text bold
-                inline (bool): Print inline without newline
-                prefix (str): Message prefix icon/text
-                inlast (bool): Add extra spacing after inline message
-
-        Returns:
-            None
-        """
-        kwargs.setdefault("color", "magenta")
-        kwargs.setdefault("prefix", "[$]")
-        self.print(message, **kwargs)
+    def success(self, value: Any, style: str = "bold green", prefix: str = "*"):
+        """Level Success"""
+        self.print(value=value, style=style, prefix=prefix)
 
 
-msg = MessagePrinter()
-log = logging.getLogger("demodapk")
+msg = CLIprinter()
 
 
 def run_commands(commands: list, quietly: bool, tasker: bool = False) -> None:
@@ -257,7 +131,6 @@ def run_commands(commands: list, quietly: bool, tasker: bool = False) -> None:
                 msg.warning("Execution cancelled by user (Ctrl+C).")
                 sys.exit(2)
             else:
-                msg.warning(f"Command failed: {cmd}")
                 msg.error(e)
                 sys.exit(1)
         except KeyboardInterrupt:
@@ -292,33 +165,13 @@ def showbox_packages(available_packages, selected_idx=None):
 
 
 if __name__ == "__main__":
-    show_logo("Hello World", font="small", style="bold cyan", ptb=1)
-    # Test msg and log
-    log.info("Starting printing messages")
-    msg.info("This is an info message.")
-    msg.success("This is a success message.")
-    msg.warning("This is a warning message.")
-    msg.error("This is an error message.")
-    log.info("Print every msg kwargs")
-    msg.info("Inline message", inline=True, inlast=True)
-    msg.info("Bold inline message", inline=True, bold=True, inlast=True)
-    msg.info("Not-Bold colored inline message", inline=True, bold=False, color="pink1")
-    msg.info("FINE", color="blue")
-    log.info("Everything Done.")
-    log.info("start run_commands test")
-    run_commands(
-        [
-            "echo 'Hello World'",
-            {
-                "run": "python -c 'import datetime; print(datetime.datetime.now())'",
-                "title": "Today",
-                "quiet": False,
-            },
-            {
-                "run": "python -c 'import time; time.sleep(2)'",
-                "title": "Sleeping",
-                "quiet": True,
-            },
-        ],
-        quietly=False,
-    )
+    try:
+        msg.progress("The World!")
+        subprocess.run("exit 2", shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        msg.error(e)
+    msg.info("Hello World")
+    msg.error("Something wrong")
+    msg.warning("He is here!")
+    msg.success("Everything gonna be alright.")
+    msg.print("I am Grok", style="b u", prefix="∅")

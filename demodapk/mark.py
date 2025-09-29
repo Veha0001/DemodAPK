@@ -16,7 +16,7 @@ from platformdirs import user_config_path
 
 from demodapk.baseconf import Apkeditor
 from demodapk.tool import download_apkeditor, get_latest_version
-from demodapk.utils import console, log, msg, run_commands
+from demodapk.utils import console, msg, run_commands
 
 
 def update_apkeditor():
@@ -29,17 +29,13 @@ def update_apkeditor():
     os.makedirs(config_dir, exist_ok=True)
 
     latest_version = get_latest_version()
-    if not latest_version:
-        log.error("Could not fetch the latest APKEditor version.")
-        return None
-
     # Remove all existing APKEditor jars
     for fname in os.listdir(config_dir):
         if re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname):
             path = os.path.join(config_dir, fname)
             try:
                 os.remove(path)
-                log.warning("Deleted: %s", path)
+                msg.warning(f"Deleted: {fname}")
             except (PermissionError, shutil.Error):
                 pass
 
@@ -49,7 +45,7 @@ def update_apkeditor():
     if os.path.exists(latest_jar):
         return latest_jar
 
-    log.error("Failed to download APKEditor.")
+    msg.error("Failed to download APKEditor.")
     return None
 
 
@@ -81,7 +77,7 @@ def get_apkeditor_cmd(cfg: Apkeditor):
             editor_jar = jars[0][1]
 
     if os.path.getsize(editor_jar) == 0:
-        log.error("The APKEditor JAR is faulty.")
+        msg.error("The APKEditor JAR is faulty.")
         update_apkeditor()
         sys.exit(0)
     # If jar  doesn't exist, update/download latest
@@ -119,7 +115,7 @@ def apkeditor_merge(
     )
     if force:
         command += " -f"
-    msg.info(f"Merging: {os.path.basename(apk_file)}", bold=True, prefix="[-]")
+    msg.info(f"Merging: {os.path.basename(apk_file)}", prefix="-")
     with (
         console.status(
             "[bold blue]Processing...", spinner="point", spinner_style="blue"
@@ -128,11 +124,9 @@ def apkeditor_merge(
         else nullcontext()
     ):
         run_commands([command], quietly, tasker=True)
-    msg.info(
+    msg.success(
         f"Merged into: {os.path.basename(merge_base_apk)}",
-        color="green",
-        bold=True,
-        prefix="[+]",
+        prefix="+",
     )
 
 
@@ -173,8 +167,7 @@ def apkeditor_decode(
         command += " -f"
     msg.info(
         f"Decoding: [magenta underline]{basename(apk_file)}",
-        bold=True,
-        prefix="[-]",
+        prefix="-",
     )
     with (
         console.status("[bold green]Processing...", spinner="point")
@@ -182,11 +175,9 @@ def apkeditor_decode(
         else nullcontext()
     ):
         run_commands([command], quietly, tasker=True)
-    msg.info(
+    msg.success(
         f"Decoded into: {cfg.to_output}",
-        color="green",
-        bold=True,
-        prefix="[+]",
+        prefix="+",
     )
 
 
@@ -215,7 +206,7 @@ def apkeditor_build(
     command = f'{get_apkeditor_cmd(cfg)} b -i "{input_dir}" -o "{output_apk}"'
     if force:
         command += " -f"
-    msg.info(f"Building: {basename(input_dir)}", bold=True, prefix="[-]")
+    msg.info(f"Building: {basename(input_dir)}", prefix="-")
     with (
         console.status("[bold green]Finishing Build...", spinner="point")
         if quietly
@@ -224,11 +215,9 @@ def apkeditor_build(
         run_commands([command], quietly, tasker=True)
     if cfg.clean:
         output_apk = cleanup_apk_build(input_dir, output_apk)
-    msg.info(
+    msg.success(
         f"Built into: {basename(output_apk)}",
-        color="green",
-        bold=True,
-        prefix="[+]",
+        prefix="+",
     )
     return output_apk
 

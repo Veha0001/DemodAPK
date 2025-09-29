@@ -20,32 +20,29 @@ from threading import Event
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from rich.panel import Panel
+from rich.progress import Progress  # TextColumn,
 from rich.progress import (
     BarColumn,
     DownloadColumn,
-    Progress,
     TaskID,
-    TextColumn,
     TimeRemainingColumn,
     TransferSpeedColumn,
 )
 
-from demodapk.utils import log
+from demodapk.utils import console
 
 # === Rich progress setup ===
 progress = Progress(
-    TextColumn(
-        "[bold blue]{task.fields[filename]}",
-        justify="right",
-    ),
+    DownloadColumn(),
+    "•",
     BarColumn(bar_width=None),
     "[progress.percentage]{task.percentage:>3.1f}%",
-    "•",
-    DownloadColumn(),
     "•",
     TransferSpeedColumn(),
     "•",
     TimeRemainingColumn(),
+    console=console,
 )
 
 done_event = Event()
@@ -77,7 +74,7 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
         HTTPError: If HTTP request fails
         OSError: If file cannot be written
     """
-    log.info("Requesting: %s", url)
+    progress.console.log(f"Requesting: {url}")
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urlopen(req) as response:
         # Break if content length is missing
@@ -92,7 +89,7 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
                 progress.update(task_id, advance=len(data))
                 if done_event.is_set():
                     return
-    log.info("Downloaded: %s", path)
+    progress.console.log(f"Downloaded: '{os.path.basename(path)}'")
 
 
 def download(urls: list[str], dest_dir: str = ".") -> None:
@@ -145,7 +142,7 @@ def get_latest_version() -> str | None:
                 # Remove leading 'V' if present
                 return tag_name.lstrip("Vv")
     except (URLError, HTTPError) as e:
-        log.error(e)
+        progress.console.log(e)
         sys.exit(1)
     return None
 
@@ -168,11 +165,13 @@ def download_apkeditor(dest_path: str) -> None:
     """
     latest_version = get_latest_version()
     if latest_version:
-        log.info("APKEditor latest version: %s", latest_version)
+        progress.console.print(
+            Panel(f"APKEditor V{latest_version}"), justify="center", style="bold cyan"
+        )
         jar_url = (
             "https://github.com/REAndroid/APKEditor/releases/download/"
             f"V{latest_version}/APKEditor-{latest_version}.jar"
         )
         download([jar_url], dest_path)
     else:
-        log.critical("Could not determine the latest version.")
+        progress.console.log("Could not determine the latest version.")

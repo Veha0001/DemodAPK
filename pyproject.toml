@@ -3,7 +3,6 @@ name = "demodapk"
 description = "A Demo CLI for modifying APK resources via config"
 requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
-authors = [{ name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }]
 dependencies = [
     "art",
     "rich",
@@ -14,6 +13,13 @@ dependencies = [
 ]
 readme = "README.md"
 dynamic = ["version"]
+authors = [
+    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }
+]
+maintainers = [
+    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }
+]
+keywords = ["arsc", "apk", "apkeditor", "demo"]
 
 [project.urls]
 Homepage = "https://github.com/Veha0001/DemodAPK"
