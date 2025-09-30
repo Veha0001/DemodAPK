@@ -92,6 +92,11 @@ def select_config_for_apk(config, args):
     Raises:
         SystemExit: If no configuration is selected or inquirer is not installed
     """
+    for pkg_name, pkg_config in config.items():
+        if not isinstance(pkg_config, dict):
+            msg.error(f"Invalid configuration for package '{pkg_name}'")
+            sys.exit(1)
+
     available_packages = list(config.keys())
     if not available_packages:
         msg.error("No preconfigured packages found.")
@@ -289,7 +294,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
         msg.error("AndroidManifest.xml not found in the directory.")
         sys.exit(1)
 
-    if conf.app_name:
+    if conf.app_name and not args.no_rename:
         update_app_name_values(conf.app_name, ctx.value_strings)
 
     if facebook and not args.no_facebook:
@@ -300,7 +305,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
             fb_login_protocol_scheme=facebook.login_protocol_scheme,
         )
 
-    if not args.no_rename_package and "package" in apk_config:
+    if not args.no_rename and "package" in apk_config:
         rename_package_in_manifest(
             android_manifest,
             ctx.package_orig_name,

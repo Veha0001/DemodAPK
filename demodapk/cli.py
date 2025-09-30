@@ -83,10 +83,10 @@ from demodapk.utils import show_logo
     help="Decode with raw dex.",
 )
 @click.option(
-    "-n",
-    "--no-rename-package",
+    "-nn",
+    "--no-rename",
     is_flag=True,
-    help="Skip rename package.",
+    help="Keep manifest names.",
 )
 @click.option(
     "-nfb",
