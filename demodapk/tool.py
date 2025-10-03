@@ -20,6 +20,7 @@ from threading import Event
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from rich.align import Align
 from rich.panel import Panel
 from rich.progress import Progress  # TextColumn,
 from rich.progress import (
@@ -166,7 +167,8 @@ def download_apkeditor(dest_path: str) -> None:
     latest_version = get_latest_version()
     if latest_version:
         progress.console.print(
-            Panel(f"APKEditor V{latest_version}"), justify="center", style="bold cyan"
+            Panel(Align.center(f"APKEditor V{latest_version}"), expand=True),
+            style="bold cyan",
         )
         jar_url = (
             "https://github.com/REAndroid/APKEditor/releases/download/"

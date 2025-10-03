@@ -13,6 +13,7 @@ from contextlib import nullcontext
 from os.path import abspath, basename
 
 from platformdirs import user_config_path
+from rich.panel import Panel
 
 from demodapk.baseconf import Apkeditor
 from demodapk.tool import download_apkeditor, get_latest_version
@@ -35,7 +36,11 @@ def update_apkeditor():
             path = os.path.join(config_dir, fname)
             try:
                 os.remove(path)
-                msg.warning(f"Deleted: {fname}")
+                console.print(
+                    Panel(f"{fname}", title="Deleted"),
+                    justify="left",
+                    style="bold yellow",
+                )
             except (PermissionError, shutil.Error):
                 pass
 
