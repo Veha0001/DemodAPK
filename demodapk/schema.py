@@ -57,10 +57,12 @@ def ensure_config(schema_value: str) -> None:
     for k, v in config.items():
         if k != "$schema":  # Avoid duplicates
             new_config[k] = v
-
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(new_config, f, indent=4)
-        console.print(schema_value)
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(new_config, f, indent=4)
+            console.print(schema_value)
+    except (PermissionError, json.JSONDecodeError, TypeError, OSError) as e:
+        console.log(f"Error: {type(e).__name__}: {e}", style="bold red")
     console.log("Add selected $schema to ./config.json")
 
 
