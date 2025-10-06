@@ -16,6 +16,7 @@ from typing import Any, Optional
 from art import text2art
 from rich import box
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import install
 from rich_gradient import Gradient
@@ -25,7 +26,11 @@ console = Console(log_path=False)
 
 
 def show_logo(
-    text: str, font: str = "small", style: str = "bold", ptb: int = 1
+    text: str,
+    font: str = "small",
+    style: str = "bold",
+    ptb: int = 1,
+    panel: bool = True,
 ) -> None:
     """
     Display ASCII art logo with gradient coloring.
@@ -35,15 +40,16 @@ def show_logo(
         font (str, optional): ASCII art font name. Defaults to "small".
         style (str, optional): Text style. Defaults to "bold".
         ptb (int, optional): Number of blank lines after logo. Defaults to 1.
-
+        panel (bool): Print in side a rich panel.
     Returns:
         None
     """
     logo_art = text2art(text, font=font)
     if isinstance(logo_art, str):
         lines = str(logo_art).splitlines()
+        lines = Panel.fit("\n".join(lines)) if panel else lines
         artlol = Gradient(lines)
-        console.print(artlol, style=style)
+        console.print(artlol, style=style, soft_wrap=True)
         console.line(ptb)
 
 
@@ -165,6 +171,7 @@ def showbox_packages(available_packages, selected_idx=None):
 
 
 if __name__ == "__main__":
+    show_logo("Diego")
     try:
         msg.progress("The World!")
         subprocess.run("exit 2", shell=True, check=True)
