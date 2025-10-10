@@ -26,10 +26,10 @@ console = Console(log_path=False)
 
 
 def show_logo(
-    text: str,
+    text: Any,
     font: str = "small",
-    style: str = "bold",
-    ptb: int = 1,
+    style: tuple[str, bool] | bool = ("bold", True),
+    fits: tuple[bool, int] | bool = (True, 1),
     panel: bool = True,
 ) -> None:
     """
@@ -38,19 +38,28 @@ def show_logo(
     Args:
         text (str): Text to convert to ASCII art
         font (str, optional): ASCII art font name. Defaults to "small".
-        style (str, optional): Text style. Defaults to "bold".
-        ptb (int, optional): Number of blank lines after logo. Defaults to 1.
-        panel (bool): Print in side a rich panel.
+        style (str, bool): Text style. Defaults to "bold". Gradient colors.
+        like (bool, int): Panel fit, Number of blank lines after logo. Defaults to 1.
+        panel (bool): Print inside a rich panel.
     Returns:
         None
     """
+    if isinstance(style, bool):
+        style = ("bold", style)
+    if isinstance(fits, bool):
+        fits = (fits, 1)
     logo_art = text2art(text, font=font)
     if isinstance(logo_art, str):
         lines = str(logo_art).splitlines()
-        lines = Panel.fit("\n".join(lines)) if panel else lines
-        artlol = Gradient(lines)
-        console.print(artlol, style=style, soft_wrap=True)
-        console.line(ptb)
+        if panel:
+            if fits[0]:
+                lines = Panel.fit("\n".join(lines))
+            else:
+                lines = Panel("\n".join(lines))
+
+        lolcat = Gradient(lines) if style[1] else lines
+        console.print(lolcat, style=style[0], soft_wrap=True)
+        console.line(fits[1])
 
 
 class CLIprinter:
