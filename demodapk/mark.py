@@ -12,12 +12,11 @@ import sys
 from contextlib import nullcontext
 from os.path import abspath, basename
 
-from platformdirs import user_config_path
 from rich.panel import Panel
 
 from demodapk.baseconf import Apkeditor
 from demodapk.tool import download_apkeditor, get_latest_version
-from demodapk.utils import console, msg, run_commands
+from demodapk.utils import CONFIG_DIR, console, msg, run_commands
 
 
 def update_apkeditor():
@@ -26,14 +25,12 @@ def update_apkeditor():
     Deletes older versions and downloads the latest.
     Returns the path to the latest jar.
     """
-    config_dir = user_config_path("demodapk")
-    os.makedirs(config_dir, exist_ok=True)
 
     latest_version = get_latest_version()
     # Remove all existing APKEditor jars
-    for fname in os.listdir(config_dir):
+    for fname in os.listdir(CONFIG_DIR):
         if re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname):
-            path = os.path.join(config_dir, fname)
+            path = os.path.join(CONFIG_DIR, fname)
             try:
                 os.remove(path)
                 console.print(
@@ -44,8 +41,8 @@ def update_apkeditor():
             except (PermissionError, shutil.Error):
                 pass
 
-    download_apkeditor(str(config_dir))
-    latest_jar = os.path.join(config_dir, f"APKEditor-{latest_version}.jar")
+    download_apkeditor(CONFIG_DIR)
+    latest_jar = os.path.join(CONFIG_DIR, f"APKEditor-{latest_version}.jar")
 
     if os.path.exists(latest_jar):
         return latest_jar
@@ -63,20 +60,17 @@ def get_apkeditor_cmd(cfg: Apkeditor):
     editor_jar = cfg.editor_jar
     javaopts = cfg.javaopts
 
-    config_dir = user_config_path("demodapk")
-    os.makedirs(config_dir, exist_ok=True)
-
     if editor_jar:
         if not os.path.exists(editor_jar):
             msg.error(f"Specified editor jar does not exist: {editor_jar}")
             sys.exit(1)
     else:
         jars = []
-        for fname in os.listdir(config_dir):
+        for fname in os.listdir(CONFIG_DIR):
             match = re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname)
             if match:
                 version = tuple(int(x) for x in match.group(1).split("."))
-                jars.append((version, os.path.join(config_dir, fname)))
+                jars.append((version, os.path.join(CONFIG_DIR, fname)))
         if jars:
             jars.sort(reverse=True)
             editor_jar = jars[0][1]

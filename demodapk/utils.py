@@ -14,6 +14,7 @@ import sys
 from typing import Any, Optional
 
 from art import text2art
+from platformdirs import user_config_path
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -23,6 +24,8 @@ from rich_gradient import Gradient
 
 install(show_locals=True)
 console = Console(log_path=False)
+
+CONFIG_DIR = user_config_path("demodapk", ensure_exists=True)
 
 
 def show_logo(

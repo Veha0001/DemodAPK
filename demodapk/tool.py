@@ -16,6 +16,7 @@ import signal
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+from pathlib import Path
 from threading import Event
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -90,10 +91,10 @@ def copy_url(task_id: TaskID, url: str, path: str) -> None:
                 progress.update(task_id, advance=len(data))
                 if done_event.is_set():
                     return
-    progress.console.log(f"Downloaded: '{os.path.basename(path)}'")
+    progress.console.log(f"Downloaded: '{path}'")
 
 
-def download(urls: list[str], dest_dir: str = ".") -> None:
+def download(urls: list[str], dest_dir: Path) -> None:
     """
     Download multiple files to the specified directory.
 
@@ -148,7 +149,7 @@ def get_latest_version() -> str | None:
     return None
 
 
-def download_apkeditor(dest_path: str) -> None:
+def download_apkeditor(dest_path: Path) -> None:
     """
     Download the latest version of APKEditor.
 

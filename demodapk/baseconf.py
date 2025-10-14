@@ -8,9 +8,7 @@ import os
 import sys
 from typing import Optional
 
-from platformdirs import user_config_dir
-
-from demodapk.utils import msg
+from demodapk.utils import CONFIG_DIR, msg
 
 
 @dataclasses.dataclass
@@ -122,13 +120,6 @@ class ConfigHandler:
         )
 
 
-def get_config_path(config: str):
-    """
-    Get the configuration path for the given config file.
-    """
-    return os.path.join(user_config_dir("demodapk"), config)
-
-
 def load_config(config: str = "config.json"):
     """
     Load the configuration from the specified JSON file.
@@ -137,7 +128,7 @@ def load_config(config: str = "config.json"):
     if os.path.isdir(config_path):
         config_path = os.path.join(config_path, "config.json")
     if not os.path.exists(config_path):
-        config_path = get_config_path(config)
+        config_path = CONFIG_DIR / config
     if not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as f:
