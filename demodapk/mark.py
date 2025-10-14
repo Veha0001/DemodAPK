@@ -81,12 +81,13 @@ def get_apkeditor_cmd(cfg: Apkeditor):
             jars.sort(reverse=True)
             editor_jar = jars[0][1]
 
-    if os.path.getsize(editor_jar) == 0:
-        msg.error("The APKEditor JAR is faulty.")
-        update_apkeditor()
-        sys.exit(0)
     # If jar  doesn't exist, update/download latest
     if not editor_jar or not os.path.exists(editor_jar):
+        update_apkeditor()
+        sys.exit(0)
+
+    if os.path.getsize(editor_jar) == 0:
+        msg.error("The APKEditor JAR is faulty.")
         update_apkeditor()
         sys.exit(0)
 
