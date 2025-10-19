@@ -9,6 +9,8 @@ This module provides utility functions and classes for:
 """
 
 import os
+import platform
+import re
 import subprocess
 import sys
 from typing import Any, Optional
@@ -132,6 +134,7 @@ def run_commands(commands: list, quietly: bool, tasker: bool = False) -> None:
     """
 
     def run(cmd, quiet_mode, title: str = ""):
+        cmd = convert_env_cmd(cmd=cmd)
         try:
             if quiet_mode:
                 if not tasker and title:
@@ -184,10 +187,52 @@ def showbox_packages(available_packages, selected_idx=None):
     console.print(table)
 
 
+def env_ref(name: str) -> str:
+    system = platform.system().lower()
+    if system == "windows":
+        shell = os.environ.get("SHELL", "").lower()
+        if "powershell" in shell:
+            return f"$ENV:{name}"
+        if "bash" in shell or "msys" in shell:
+            return f"${name}"
+        return f"%{name}%"
+    return f"${name}"
+
+
+def convert_env_cmd(cmd: str) -> str:
+    """
+    Convert environment variable references in a command string
+    to the current platform/shell.
+
+    Supports:
+    - $VAR
+    - ${VAR}
+    - %VAR%
+    - Easily extendable with new patterns
+    """
+    # Named groups for clarity
+    pattern = re.compile(
+        r"\$(?P<simple>\w+)"  # $VAR
+        r"|\${(?P<braced>\w+)}"  # ${VAR}
+        r"|%(?P<percent>\w+)%"  # %VAR%
+    )
+
+    def replacer(match):
+        # Get the name of the matched group dynamically
+        for _, value in match.groupdict().items():
+            if value is not None:
+                return env_ref(value)
+        return match.group(0)  # fallback, should not happen
+
+    return pattern.sub(replacer, cmd)
+
+
 if __name__ == "__main__":
     show_logo("Diego")
     try:
         msg.progress("The World!")
+        msg.info("Are you using: \r")
+        subprocess.run(f"echo {env_ref('SHELL')}", shell=True, check=True)
         subprocess.run("exit 2", shell=True, check=True)
     except subprocess.CalledProcessError as e:
         msg.error(e)
