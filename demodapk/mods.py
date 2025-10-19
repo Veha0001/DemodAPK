@@ -231,10 +231,6 @@ def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
         if editor.to_output
         else decoded_dir
     )
-    if os.path.exists(decoded_dir):
-        msg.error(f"No overwrite: {decoded_dir}")
-        msg.error("Try again with option [cyan] -f / --force ")
-        sys.exit(1)
 
     if not shutil.which("java"):
         msg.error("Java is not installed. Please install Java to proceed.")
