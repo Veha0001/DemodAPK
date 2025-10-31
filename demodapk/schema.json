@@ -219,12 +219,46 @@
               "type": "object",
               "description": "Configuration for modifying AndroidManifest.xml.",
               "properties": {
+                "app_label": {
+                  "type": "string",
+                  "description": "The new application label to set in AndroidManifest.xml."
+                },
                 "remove_metadata": {
                   "type": "array",
                   "description": "List of metadata keys to remove from the manifest.",
                   "items": {
                     "type": "string"
                   }
+                },
+                "activity_exportall": {
+                  "type": "boolean",
+                  "default": false,
+                  "anyOf": [
+                    {
+                      "const": true,
+                      "description": "Enable"
+                    },
+                    {
+                      "const": false,
+                      "description": "Disable"
+                    }
+                  ],
+                  "description": "Makes all application activities exportable."
+                },
+                "app_debuggable": {
+                  "type": "boolean",
+                  "default": false,
+                  "anyOf": [
+                    {
+                      "const": true,
+                      "description": "Enable"
+                    },
+                    {
+                      "const": false,
+                      "description": "Disable"
+                    }
+                  ],
+                  "description": "Makes the application debuggable."
                 }
               },
               "additionalProperties": false

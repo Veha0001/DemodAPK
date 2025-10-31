@@ -85,9 +85,7 @@ def update_app_name_values(app_name, value_strings):
     msg.success(f"Updated app name to: [reset]{app_name}")
 
 
-def update_facebook_app_values(
-    strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme
-):
+def update_facebook_app_values(strings_file, fb_app_id, fb_client_token, fb_login_protocol_scheme):
     """
     Update Facebook integration settings in strings.xml.
 
@@ -123,14 +121,12 @@ def update_facebook_app_values(
 
         with open(strings_file, "w", encoding="utf-8") as file:
             file.write(content)
-        msg.success("Updated facebook app values")
+        msg.success("Updated facebook app values.")
     else:
         msg.error(f"File: {strings_file}, does not exists.")
 
 
-def rename_package_in_manifest(
-    manifest_file, old_package_name, new_package_name, level=0
-):
+def rename_package_in_manifest(manifest_file, old_package_name, new_package_name, level=0):
     """
     Update package name references in AndroidManifest.xml.
 
@@ -291,9 +287,7 @@ def rename_package_in_resources(resources_dir, old_package_name, new_package_nam
     try:
         # Check if resources directory exists
         if not os.path.isdir(resources_dir):
-            raise FileNotFoundError(
-                f"The resources directory '{resources_dir}' does not exist."
-            )
+            raise FileNotFoundError(f"The resources directory '{resources_dir}' does not exist.")
 
         updated_any = False  # Track if any file was updated
         valid_file_extensions = (
@@ -364,9 +358,7 @@ def update_smali_directory(smali_base_dir, old_package_path, new_package_path):
             for old_dir in old_dirs:
                 if os.path.isdir(old_dir):
                     new_dir = old_dir.replace(old_package_path, new_package_path)
-                    os.makedirs(
-                        os.path.dirname(new_dir), exist_ok=True
-                    )  # Ensure parent dir exists
+                    os.makedirs(os.path.dirname(new_dir), exist_ok=True)  # Ensure parent dir exists
                     os.rename(old_dir, new_dir)
                     msg.success(f"Updated smali with: [reset]{new_package_path}")
                     renamed = True
@@ -395,9 +387,7 @@ def update_buildconfig_file(file_path, old_package_name, new_package_name):
     return False
 
 
-def update_application_id_in_smali(
-    smali_dir, old_package_name, new_package_name, strict=False
-):
+def update_application_id_in_smali(smali_dir, old_package_name, new_package_name, strict=False):
     """
     Update APPLICATION_ID in BuildConfig.smali files.
 
@@ -425,66 +415,16 @@ def update_application_id_in_smali(
             if file.endswith("BuildConfig.smali"):
                 buildconfig_found = True
                 file_path = os.path.join(root, file)
-                if update_buildconfig_file(
-                    file_path, old_package_name, new_package_name
-                ):
+                if update_buildconfig_file(file_path, old_package_name, new_package_name):
                     updated_any = True
 
     if strict:
         if not buildconfig_found:
-            msg.error(
-                "No BuildConfig.smali files found in the provided smali directory."
-            )
+            msg.error("No BuildConfig.smali files found in the provided smali directory.")
             return
         if not updated_any:
-            msg.error(
-                "No BuildConfig.smali file contained the specified old APPLICATION_ID."
-            )
+            msg.error("No BuildConfig.smali file contained the specified old APPLICATION_ID.")
             return
 
     if updated_any:
         msg.success("Updated APPLICATION_ID in smali files.")
-
-
-def remove_metadata_from_manifest(manifest_file, config_file):
-    """
-    Remove specified metadata entries from AndroidManifest.xml.
-
-    Args:
-        manifest_file (str): Path to AndroidManifest.xml
-        config_file (list): List of metadata entries to remove
-
-    Returns:
-        None
-    """
-    # Filter out any empty strings in metadata_to_remove
-    metadata_to_remove = [
-        meta for meta in config_file if isinstance(meta, str) and meta.strip()
-    ]
-
-    # If metadata_to_remove is empty or only contained empty strings, skip removal
-    if not metadata_to_remove:
-        # msg.info("No valid metadata entries specified for removal in configuration file.")
-        return
-
-    if os.path.isfile(manifest_file):
-        with open(manifest_file, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-
-        # Filter out lines that match the metadata
-        filtered_lines = []
-        skip = False
-        for line in lines:
-            if any(meta in line for meta in metadata_to_remove):
-                skip = True  # Skip this line and the next
-            elif skip and "/>" in line:  # End of the meta-data entry
-                skip = False  # Stop skipping after closing tag
-            else:
-                filtered_lines.append(line)
-
-        # Write the filtered lines back to the manifest file
-        with open(manifest_file, "w", encoding="utf-8") as file:
-            file.writelines(filtered_lines)
-        msg.success("Specific metadata removed from manifest.")
-    else:
-        msg.warning(f"File '{manifest_file}' does not exist.")

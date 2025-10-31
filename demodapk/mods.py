@@ -23,7 +23,6 @@ from demodapk.baseconf import (
 from demodapk.mark import apkeditor_build, apkeditor_decode, update_apkeditor
 from demodapk.patch import (
     extract_package_info,
-    remove_metadata_from_manifest,
     rename_package_in_manifest,
     rename_package_in_resources,
     update_app_name_values,
@@ -34,6 +33,7 @@ from demodapk.patch import (
 )
 from demodapk.schema import get_schema
 from demodapk.utils import console, msg, run_commands, showbox_packages
+from demodapk.xmls import update_manifest_group
 
 try:
     import inquirer
@@ -336,11 +336,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
                 ctx.package_orig_name,
                 new_package_name=package.name,
             )
-
-    if "manifest" in apk_config and "remove_metadata" in apk_config["manifest"]:
-        remove_metadata_from_manifest(
-            android_manifest, apk_config["manifest"]["remove_metadata"]
-        )
+    update_manifest_group(manifest_xml=android_manifest, apk_config=apk_config)
 
 
 def get_finish(conf, decoded_dir, apk_config, args):
