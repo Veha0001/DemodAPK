@@ -47,7 +47,7 @@ def remove_metadata_from_manifest(manifest_xml, metadata_to_remove):
         return
 
     if not os.path.isfile(manifest_xml):
-        msg.warning(f"File '{manifest_xml}' does not exist.")
+        msg.warning(f"File {manifest_xml} does not exist.")
         return
 
     try:
@@ -170,7 +170,7 @@ def update_manifest_app_label(manifest_xml: str, app_name: str) -> None:
         with open(manifest_xml, "w", encoding="utf-8") as f:
             f.write(xml_str)
 
-        msg.success(f"Application label: [reset]'{app_name}'.")
+        msg.success(f"Application label: [reset]{app_name}")
 
     except ET.ParseError as e:
         msg.error(f"Failed to parse manifest: {e}")

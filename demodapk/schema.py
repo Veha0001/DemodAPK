@@ -14,13 +14,12 @@ import sys
 import inquirer
 
 import demodapk
-from demodapk.utils import console
+from demodapk.utils import msg
 
 # Schema configuration constants
 SCHEMA_PATH = os.path.join(os.path.dirname(demodapk.__file__), "schema.json")
 SCHEMA_URL = (
-    "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/demodapk"
-    "/schema.json"
+    "https://raw.githubusercontent.com/Veha0001/DemodAPK/refs/heads/main/demodapk/schema.json"
 )
 SCHEMA_NETLIFY = "https://demodapk.netlify.app/schema.json"
 CONFIG_FILE = "config.json"
@@ -50,7 +49,7 @@ def ensure_config(schema_value: str) -> None:
             try:
                 config = json.load(f)
             except json.JSONDecodeError:
-                console.log("config.json exists but is invalid JSON. Rewriting it.")
+                msg.error("config.json exists but is invalid JSON. Rewriting it.")
 
     # Insert $schema at the top by creating a new dict
     new_config = {"$schema": schema_value}
@@ -60,10 +59,10 @@ def ensure_config(schema_value: str) -> None:
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(new_config, f, indent=4)
-            console.print(schema_value)
     except (PermissionError, json.JSONDecodeError, TypeError, OSError) as e:
-        console.log(f"Error: {type(e).__name__}: {e}", style="bold red")
-    console.log("Add selected $schema to ./config.json")
+        msg.error(f"Error: {type(e).__name__}: {e}", style="bold red")
+    msg.info("Add selected [blue]$schema[/blue] to: [yellow]config.json[/yellow]", prefix="INFO")
+    sys.exit(0)
 
 
 def get_schema() -> None:
@@ -86,25 +85,26 @@ def get_schema() -> None:
         inquirer.List(
             "schema_index",
             message="Select a way of JSON Schema",
-            choices=["pack", "netlify", "githubusercontent"],
+            choices=["project", "netlify", "githubusercontent"],
             default="netlify",
         )
     ]
 
     ans = inquirer.prompt(questions)
     choice = ans.get("schema_index") if ans else None
-
-    if choice:
-        console.log(f"[bold green]You selected Schema {choice}:[/bold green]")
+    if choice == "project":
+        schema_link = SCHEMA_PATH
+    elif choice == "githubusercontent":
+        schema_link = SCHEMA_URL
     else:
-        console.print("[red]No selection made[/red]")
+        schema_link = SCHEMA_NETLIFY
+    if choice:
+        msg.info(
+            f"You selected [blue]$schema[/blue]: [purple][link={schema_link}]{choice}[/link]",
+            prefix="INFO",
+        )
+    else:
+        msg.error("No selection made")
         sys.exit(1)
 
-    if choice == "pack":
-        ensure_config(SCHEMA_PATH)
-    elif choice == "githubusercontent":
-        ensure_config(SCHEMA_URL)
-    else:
-        ensure_config(SCHEMA_NETLIFY)
-
-    sys.exit(0)
+    return ensure_config(schema_link)
