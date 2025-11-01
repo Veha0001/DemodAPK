@@ -3,7 +3,14 @@ import xml.etree.ElementTree as ET
 
 from demodapk.utils import msg
 
-ANDROID_NS = "http://schemas.android.com/apk/res/android"
+ANDROID_NS_URL = "http://schemas.android.com/apk/res/android"
+ANDROID_NS = f"{{{ANDROID_NS_URL}}}"
+ET.register_namespace("android", ANDROID_NS_URL)
+
+
+def android_attr(name: str) -> str:
+    """Return fully-qualified Android namespace attribute."""
+    return f"{ANDROID_NS}{name}"
 
 
 def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
@@ -14,11 +21,13 @@ def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
       - export_all_activities
       - app_label
       - remove_metadata
+      - version_targetsdk
+      - version_code
     """
     if "manifest" not in apk_config:
         return
 
-    config = apk_config["manifest"]
+    config: dict = apk_config["manifest"]
 
     if config.get("activity_exportall", False):
         update_manifest_activity_export_all(manifest_xml)
@@ -31,6 +40,12 @@ def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
 
     if "remove_metadata" in config:
         remove_metadata_from_manifest(manifest_xml, config["remove_metadata"])
+
+    if config.get("version_targetsdk") is not None:
+        set_target_sdk_version(manifest_xml, config["version_targetsdk"])
+
+    if config.get("version_code") is not None:
+        set_version_code(manifest_xml, config["version_code"])
 
 
 def remove_metadata_from_manifest(manifest_xml, metadata_to_remove):
@@ -61,7 +76,7 @@ def remove_metadata_from_manifest(manifest_xml, metadata_to_remove):
 
         removed_count = 0
         for meta in list(app.findall("meta-data")):  # list() so we can remove
-            name = meta.get(f"{{{ANDROID_NS}}}name")
+            name = meta.get(android_attr("name"))
             if name in metadata_to_remove:
                 app.remove(meta)
                 removed_count += 1
@@ -85,7 +100,6 @@ def update_manifest_app_debuggable(manifest_xml: str) -> None:
         return
 
     try:
-        ET.register_namespace("android", ANDROID_NS)
         tree = ET.parse(manifest_xml)
         root = tree.getroot()
 
@@ -94,7 +108,7 @@ def update_manifest_app_debuggable(manifest_xml: str) -> None:
             msg.error("No <application> tag found in AndroidManifest.xml.")
             return
 
-        app.set(f"{{{ANDROID_NS}}}debuggable", "true")
+        app.set(android_attr("debuggable"), "true")
         xml_str = ET.tostring(root, encoding="utf-8").decode("utf-8")
 
         with open(manifest_xml, "w", encoding="utf-8") as f:
@@ -116,18 +130,17 @@ def update_manifest_activity_export_all(manifest_xml: str) -> None:
         return
 
     try:
-        ET.register_namespace("android", ANDROID_NS)
         tree = ET.parse(manifest_xml)
         root = tree.getroot()
 
         changed_activities = 0
         for activity in root.findall(".//activity"):
             updated = False
-            if activity.get(f"{{{ANDROID_NS}}}exported") != "true":
-                activity.set(f"{{{ANDROID_NS}}}exported", "true")
+            if activity.get(android_attr("exported")) != "true":
+                activity.set(android_attr("exported"), "true")
                 updated = True
-            if activity.get(f"{{{ANDROID_NS}}}enabled") != "true":
-                activity.set(f"{{{ANDROID_NS}}}enabled", "true")
+            if activity.get(android_attr("enabled")) != "true":
+                activity.set(android_attr("enabled"), "true")
                 updated = True
             if updated:
                 changed_activities += 1
@@ -155,7 +168,6 @@ def update_manifest_app_label(manifest_xml: str, app_name: str) -> None:
         return
 
     try:
-        ET.register_namespace("android", ANDROID_NS)
         tree = ET.parse(manifest_xml)
         root = tree.getroot()
 
@@ -164,13 +176,77 @@ def update_manifest_app_label(manifest_xml: str, app_name: str) -> None:
             msg.error("No <application> tag found in AndroidManifest.xml.")
             return
 
-        app.set(f"{{{ANDROID_NS}}}label", app_name)
+        app.set(android_attr("label"), app_name)
         xml_str = ET.tostring(root, encoding="utf-8").decode("utf-8")
 
         with open(manifest_xml, "w", encoding="utf-8") as f:
             f.write(xml_str)
 
         msg.success(f"Application label: [reset]{app_name}")
+
+    except ET.ParseError as e:
+        msg.error(f"Failed to parse manifest: {e}")
+
+
+def set_target_sdk_version(manifest_xml: str, version: int) -> None:
+    """
+    Sets the android:targetSdkVersion in AndroidManifest.xml.
+
+    Args:
+        manifest_xml (str): Path to AndroidManifest.xml
+        version (int): Target SDK version to set
+    """
+    if not os.path.isfile(manifest_xml):
+        msg.error(f"File {manifest_xml} not found.")
+        return
+    if version < 23:
+        msg.error("targetSdkVersion must be >= 23.")
+        return
+
+    try:
+        tree = ET.parse(manifest_xml)
+        root = tree.getroot()
+
+        # Find existing <uses-sdk> or create one if missing
+        uses_sdk = root.find("uses-sdk")
+        if uses_sdk is None:
+            uses_sdk = ET.Element("uses-sdk")
+            root.append(uses_sdk)
+
+        # Set targetSdkVersion attribute
+        uses_sdk.set(android_attr("targetSdkVersion"), str(version))
+        tree.write(manifest_xml, encoding="utf-8", xml_declaration=True)
+        msg.success(f"Set targetSdkVersion to {version}.")
+
+    except ET.ParseError as e:
+        msg.error(f"Failed to parse manifest: {e}")
+
+
+def set_version_code(manifest_xml: str, version_code: int) -> None:
+    """
+    Sets the android:versionCode attribute in AndroidManifest.xml.
+
+    Args:
+        manifest_xml (str): Path to AndroidManifest.xml
+        version_code (int): Version code to set (must be >= 1)
+    """
+    if version_code < 1:
+        msg.warning("Version code must be >= 1.")
+        return
+
+    if not os.path.isfile(manifest_xml):
+        msg.error(f"File {manifest_xml} not found.")
+        return
+
+    try:
+        tree = ET.parse(manifest_xml)
+        root = tree.getroot()
+
+        # Set android:versionCode on <manifest> tag
+        root.set(android_attr("versionCode"), str(version_code))
+
+        tree.write(manifest_xml, encoding="utf-8", xml_declaration=True)
+        msg.success(f"Set versionCode to {version_code}.")
 
     except ET.ParseError as e:
         msg.error(f"Failed to parse manifest: {e}")

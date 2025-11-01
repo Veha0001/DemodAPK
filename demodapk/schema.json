@@ -111,9 +111,7 @@
                             "description": "Override quiet mode for this command."
                           }
                         },
-                        "required": [
-                          "run"
-                        ],
+                        "required": ["run"],
                         "additionalProperties": false
                       }
                     ]
@@ -148,9 +146,7 @@
                         "description": "Override quiet mode for this command."
                       }
                     },
-                    "required": [
-                      "run"
-                    ],
+                    "required": ["run"],
                     "additionalProperties": false
                   }
                 }
@@ -160,13 +156,7 @@
             "level": {
               "type": "integer",
               "default": 2,
-              "enum": [
-                0,
-                1,
-                2,
-                3,
-                4
-              ],
+              "enum": [0, 1, 2, 3, 4],
               "anyOf": [
                 {
                   "const": 0,
@@ -259,6 +249,17 @@
                     }
                   ],
                   "description": "Makes the application debuggable."
+                },
+                "version_targetsdk": {
+                  "type": "integer",
+                  "minimum": 23,
+                  "default": 34,
+                  "description": "Changes the target SDK of the app."
+                },
+                "version_code": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Changes the version code of the app. This will turn off app store updates"
                 }
               },
               "additionalProperties": false
@@ -377,72 +378,42 @@
                   "anyOf": [
                     {
                       "description": "Patch by method name with a hex replacement.",
-                      "required": [
-                        "method_name",
-                        "hex_replace"
-                      ]
+                      "required": ["method_name", "hex_replace"]
                     },
                     {
                       "description": "Patch by method name with a hex insertion.",
-                      "required": [
-                        "method_name",
-                        "hex_insert"
-                      ]
+                      "required": ["method_name", "hex_insert"]
                     },
                     {
                       "description": "Patch by file offset with a hex replacement.",
-                      "required": [
-                        "offset",
-                        "hex_replace"
-                      ]
+                      "required": ["offset", "hex_replace"]
                     },
                     {
                       "description": "Patch by file offset with a hex insertion.",
-                      "required": [
-                        "offset",
-                        "hex_insert"
-                      ]
+                      "required": ["offset", "hex_insert"]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex insertion.",
-                      "required": [
-                        "wildcard",
-                        "hex_insert"
-                      ]
+                      "required": ["wildcard", "hex_insert"]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex replacement.",
-                      "required": [
-                        "wildcard",
-                        "hex_replace"
-                      ]
+                      "required": ["wildcard", "hex_replace"]
                     }
                   ],
                   "not": {
                     "anyOf": [
                       {
-                        "required": [
-                          "method_name",
-                          "offset"
-                        ]
+                        "required": ["method_name", "offset"]
                       },
                       {
-                        "required": [
-                          "method_name",
-                          "wildcard"
-                        ]
+                        "required": ["method_name", "wildcard"]
                       },
                       {
-                        "required": [
-                          "offset",
-                          "wildcard"
-                        ]
+                        "required": ["offset", "wildcard"]
                       },
                       {
-                        "required": [
-                          "hex_replace",
-                          "hex_insert"
-                        ]
+                        "required": ["hex_replace", "hex_insert"]
                       }
                     ]
                   }
@@ -453,23 +424,16 @@
               {
                 "anyOf": [
                   {
-                    "required": [
-                      "open"
-                    ]
+                    "required": ["open"]
                   },
                   {
-                    "required": [
-                      "input"
-                    ]
+                    "required": ["input"]
                   }
                 ]
               },
               {
                 "not": {
-                  "required": [
-                    "open",
-                    "input"
-                  ]
+                  "required": ["open", "input"]
                 }
               }
             ],
@@ -477,10 +441,7 @@
           }
         }
       },
-      "required": [
-        "menu",
-        "files"
-      ],
+      "required": ["menu", "files"],
       "additionalProperties": false
     }
   },
