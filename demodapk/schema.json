@@ -111,7 +111,9 @@
                             "description": "Override quiet mode for this command."
                           }
                         },
-                        "required": ["run"],
+                        "required": [
+                          "run"
+                        ],
                         "additionalProperties": false
                       }
                     ]
@@ -146,7 +148,9 @@
                         "description": "Override quiet mode for this command."
                       }
                     },
-                    "required": ["run"],
+                    "required": [
+                      "run"
+                    ],
                     "additionalProperties": false
                   }
                 }
@@ -156,27 +160,33 @@
             "level": {
               "type": "integer",
               "default": 2,
-              "enum": [0, 1, 2, 3, 4],
+              "enum": [
+                0,
+                1,
+                2,
+                3,
+                4
+              ],
               "anyOf": [
                 {
                   "const": 0,
-                  "description": "Basic replacements only (package name, android:name, authorities)."
+                  "description": "Updates the 'package' attribute, and attributes like 'android:name' and 'android:authorities' that use the old package name."
                 },
                 {
                   "const": 1,
-                  "description": "Basic replacements + clear android:taskAffinity."
+                  "description": "Level 0 changes, plus clears 'android:taskAffinity'."
                 },
                 {
                   "const": 2,
-                  "description": "Basic replacements + update android:taskAffinity to new package name."
+                  "description": "Level 0 changes, plus updates 'android:taskAffinity' to the new package name."
                 },
                 {
                   "const": 3,
-                  "description": "Level 2 changes + update android:host and cct.android:host with new package name."
+                  "description": "Level 2 changes, plus updates 'android:host' attributes (including 'cct' variants)."
                 },
                 {
                   "const": 4,
-                  "description": "Level 1 changes + update android:host and cct.android:host with new package name."
+                  "description": "Level 1 changes, plus updates 'android:host' attributes (including 'cct' variants)."
                 }
               ],
               "description": "Configuration manifest level edit or priority for the app."
@@ -212,6 +222,21 @@
                 "app_label": {
                   "type": "string",
                   "description": "The new application label to set in AndroidManifest.xml."
+                },
+                "hide_app_icon": {
+                  "type": "boolean",
+                  "default": false,
+                  "oneOf": [
+                    {
+                      "const": true,
+                      "description": "Hides the app icon from the launcher."
+                    },
+                    {
+                      "const": false,
+                      "description": "App icon remains visible in the launcher."
+                    }
+                  ],
+                  "description": "Hides the app icon from the launcher by disabling launcher activities."
                 },
                 "remove_metadata": {
                   "type": "array",
@@ -378,42 +403,72 @@
                   "anyOf": [
                     {
                       "description": "Patch by method name with a hex replacement.",
-                      "required": ["method_name", "hex_replace"]
+                      "required": [
+                        "method_name",
+                        "hex_replace"
+                      ]
                     },
                     {
                       "description": "Patch by method name with a hex insertion.",
-                      "required": ["method_name", "hex_insert"]
+                      "required": [
+                        "method_name",
+                        "hex_insert"
+                      ]
                     },
                     {
                       "description": "Patch by file offset with a hex replacement.",
-                      "required": ["offset", "hex_replace"]
+                      "required": [
+                        "offset",
+                        "hex_replace"
+                      ]
                     },
                     {
                       "description": "Patch by file offset with a hex insertion.",
-                      "required": ["offset", "hex_insert"]
+                      "required": [
+                        "offset",
+                        "hex_insert"
+                      ]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex insertion.",
-                      "required": ["wildcard", "hex_insert"]
+                      "required": [
+                        "wildcard",
+                        "hex_insert"
+                      ]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex replacement.",
-                      "required": ["wildcard", "hex_replace"]
+                      "required": [
+                        "wildcard",
+                        "hex_replace"
+                      ]
                     }
                   ],
                   "not": {
                     "anyOf": [
                       {
-                        "required": ["method_name", "offset"]
+                        "required": [
+                          "method_name",
+                          "offset"
+                        ]
                       },
                       {
-                        "required": ["method_name", "wildcard"]
+                        "required": [
+                          "method_name",
+                          "wildcard"
+                        ]
                       },
                       {
-                        "required": ["offset", "wildcard"]
+                        "required": [
+                          "offset",
+                          "wildcard"
+                        ]
                       },
                       {
-                        "required": ["hex_replace", "hex_insert"]
+                        "required": [
+                          "hex_replace",
+                          "hex_insert"
+                        ]
                       }
                     ]
                   }
@@ -424,16 +479,23 @@
               {
                 "anyOf": [
                   {
-                    "required": ["open"]
+                    "required": [
+                      "open"
+                    ]
                   },
                   {
-                    "required": ["input"]
+                    "required": [
+                      "input"
+                    ]
                   }
                 ]
               },
               {
                 "not": {
-                  "required": ["open", "input"]
+                  "required": [
+                    "open",
+                    "input"
+                  ]
                 }
               }
             ],
@@ -441,7 +503,10 @@
           }
         }
       },
-      "required": ["menu", "files"],
+      "required": [
+        "menu",
+        "files"
+      ],
       "additionalProperties": false
     }
   },

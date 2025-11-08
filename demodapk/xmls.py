@@ -23,11 +23,15 @@ def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
       - remove_metadata
       - version_targetsdk
       - version_code
+      - hide_app_icon
     """
     if "manifest" not in apk_config:
         return
 
     config: dict = apk_config["manifest"]
+
+    if config.get("hide_app_icon", False):
+        hide_app_icon(manifest_xml)
 
     if config.get("activity_exportall", False):
         update_manifest_activity_export_all(manifest_xml)
@@ -46,6 +50,55 @@ def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
 
     if config.get("version_code") is not None:
         set_version_code(manifest_xml, config["version_code"])
+
+
+def hide_app_icon(manifest_xml: str) -> None:
+    """
+    Hides the app icon from the launcher by changing the category of launcher activities.
+    It finds activities with MAIN action and LAUNCHER category and changes
+    the category to DEFAULT.
+    """
+    if not os.path.isfile(manifest_xml):
+        msg.error(f"File {manifest_xml} not found.")
+        return
+
+    try:
+        tree = ET.parse(manifest_xml)
+        root = tree.getroot()
+
+        changed_count = 0
+        # Find all intent-filter tags
+        for intent_filter in root.findall(".//intent-filter"):
+            has_main_action = False
+            launcher_category = None
+
+            # Check for MAIN action
+            for action in intent_filter.findall("action"):
+                if action.get(android_attr("name")) == "android.intent.action.MAIN":
+                    has_main_action = True
+                    break
+
+            if not has_main_action:
+                continue
+
+            # Find LAUNCHER category
+            for category in intent_filter.findall("category"):
+                if category.get(android_attr("name")) == "android.intent.category.LAUNCHER":
+                    launcher_category = category
+                    break
+
+            if launcher_category is not None:
+                launcher_category.set(android_attr("name"), "android.intent.category.DEFAULT")
+                changed_count += 1
+
+        if changed_count > 0:
+            tree.write(manifest_xml, encoding="utf-8", xml_declaration=True)
+            msg.success("App icon hidden from launcher.")
+        else:
+            msg.info("App icon is already hidden.")
+
+    except ET.ParseError as e:
+        msg.error(f"Failed to parse manifest: {e}")
 
 
 def remove_metadata_from_manifest(manifest_xml, metadata_to_remove):
