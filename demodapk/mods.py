@@ -106,9 +106,7 @@ def select_config_for_apk(config, args):
         idx = args.index
         if idx < 0 or idx >= len(available_packages):
             showbox_packages(available_packages, idx)
-            msg.error(
-                f"Invalid index {idx}, must be between 0 and {len(available_packages) - 1}."
-            )
+            msg.error(f"Invalid index {idx}, must be between 0 and {len(available_packages) - 1}.")
             sys.exit(1)
         name = available_packages[idx]
         return name, config[name]
@@ -390,12 +388,10 @@ def runsteps(args, packer):
     basic = get_the_inputs(packer, args)
     conf = ConfigHandler(basic.apk_config)
 
-    android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = (
-        get_demo(
-            conf,
-            basic,
-            args=args,
-        )
+    android_manifest, smali_folder, resources_folder, value_strings, decoded_dir = get_demo(
+        conf,
+        basic,
+        args=args,
     )
     with console.status(
         "[bold orange_red1]Modifying...", spinner_style="orange_red1", spinner="point"

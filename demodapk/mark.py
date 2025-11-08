@@ -117,9 +117,7 @@ def apkeditor_merge(
         command += " -f"
     msg.info(f"Merging: {os.path.basename(apk_file)}", prefix="-")
     with (
-        console.status(
-            "[bold blue]Processing...", spinner="point", spinner_style="blue"
-        )
+        console.status("[bold blue]Processing...", spinner="point", spinner_style="blue")
         if quietly
         else nullcontext()
     ):
@@ -169,11 +167,7 @@ def apkeditor_decode(
         f"Decoding: [magenta underline]{basename(apk_file)}",
         prefix="-",
     )
-    with (
-        console.status("[bold green]Processing...", spinner="point")
-        if quietly
-        else nullcontext()
-    ):
+    with console.status("[bold green]Processing...", spinner="point") if quietly else nullcontext():
         run_commands([command], quietly, tasker=True)
     msg.success(
         f"Decoded into: {cfg.to_output}",

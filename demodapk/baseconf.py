@@ -35,11 +35,7 @@ class Apkeditor:
 
     def __bool__(self):
         return bool(
-            self.editor_jar
-            or self.javaopts
-            or self.dex_option
-            or self.to_output
-            or self.clean
+            self.editor_jar or self.javaopts or self.dex_option or self.to_output or self.clean
         )
 
 
@@ -95,8 +91,7 @@ class ConfigHandler:
         return Apkeditor(
             editor_jar=apkeditor_conf.get("jarpath", ""),
             javaopts=apkeditor_conf.get("javaopts", ""),
-            dex_option=getattr(args, "raw_dex", None)
-            or apkeditor_conf.get("dex", False),
+            dex_option=getattr(args, "raw_dex", None) or apkeditor_conf.get("dex", False),
             to_output=getattr(args, "output", None) or apkeditor_conf.get("output"),
             clean=getattr(args, "single_apk", False) or apkeditor_conf.get("clean"),
         )
@@ -170,9 +165,7 @@ def verify_apk_directory(apk_dir):
             sys.exit(1)
 
     # Check for at least one optional folder
-    if not any(
-        os.path.isdir(os.path.join(apk_dir, folder)) for folder in optional_folders
-    ):
+    if not any(os.path.isdir(os.path.join(apk_dir, folder)) for folder in optional_folders):
         msg.error(
             "At least one of the following folders is required in"
             f" {dir_name}: {', '.join(optional_folders)}."
