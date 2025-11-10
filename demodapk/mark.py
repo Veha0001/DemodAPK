@@ -57,23 +57,27 @@ def get_apkeditor_cmd(cfg: Apkeditor):
     - Use the provided jar or pick the latest jar from config.
     - If missing, download the latest jar and prompt to rerun.
     """
-    editor_jar = cfg.editor_jar
     javaopts = cfg.javaopts
 
-    if editor_jar:
-        if not os.path.exists(editor_jar):
-            msg.error(f"Specified editor jar does not exist: {editor_jar}")
-            sys.exit(1)
+    env_editor_jar = os.environ.get("APKEDITOR_JAR")
+    if env_editor_jar and os.path.exists(env_editor_jar):
+        editor_jar = env_editor_jar
     else:
-        jars = []
-        for fname in os.listdir(CONFIG_DIR):
-            match = re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname)
-            if match:
-                version = tuple(int(x) for x in match.group(1).split("."))
-                jars.append((version, os.path.join(CONFIG_DIR, fname)))
-        if jars:
-            jars.sort(reverse=True)
-            editor_jar = jars[0][1]
+        editor_jar = cfg.editor_jar
+        if editor_jar:
+            if not os.path.exists(editor_jar):
+                msg.error(f"Specified editor jar does not exist: {editor_jar}")
+                sys.exit(1)
+        else:
+            jars = []
+            for fname in os.listdir(CONFIG_DIR):
+                match = re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname)
+                if match:
+                    version = tuple(int(x) for x in match.group(1).split("."))
+                    jars.append((version, os.path.join(CONFIG_DIR, fname)))
+            if jars:
+                jars.sort(reverse=True)
+                editor_jar = jars[0][1]
 
     # If jar  doesn't exist, update/download latest
     if not editor_jar or not os.path.exists(editor_jar):
