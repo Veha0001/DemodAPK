@@ -14,6 +14,8 @@ import json
 import os
 import signal
 import sys
+import hashlib
+import re
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -23,8 +25,8 @@ from urllib.request import Request, urlopen
 
 from rich.align import Align
 from rich.panel import Panel
-from rich.progress import Progress  # TextColumn,
-from rich.progress import (
+from rich.progress import (  # TextColumn,
+    Progress,
     BarColumn,
     DownloadColumn,
     TaskID,
@@ -121,18 +123,26 @@ def download(urls: list[str], dest_dir: Path) -> None:
                 pool.submit(copy_url, task_id, url, dest_path)
 
 
-def get_latest_version() -> str | None:
+def get_file_sha256(path: str) -> str | None:
+    """Calculate SHA256 hash of a file."""
+    if not os.path.exists(path):
+        return None
+    sha256 = hashlib.sha256()
+    with open(path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256.update(byte_block)
+    return sha256.hexdigest()
+
+
+def get_latest_apkeditor_info() -> dict | None:
     """
     Get the latest version of APKEditor from GitHub API.
 
-    Queries the GitHub releases API to get the most recent version tag.
-    Handles version strings with or without leading 'V'/'v' prefix.
+    Queries the GitHub releases API to get the most recent version tag,
+    download URL, and SHA256 checksum.
 
     Returns:
-        str | None: Version string without prefix, or None if version cannot be determined
-
-    Raises:
-        SystemExit: If GitHub API request fails
+        dict | None: Dictionary with 'version', 'url', 'sha256', or None on failure.
     """
     url = "https://api.github.com/repos/reandroid/apkeditor/releases/latest"
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -140,13 +150,37 @@ def get_latest_version() -> str | None:
         with urlopen(req) as resp:
             data = json.load(resp)
             tag_name = data.get("tag_name")
-            if tag_name:
-                # Remove leading 'V' if present
-                return tag_name.lstrip("Vv")
+            if not tag_name:
+                return None
+
+            version = tag_name.lstrip("Vv")
+            result = {"version": version, "sha256": None, "url": None}
+
+            # Find asset download URL and digest
+            assets = data.get("assets", [])
+            jar_filename = f"APKEditor-{version}.jar"
+            for asset in assets:
+                if asset.get("name") == jar_filename:
+                    result["url"] = asset.get("browser_download_url")
+                    digest = asset.get("digest")
+                    if digest and digest.startswith("sha256:"):
+                        result["sha256"] = digest.split(":")[1]
+                    break
+
+            # Fallback: Try to find sha256 in release body
+            if not result.get("sha256"):
+                body = data.get("body")
+                if body:
+                    # Look for something like `SHA256: <hash>` or just a 64-char hex string
+                    match = re.search(r"([a-fA-F0-9]{64})", body)
+                    if match:
+                        result["sha256"] = match.group(1)
+
+            return result
+
     except (URLError, HTTPError) as e:
         progress.console.log(e)
         sys.exit(1)
-    return None
 
 
 def download_apkeditor(dest_path: Path) -> None:
@@ -165,16 +199,14 @@ def download_apkeditor(dest_path: Path) -> None:
     Raises:
         SystemExit: If version cannot be determined or download fails
     """
-    latest_version = get_latest_version()
-    if latest_version:
+    apkeditor_info = get_latest_apkeditor_info()
+    if apkeditor_info and apkeditor_info["version"] and apkeditor_info["url"]:
+        latest_version = apkeditor_info["version"]
         progress.console.print(
             Panel(Align.center(f"APKEditor V{latest_version}"), expand=True),
             style="bold cyan",
         )
-        jar_url = (
-            "https://github.com/REAndroid/APKEditor/releases/download/"
-            f"V{latest_version}/APKEditor-{latest_version}.jar"
-        )
+        jar_url = apkeditor_info["url"]
         download([jar_url], dest_path)
     else:
-        progress.console.log("Could not determine the latest version.")
+        progress.console.log("Could not determine the latest version or download URL.")

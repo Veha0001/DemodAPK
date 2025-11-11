@@ -15,37 +15,79 @@ from os.path import abspath, basename
 from rich.panel import Panel
 
 from demodapk.baseconf import Apkeditor
-from demodapk.tool import download_apkeditor, get_latest_version
+from demodapk.tool import (
+    download_apkeditor,
+    get_file_sha256,
+    get_latest_apkeditor_info,
+)
 from demodapk.utils import CONFIG_DIR, console, msg, run_commands
 
 
 def update_apkeditor():
     """
     Ensure the latest APKEditor jar is present in the user config folder.
-    Deletes older versions and downloads the latest.
+    Deletes older versions and downloads the latest if needed.
     Returns the path to the latest jar.
     """
+    apkeditor_info = get_latest_apkeditor_info()
+    if not apkeditor_info or not apkeditor_info.get("version"):
+        msg.error("Could not get latest APKEditor version info.")
+        return None
 
-    latest_version = get_latest_version()
-    # Remove all existing APKEditor jars
+    latest_version = apkeditor_info["version"]
+    latest_jar_name = f"APKEditor-{latest_version}.jar"
+    latest_jar_path = os.path.join(CONFIG_DIR, latest_jar_name)
+    remote_sha = apkeditor_info.get("sha256")
+
+    # Clean up old versions
     for fname in os.listdir(CONFIG_DIR):
-        if re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname):
+        if re.match(r"APKEditor-(.+?)\.jar$", fname) and fname != latest_jar_name:
             path = os.path.join(CONFIG_DIR, fname)
             try:
                 os.remove(path)
                 console.print(
-                    Panel(f"{fname}", title="Deleted"),
+                    Panel(f"{fname}", title="Deleted old version"),
                     justify="left",
                     style="bold yellow",
                 )
             except (PermissionError, shutil.Error):
                 pass
 
-    download_apkeditor(CONFIG_DIR)
-    latest_jar = os.path.join(CONFIG_DIR, f"APKEditor-{latest_version}.jar")
+    # Check if latest version already exists and is valid
+    if os.path.exists(latest_jar_path):
+        if remote_sha:
+            local_sha = get_file_sha256(latest_jar_path)
+            if local_sha == remote_sha:
+                console.print(
+                    Panel.fit(
+                        f"APKEditor [bold blue]v{latest_version}[/bold blue] is up to date.",
+                        border_style="bold green",
+                    )
+                )
+                return latest_jar_path
 
-    if os.path.exists(latest_jar):
-        return latest_jar
+            console.print("Local APKEditor JAR has incorrect hash. Redownloading.", style="yellow")
+        else:
+            # No remote hash, just assume it's fine if it exists and is not empty
+            if os.path.getsize(latest_jar_path) > 0:
+                console.print(
+                    f"APKEditor v{latest_version} is up to date (no hash to verify).",
+                    style="green",
+                )
+                return latest_jar_path
+
+            console.print("Local APKEditor JAR is empty. Redownloading.", style="yellow")
+
+    # If we are here, we need to download
+    download_apkeditor(CONFIG_DIR)
+
+    if os.path.exists(latest_jar_path):
+        if remote_sha:
+            local_sha = get_file_sha256(latest_jar_path)
+            if local_sha != remote_sha:
+                msg.error("Downloaded APKEditor JAR has incorrect hash. Download may be corrupt.")
+                return None
+        return latest_jar_path
 
     msg.error("Failed to download APKEditor.")
     return None
@@ -71,10 +113,12 @@ def get_apkeditor_cmd(cfg: Apkeditor):
         else:
             jars = []
             for fname in os.listdir(CONFIG_DIR):
-                match = re.match(r"APKEditor-(\d+\.\d+\.\d+)\.jar$", fname)
+                match = re.match(r"APKEditor-(.+?)\.jar$", fname)
                 if match:
-                    version = tuple(int(x) for x in match.group(1).split("."))
-                    jars.append((version, os.path.join(CONFIG_DIR, fname)))
+                    version_str = match.group(1)
+                    version_parts = tuple(map(int, re.findall(r"\d+", version_str)))
+                    if version_parts:
+                        jars.append((version_parts, os.path.join(CONFIG_DIR, fname)))
             if jars:
                 jars.sort(reverse=True)
                 editor_jar = jars[0][1]

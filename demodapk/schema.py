@@ -61,7 +61,7 @@ def ensure_config(schema_value: str) -> None:
             json.dump(new_config, f, indent=4)
     except (PermissionError, json.JSONDecodeError, TypeError, OSError) as e:
         msg.error(f"Error: {type(e).__name__}: {e}", style="bold red")
-    msg.info("Add selected [blue]$schema[/blue] to: [yellow]config.json[/yellow]", prefix="INFO")
+    msg.success("Add selected [blue]$schema[/blue] to: [u]config.json[/u]")
     sys.exit(0)
 
 
@@ -100,8 +100,7 @@ def get_schema() -> None:
         schema_link = SCHEMA_NETLIFY
     if choice:
         msg.info(
-            f"You selected [blue]$schema[/blue]: [purple][link={schema_link}]{choice}[/link]",
-            prefix="INFO",
+            f"Selected [blue]$schema[/blue]: [u][link={schema_link}]{choice}[/link][/u]",
         )
     else:
         msg.error("No selection made")
