@@ -21,6 +21,18 @@ wheels = [
 ]
 
 [[package]]
+name = "auto-click-auto"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/85/bc/58ada0e0d9f96e44556ee8c355c8456fe8a2ae3106c70a47be14c2391618/auto_click_auto-0.1.5.tar.gz", hash = "sha256:fbe2025af8ae3447e052f3b8284e56bc54d737613da6e30e7c3660f06b79ac2c", size = 9439, upload-time = "2024-06-26T19:38:53.988Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/d3/345caef0ee9343eb114dd55aa5eab0077360f17a993c7cfd078d3a15f785/auto_click_auto-0.1.5-py3-none-any.whl", hash = "sha256:63ba97d3503578a497a4919b4dc381d8558c2a67f9bcb2d9f317dc60364b9da6", size = 9592, upload-time = "2024-06-26T19:38:52.954Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -155,6 +167,7 @@ name = "demodapk"
 source = { editable = "." }
 dependencies = [
     { name = "art" },
+    { name = "auto-click-auto" },
     { name = "inquirer" },
     { name = "platformdirs" },
     { name = "rich" },
@@ -163,7 +176,7 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-docs = [
+dev = [
     { name = "mkdocs" },
     { name = "mkdocs-github-admonitions-plugin" },
     { name = "mkdocs-material" },
@@ -172,16 +185,17 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "art" },
+    { name = "auto-click-auto" },
     { name = "inquirer" },
-    { name = "mkdocs", marker = "extra == 'docs'" },
-    { name = "mkdocs-github-admonitions-plugin", marker = "extra == 'docs'" },
-    { name = "mkdocs-material", marker = "extra == 'docs'" },
+    { name = "mkdocs", marker = "extra == 'dev'" },
+    { name = "mkdocs-github-admonitions-plugin", marker = "extra == 'dev'" },
+    { name = "mkdocs-material", marker = "extra == 'dev'" },
     { name = "platformdirs" },
     { name = "rich" },
     { name = "rich-click" },
     { name = "rich-gradient" },
 ]
-provides-extras = ["docs"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "editor"

@@ -9,6 +9,7 @@ and various customization options.
 from types import SimpleNamespace
 
 import rich_click as click
+from auto_click_auto import enable_click_shell_completion_option
 
 from demodapk import __version__
 from demodapk.baseconf import load_config
@@ -16,6 +17,7 @@ from demodapk.mods import dowhat, runsteps
 from demodapk.utils import show_logo
 
 
+# INFO: https://click.palletsprojects.com/en/stable/api/
 @click.command()
 @click.help_option("-h", "--help")
 @click.argument(
@@ -100,6 +102,7 @@ from demodapk.utils import show_logo
     is_flag=True,
     help="Rename package in smali files and directories.",
 )
+@enable_click_shell_completion_option("--autocomplete", "-aca", program_name="demodapk")
 @click.version_option(
     __version__,
     "-v",

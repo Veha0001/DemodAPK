@@ -5,19 +5,20 @@ requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
 dependencies = [
     "art",
+    "auto-click-auto",
     "rich",
     "rich-click",
     "rich-gradient",
     "platformdirs",
-    "inquirer"
+    "inquirer",
 ]
 readme = "README.md"
 dynamic = ["version"]
 authors = [
-    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }
+    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" },
 ]
 maintainers = [
-    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" }
+    { name = "Veha0001", email = "84841152+Veha0001@users.noreply.github.com" },
 ]
 keywords = ["arsc", "apk", "apkeditor", "demo"]
 
@@ -35,11 +36,7 @@ build-backend = "flit_core.buildapi"
 demodapk = "demodapk.cli:main"
 
 [project.optional-dependencies]
-docs = [
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocs-github-admonitions-plugin"
-]
+dev = ["mkdocs", "mkdocs-material", "mkdocs-github-admonitions-plugin"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
