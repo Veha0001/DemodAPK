@@ -157,6 +157,36 @@
               },
               "additionalProperties": false
             },
+            "hex": {
+              "type": "array",
+              "description": "A list of binary patching operations to apply.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path to the binary file to patch, relative to the decoded APK directory."
+                  },
+                  "verbose": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable detailed logging for this patch operation."
+                  },
+                  "patch": {
+                    "type": "array",
+                    "description": "A list of search-and-replace hex patterns.",
+                    "items": {
+                      "type": "string",
+                      "description": "A single patch rule in the format 'SEARCH_HEX | REPLACE_HEX'. SEARCH_HEX can contain '??' as wildcards."
+                    }
+                  }
+                },
+                "required": [
+                  "path",
+                  "patch"
+                ]
+              }
+            },
             "level": {
               "type": "integer",
               "default": 2,

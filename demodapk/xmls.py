@@ -1,3 +1,5 @@
+"""Module for updating AndroidManifest.xml based on provided configuration."""
+
 import os
 import xml.etree.ElementTree as ET
 

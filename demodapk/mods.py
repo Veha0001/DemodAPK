@@ -20,6 +20,7 @@ from demodapk.baseconf import (
     check_for_dex_folder,
     verify_apk_directory,
 )
+from demodapk.hex import update_bin_with_patch
 from demodapk.mark import apkeditor_build, apkeditor_decode, update_apkeditor
 from demodapk.patch import (
     extract_package_info,
@@ -288,6 +289,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
     editor = conf.apkeditor(args)
     package = conf.package()
     facebook = conf.facebook()
+    apk_dir = os.path.dirname(android_manifest)
 
     if not os.path.isfile(android_manifest):
         msg.error("AndroidManifest.xml not found in the directory.")
@@ -334,6 +336,8 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
                 ctx.package_orig_name,
                 new_package_name=package.name,
             )
+    if "hex" in apk_config:
+        update_bin_with_patch(apk_config, apk_dir)
     update_manifest_group(manifest_xml=android_manifest, apk_config=apk_config)
 
 

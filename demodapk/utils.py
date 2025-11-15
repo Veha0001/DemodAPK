@@ -108,6 +108,11 @@ class CLIprinter:
         """Level Success"""
         self.print(value=value, style=style, prefix=prefix)
 
+    # Aliases
+    warn = warning
+    done = success
+    prog = progress
+
 
 msg = CLIprinter()
 
@@ -185,7 +190,7 @@ def showbox_packages(available_packages, selected_idx=None):
 
 
 if __name__ == "__main__":
-    show_logo("Diego")
+    show_logo("Echo")
     try:
         msg.progress("The World!")
         subprocess.run("exit 2", shell=True, check=True)
