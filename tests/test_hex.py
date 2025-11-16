@@ -1,5 +1,5 @@
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
 
 from demodapk.hex import update_bin_with_patch
@@ -47,7 +47,9 @@ def test_hex_patching():
         # Original byte at 0x0B is 0B
         # Result: 00 FF EE DD CC 05 06 07 08 09 AA 0B BB 0D 0E 0F
         expected_content = bytes.fromhex("00FFEEDDCC0506070809AA0BBB0D0E0F")
-        assert content == expected_content, f"Expected {expected_content.hex().upper()}, got {content.hex().upper()}"
+        assert content == expected_content, (
+            f"Expected {expected_content.hex().upper()}, got {content.hex().upper()}"
+        )
 
     finally:
         # Clean up the dummy directory

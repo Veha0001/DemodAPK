@@ -195,16 +195,13 @@ def patch_codes(
     Patch binary file with given hex codes.
     Each code in codes should be in the format:
     "search/wildcards | replace" or "offset | replace"
-    Example:
-    [
-        "1F 0D 00 71 ?? ?? ?? ?? | 1F BD",
-        "0x1D22E1C | 00 00 00 00 00 00 00 00"
-    ]
-    Parameters:
+
+    Args:
         src (Path | str): Path to the source binary file.
         codes (list[str]): List of hex patch codes.
         output (Path | str | None): Path to save the patched file. If None, overwrite src.
         verbose (bool): Whether to print detailed patching info.
+
     Returns:
         None
     """
