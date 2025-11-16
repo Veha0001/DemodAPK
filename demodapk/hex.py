@@ -194,14 +194,21 @@ def patch_codes(
     """
     Patch binary file with given hex codes.
     Each code in codes should be in the format:
-    "search | replace" or "offset | replace"
-    :param src: Path to the binary file to be patched.
-    :param codes: List of hex code strings to search and replace.
-    :param output: Path to the output file. If None, src is overwritten.
-    :param verbose: If True, print detailed information about the patches.
-
-    :return: None
+    "search/wildcards | replace" or "offset | replace"
+    Example:
+    [
+        "1F 0D 00 71 ?? ?? ?? ?? | 1F BD",
+        "0x1D22E1C | 00 00 00 00 00 00 00 00"
+    ]
+    Parameters:
+        src (Path | str): Path to the source binary file.
+        codes (list[str]): List of hex patch codes.
+        output (Path | str | None): Path to save the patched file. If None, overwrite src.
+        verbose (bool): Whether to print detailed patching info.
+    Returns:
+        None
     """
+
     src = Path(src)
     if not src.exists():
         msg.error(f"File not found: {src.name}")
