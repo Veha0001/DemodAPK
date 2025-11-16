@@ -245,28 +245,31 @@ def get_demo(conf: ConfigHandler, basic: ApkBasic, args):
         )
         apk_dir = decoded_dir
 
-    apk_root_folder = os.path.join(apk_dir, "root")
-    android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
-    resources_folder = os.path.join(apk_dir, "resources")
-    smali_folder = os.path.join(apk_dir, "smali") if not editor.dex_option else ""
-    value_strings = os.path.join(resources_folder, "package_1/res/values/strings.xml")
-
-    begin_paths = {
+    apk_paths = {
         "BASE": apk_dir,
-        "BASE_ROOT": apk_root_folder,
-        "BASE_MANIFEST": android_manifest,
-        "BASE_RESOURCES": resources_folder,
-        "BASE_VALUE": value_strings,
-        "BASE_SMALI": smali_folder,
-        "BASE_RESDIR": os.path.join(resources_folder, "package_1/res"),
-        "BASE_LIB": os.path.join(apk_root_folder, "lib"),
+        "BASE_ROOT": os.path.join(apk_dir, "root"),
+        "BASE_MANIFEST": os.path.join(apk_dir, "AndroidManifest.xml"),
+        "BASE_RESOURCES": os.path.join(apk_dir, "resources"),
+        "BASE_SMALI": os.path.join(apk_dir, "smali") if not editor.dex_option else "",
     }
-    setup_env(begin_paths)
+    apk_paths["BASE_VALUE"] = os.path.join(
+        apk_paths["BASE_RESOURCES"], "package_1/res/values/strings.xml"
+    )
+    apk_paths["BASE_RESDIR"] = os.path.join(apk_paths["BASE_RESOURCES"], "package_1/res")
+    apk_paths["BASE_LIB"] = os.path.join(apk_paths["BASE_ROOT"], "lib")
+
+    setup_env(apk_paths)
 
     if "commands" in apk_config and "begin" in apk_config["commands"]:
         run_commands(apk_config["commands"]["begin"], conf.command_quietly)
 
-    return android_manifest, smali_folder, resources_folder, value_strings, apk_dir
+    return (
+        apk_paths["BASE_MANIFEST"],
+        apk_paths["BASE_SMALI"],
+        apk_paths["BASE_RESOURCES"],
+        apk_paths["BASE_VALUE"],
+        apk_dir,
+    )
 
 
 def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):

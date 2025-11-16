@@ -78,32 +78,36 @@ def _apply_offset_patch(
     hex_replace_str: str,
     patched_data: bytearray,
     verbose: bool,
-) -> tuple[bool, bytearray]:
+) -> tuple[int, bytearray]:  # Changed return type from bool to int
     """Applies an offset-based hex patch."""
     try:
         target_offset = int(hex_search_or_offset, 16)
     except ValueError:
         msg.error(f"Invalid hex offset: {hex_search_or_offset}")
-        return False, patched_data
+        return 0, patched_data
 
     replace_bytes = _parse_replace_pattern(hex_replace_str, patched_data, target_offset)
     if not replace_bytes:
-        return False, patched_data
+        return 0, patched_data
 
     if target_offset + len(replace_bytes) > len(patched_data):
         msg.error(
             "Offset patch out of bounds: "
             f"{hex(target_offset)} with replace length {len(replace_bytes)}."
         )
-        return False, patched_data
+        return 0, patched_data
 
     # Apply the patch directly
     patched_data[target_offset : target_offset + len(replace_bytes)] = replace_bytes
 
     if verbose:
         msg.done(f"Replace: [b magenta]{hex_replace_str}")
-    msg.info(f"  -> Offset: {hex(target_offset)}")
-    return True, patched_data
+    offset_str = hex(target_offset)
+    msg.info(
+        f"  -> Offset: [u green]0x{offset_str[2:].upper()}[/u green]",
+        prefix="?",
+    )
+    return 1, patched_data
 
 
 def _apply_search_replace_patch(
@@ -135,7 +139,11 @@ def _apply_search_replace_patch(
                 msg.done(f"Found: [b blue]{hex_search_or_offset}")
                 msg.done(f"Replace: [b magenta]{hex_replace_str}")
 
-            msg.info(f"  -> Offset: [u green]{hex(found_offset)}[/u green]", prefix="?")
+            offset_str = hex(found_offset)
+            msg.info(
+                f"  -> Offset: [u green]0x{offset_str[2:].upper()}[/u green]",
+                prefix="?",
+            )
 
             end_of_replace = found_offset + len(replace_bytes)
             if end_of_replace > len(patched_data):
@@ -164,6 +172,7 @@ def update_bin_with_patch(attr: dict, decoded_dir: str):
     hex_patches = attr.get("hex", [])
     for hex_patch in hex_patches:
         rel_path = hex_patch.get("path")
+        output_path = hex_patch.get("output")
         patches = hex_patch.get("patch", [])
         verbose = hex_patch.get("verbose", False)
 
@@ -172,20 +181,28 @@ def update_bin_with_patch(attr: dict, decoded_dir: str):
             continue
 
         full_path = Path(decoded_dir) / rel_path
-        patch_codes(full_path, patches, verbose)
+        full_output_path = Path(decoded_dir) / output_path if output_path else None
+        patch_codes(full_path, patches, full_output_path, verbose)
 
 
-def patch_codes(src: Path, codes: list[str], verbose: bool = False) -> None:
+def patch_codes(
+    src: Path | str,
+    codes: list[str],
+    output: Path | str | None = None,
+    verbose: bool = False,
+) -> None:
     """
     Patch binary file with given hex codes.
     Each code in codes should be in the format:
     "search | replace" or "offset | replace"
     :param src: Path to the binary file to be patched.
     :param codes: List of hex code strings to search and replace.
+    :param output: Path to the output file. If None, src is overwritten.
     :param verbose: If True, print detailed information about the patches.
 
     :return: None
     """
+    src = Path(src)
     if not src.exists():
         msg.error(f"File not found: {src.name}")
         return
@@ -204,30 +221,36 @@ def patch_codes(src: Path, codes: list[str], verbose: bool = False) -> None:
 
     for code in codes:
         try:
-            hex_search_or_offset, hex_replace_str = map(str.strip, code.split("|"))
+            parts = code.split("|")
+            if len(parts) != 2:
+                raise ValueError("Invalid patch format")
+            hex_search, hex_replace = parts[0].strip(), parts[1].strip()
         except ValueError:
             msg.error(f"Invalid patch format: {code}")
             continue
 
-        # Check if hex_search_or_offset is an offset
-        if hex_search_or_offset.lower().startswith("0x"):
-            applied, patched_data = _apply_offset_patch(
-                hex_search_or_offset, hex_replace_str, patched_data, verbose
+        # Check if hex_search is an offset
+        if hex_search.lower().startswith("0x"):
+            applied_count, patched_data = _apply_offset_patch(
+                hex_search, hex_replace, patched_data, verbose
             )
-            if applied:
-                total_patches_applied += 1
+            total_patches_applied += applied_count
         else:  # Existing search-and-replace logic
             applied_count, patched_data = _apply_search_replace_patch(
-                hex_search_or_offset, hex_replace_str, patched_data, verbose
+                hex_search, hex_replace, patched_data, verbose
             )
             total_patches_applied += applied_count
 
     if total_patches_applied > 0:
+        actual_output_path = Path(output) if output else src
         try:
-            with open(src, "wb") as f:
+            with open(actual_output_path, "wb") as f:
                 f.write(patched_data)
-            msg.done(f"Updated {total_patches_applied} hex patch(es) in [b cyan]{src.name}[/].")
+            msg.done(
+                f"Updated {total_patches_applied} hex patch(es) in "
+                f"[b cyan]{actual_output_path.name}[/]."
+            )
         except IOError as e:
-            msg.error(f"Failed to write to file {src}: {e}")
+            msg.error(f"Failed to write to file {actual_output_path}: {e}")
     else:
         msg.info(f"No patches applied to [b cyan]{src.name}[/].")
