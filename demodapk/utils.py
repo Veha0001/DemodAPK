@@ -25,9 +25,7 @@ from rich_gradient import Gradient
 install(show_locals=True)
 console = Console(log_path=False)
 
-CONFIG_DIR = user_config_path(
-    appname="demodapk", appauthor="VehaLV", ensure_exists=True, roaming=True
-)
+CONFIG_DIR = user_config_path(appname="demodapk", appauthor="VehaVeha", ensure_exists=True)
 
 
 def show_logo(

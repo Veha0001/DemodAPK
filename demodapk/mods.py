@@ -12,6 +12,7 @@ This module implements the core workflow for modifying APK files, including:
 import os
 import shutil
 import sys
+import zipfile
 
 from demodapk.baseconf import (
     ApkBasic,
@@ -175,8 +176,8 @@ def get_the_inputs(config, args):
     apk_dir = os.path.abspath(apk_input)
     android_manifest = os.path.join(apk_dir, "AndroidManifest.xml")
     if os.path.isfile(apk_dir):  # APK file case
-        if not apk_dir.lower().endswith((".zip", ".apk", ".apks", ".xapk")):
-            msg.error(f"This: {apk_dir}, isn’t an apk type.")
+        if not zipfile.is_zipfile(apk_dir):
+            msg.error(f"Input file is not a valid APK or zip archive: {apk_dir}")
             sys.exit(1)
 
         package_name, apk_config = select_config_for_apk(config, args)

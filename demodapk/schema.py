@@ -100,10 +100,14 @@ def get_schema() -> None:
         schema_link = SCHEMA_NETLIFY
     if choice:
         msg.info(
-            f"Selected [blue]$schema[/blue]: [u][link={schema_link}]{choice}[/link][/u]",
+            f"Selected: [u white][link={schema_link}]{choice}[/link][/u white]",
         )
     else:
         msg.error("No selection made")
         sys.exit(1)
 
     return ensure_config(schema_link)
+
+
+if __name__ == "__main__":
+    get_schema()

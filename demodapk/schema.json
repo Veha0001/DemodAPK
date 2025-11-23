@@ -98,7 +98,7 @@
                           },
                           "quiet": {
                             "type": "boolean",
-                            "anyOf": [
+                            "oneOf": [
                               {
                                 "const": true,
                                 "description": "Run the command in quiet mode (no output will be shown)."
@@ -111,9 +111,7 @@
                             "description": "Override quiet mode for this command."
                           }
                         },
-                        "required": [
-                          "run"
-                        ],
+                        "required": ["run"],
                         "additionalProperties": false
                       }
                     ]
@@ -135,7 +133,7 @@
                       },
                       "quiet": {
                         "type": "boolean",
-                        "anyOf": [
+                        "oneOf": [
                           {
                             "const": true,
                             "description": "Run the command in quiet mode (no output will be shown)."
@@ -148,9 +146,7 @@
                         "description": "Override quiet mode for this command."
                       }
                     },
-                    "required": [
-                      "run"
-                    ],
+                    "required": ["run"],
                     "additionalProperties": false
                   }
                 }
@@ -170,6 +166,16 @@
                   "verbose": {
                     "type": "boolean",
                     "default": false,
+                    "oneOf": [
+                      {
+                        "const": true,
+                        "description": "Print detailed hex-patch information."
+                      },
+                      {
+                        "const": false,
+                        "description": "Show only the offsets that were patched."
+                      }
+                    ],
                     "description": "Enable detailed logging for this patch operation."
                   },
                   "patch": {
@@ -177,26 +183,17 @@
                     "description": "A list of search-and-replace hex patterns.",
                     "items": {
                       "type": "string",
-                      "description": "A single patch rule in the format 'SEARCH_HEX | REPLACE_HEX'. SEARCH_HEX can contain '??' as wildcards."
+                      "description": "A single patch rule in the format 'SEARCH | REPLACE_HEX'. SEARCH can contain '??' as wildcards. or can be offset with 0x."
                     }
                   }
                 },
-                "required": [
-                  "path",
-                  "patch"
-                ]
+                "required": ["path", "patch"]
               }
             },
             "level": {
               "type": "integer",
               "default": 2,
-              "enum": [
-                0,
-                1,
-                2,
-                3,
-                4
-              ],
+              "enum": [0, 1, 2, 3, 4],
               "anyOf": [
                 {
                   "const": 0,
@@ -278,7 +275,7 @@
                 "activity_exportall": {
                   "type": "boolean",
                   "default": false,
-                  "anyOf": [
+                  "oneOf": [
                     {
                       "const": true,
                       "description": "Enable"
@@ -293,7 +290,7 @@
                 "app_debuggable": {
                   "type": "boolean",
                   "default": false,
-                  "anyOf": [
+                  "oneOf": [
                     {
                       "const": true,
                       "description": "Enable"
@@ -332,7 +329,7 @@
         "menu": {
           "type": "boolean",
           "description": "The menu selection files mode.",
-          "anyOf": [
+          "oneOf": [
             {
               "const": true,
               "description": "Enable"
@@ -346,7 +343,7 @@
         "style": {
           "type": "boolean",
           "description": "Toggle styled output for logging.",
-          "anyOf": [
+          "oneOf": [
             {
               "const": true,
               "description": "Enable (use tags like [Found], [Patch], etc...)"
@@ -386,7 +383,7 @@
               "require": {
                 "type": "boolean",
                 "description": "Whether this file is required before processing.",
-                "anyOf": [
+                "oneOf": [
                   {
                     "const": true,
                     "description": "Enable"
@@ -433,72 +430,42 @@
                   "anyOf": [
                     {
                       "description": "Patch by method name with a hex replacement.",
-                      "required": [
-                        "method_name",
-                        "hex_replace"
-                      ]
+                      "required": ["method_name", "hex_replace"]
                     },
                     {
                       "description": "Patch by method name with a hex insertion.",
-                      "required": [
-                        "method_name",
-                        "hex_insert"
-                      ]
+                      "required": ["method_name", "hex_insert"]
                     },
                     {
                       "description": "Patch by file offset with a hex replacement.",
-                      "required": [
-                        "offset",
-                        "hex_replace"
-                      ]
+                      "required": ["offset", "hex_replace"]
                     },
                     {
                       "description": "Patch by file offset with a hex insertion.",
-                      "required": [
-                        "offset",
-                        "hex_insert"
-                      ]
+                      "required": ["offset", "hex_insert"]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex insertion.",
-                      "required": [
-                        "wildcard",
-                        "hex_insert"
-                      ]
+                      "required": ["wildcard", "hex_insert"]
                     },
                     {
                       "description": "Patch by wildcard pattern with a hex replacement.",
-                      "required": [
-                        "wildcard",
-                        "hex_replace"
-                      ]
+                      "required": ["wildcard", "hex_replace"]
                     }
                   ],
                   "not": {
                     "anyOf": [
                       {
-                        "required": [
-                          "method_name",
-                          "offset"
-                        ]
+                        "required": ["method_name", "offset"]
                       },
                       {
-                        "required": [
-                          "method_name",
-                          "wildcard"
-                        ]
+                        "required": ["method_name", "wildcard"]
                       },
                       {
-                        "required": [
-                          "offset",
-                          "wildcard"
-                        ]
+                        "required": ["offset", "wildcard"]
                       },
                       {
-                        "required": [
-                          "hex_replace",
-                          "hex_insert"
-                        ]
+                        "required": ["hex_replace", "hex_insert"]
                       }
                     ]
                   }
@@ -509,23 +476,16 @@
               {
                 "anyOf": [
                   {
-                    "required": [
-                      "open"
-                    ]
+                    "required": ["open"]
                   },
                   {
-                    "required": [
-                      "input"
-                    ]
+                    "required": ["input"]
                   }
                 ]
               },
               {
                 "not": {
-                  "required": [
-                    "open",
-                    "input"
-                  ]
+                  "required": ["open", "input"]
                 }
               }
             ],
@@ -533,10 +493,7 @@
           }
         }
       },
-      "required": [
-        "menu",
-        "files"
-      ],
+      "required": ["menu", "files"],
       "additionalProperties": false
     }
   },
