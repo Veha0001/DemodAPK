@@ -15,12 +15,8 @@ from os.path import abspath, basename
 from rich.panel import Panel
 
 from demodapk.baseconf import Apkeditor
-from demodapk.tool import (
-    download_apkeditor,
-    get_file_sha256,
-    get_latest_apkeditor_info,
-)
-from demodapk.utils import CONFIG_DIR, console, msg, run_commands
+from demodapk.tool import download_apkeditor, get_file_sha256, get_latest_apkeditor_info
+from demodapk.utils import LIBEXEC_PATH, console, msg, run_commands
 
 
 def update_apkeditor():
@@ -36,13 +32,13 @@ def update_apkeditor():
 
     latest_version = apkeditor_info["version"]
     latest_jar_name = f"APKEditor-{latest_version}.jar"
-    latest_jar_path = os.path.join(CONFIG_DIR, latest_jar_name)
+    latest_jar_path = os.path.join(LIBEXEC_PATH, latest_jar_name)
     remote_sha = apkeditor_info.get("sha256")
 
     # Clean up old versions
-    for fname in os.listdir(CONFIG_DIR):
+    for fname in os.listdir(LIBEXEC_PATH):
         if re.match(r"APKEditor-(.+?)\.jar$", fname) and fname != latest_jar_name:
-            path = os.path.join(CONFIG_DIR, fname)
+            path = os.path.join(LIBEXEC_PATH, fname)
             try:
                 os.remove(path)
                 console.print(
@@ -79,7 +75,7 @@ def update_apkeditor():
             console.print("Local APKEditor JAR is empty. Redownloading.", style="yellow")
 
     # If we are here, we need to download
-    download_apkeditor(CONFIG_DIR)
+    download_apkeditor(LIBEXEC_PATH)
 
     if os.path.exists(latest_jar_path):
         if remote_sha:
@@ -112,13 +108,13 @@ def get_apkeditor_cmd(cfg: Apkeditor):
                 sys.exit(1)
         else:
             jars = []
-            for fname in os.listdir(CONFIG_DIR):
+            for fname in os.listdir(LIBEXEC_PATH):
                 match = re.match(r"APKEditor-(.+?)\.jar$", fname)
                 if match:
                     version_str = match.group(1)
                     version_parts = tuple(map(int, re.findall(r"\d+", version_str)))
                     if version_parts:
-                        jars.append((version_parts, os.path.join(CONFIG_DIR, fname)))
+                        jars.append((version_parts, os.path.join(LIBEXEC_PATH, fname)))
             if jars:
                 jars.sort(reverse=True)
                 editor_jar = jars[0][1]

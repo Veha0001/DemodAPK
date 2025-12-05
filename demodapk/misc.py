@@ -1,6 +1,11 @@
-"""Module for updating AndroidManifest.xml based on provided configuration."""
+"""
+Module for miscellaneous utility functions, including AndroidManifest.xml updates
+and file system operations within the decoded APK directory.
+"""
 
 import os
+import shlex
+import shutil
 import xml.etree.ElementTree as ET
 
 from demodapk.utils import msg
@@ -8,6 +13,119 @@ from demodapk.utils import msg
 ANDROID_NS_URL = "http://schemas.android.com/apk/res/android"
 ANDROID_NS = f"{{{ANDROID_NS_URL}}}"
 ET.register_namespace("android", ANDROID_NS_URL)
+
+
+def _is_safe_path(base_path: str, path_to_check: str) -> bool:
+    """Check if a path is within the base directory."""
+    return os.path.realpath(path_to_check).startswith(base_path)
+
+
+def _handle_rm(p: str, base_path: str):
+    """Handle the 'rm' operation."""
+    src_path = os.path.join(base_path, p)
+    if not _is_safe_path(base_path, src_path):
+        msg.error(f"Path operation aborted: '{p}' is outside the base directory.")
+        return
+
+    if os.path.isdir(src_path):
+        shutil.rmtree(src_path)
+    elif os.path.isfile(src_path):
+        os.remove(src_path)
+    msg.success(f"Removed: [u magenta]{p}[/u magenta]")
+
+
+def _handle_cp_mv(op: str, p: str, base_path: str):
+    """Handle 'cp' and 'mv' operations."""
+    args = shlex.split(p)
+    if len(args) != 2:
+        msg.error(f"Invalid arguments for {op}: {p}. Expected source and destination.")
+        return
+
+    src, dest = args
+    src_path = os.path.join(base_path, src)
+    dest_path = os.path.join(base_path, dest)
+
+    if not _is_safe_path(base_path, src_path) or not _is_safe_path(base_path, dest_path):
+        msg.error(f"Path operation aborted: {src} or {dest} is outside the base directory.")
+        return
+
+    if not os.path.exists(src_path):
+        msg.warning(f"Source for {op} does not exist: {src}")
+        return
+
+    if op == "cp":
+        if os.path.isdir(src_path):
+            shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
+        else:
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.copy(src_path, dest_path)
+        msg.success(f"Copied: [u magenta]{src}[/u magenta] -> [u magenta]{dest}[/u magenta]")
+
+    elif op == "mv":
+        shutil.move(src_path, dest_path)
+        msg.success(f"Moved: [u magenta]{src}[/u magenta] -> [u magenta]{dest}[/u magenta]")
+
+
+def _handle_add(p: str, base_path: str):
+    """Handle the 'add' operation."""
+    args = shlex.split(p)
+    if len(args) != 2:
+        msg.error(f"Invalid arguments for add: {p}. Expected source and destination.")
+        return
+
+    src_external, dest_internal = args
+    src_path = os.path.abspath(src_external)
+    dest_path = os.path.join(base_path, dest_internal)
+
+    if not _is_safe_path(base_path, dest_path):
+        msg.error(
+            f"Path operation aborted: Destination '{dest_internal}' is outside the base directory."
+        )
+        return
+
+    if not os.path.exists(src_path):
+        msg.warning(f"Source for add does not exist: {src_external}")
+        return
+
+    if os.path.isdir(src_path):
+        shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
+    else:
+        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+        shutil.copy(src_path, dest_path)
+    msg.success(
+        f"Added: [u magenta]{src_external}[/u magenta] to [u magenta]{dest_internal}[/u magenta]"
+    )
+
+
+def update_base_path(apk_dir: str, path_config: dict) -> None:
+    """
+    Perform file operations (cp, mv, rm, add) within the decoded APK directory.
+
+    Args:
+        apk_dir (str): The base directory of the decoded APK.
+        path_config (dict): A dictionary with 'cp', 'mv', 'rm', 'add' keys.
+    """
+    base_path = os.path.realpath(apk_dir)
+
+    operations = {
+        "rm": lambda p: _handle_rm(p, base_path),
+        "cp": lambda p: _handle_cp_mv("cp", p, base_path),
+        "mv": lambda p: _handle_cp_mv("mv", p, base_path),
+        "add": lambda p: _handle_add(p, base_path),
+    }
+
+    for op, paths in path_config.items():
+        if op not in operations:
+            continue
+
+        if not isinstance(paths, list):
+            paths = [paths]
+
+        for p in paths:
+            try:
+                operations[op](p)
+            except (shutil.Error, OSError) as e:
+                msg.error(f"File operation failed for '{op}' on '{p}': {e}")
 
 
 def android_attr(name: str) -> str:

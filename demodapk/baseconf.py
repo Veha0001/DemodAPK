@@ -8,7 +8,7 @@ import os
 import sys
 from typing import Optional
 
-from demodapk.utils import CONFIG_DIR, msg
+from demodapk.utils import CONFIG_PATH, msg
 
 
 @dataclasses.dataclass
@@ -83,7 +83,7 @@ class ConfigHandler:
         self.manifest_edit_level = apk_config.get("level", 2)
         self.app_name = apk_config.get("app_name", None)
         self.apk_config = apk_config
-        self.command_quietly = apk_config.get("commands", {}).get("quietly", False)
+        self.command_quietly = apk_config.get("commands", {}).get("quietly", True)
 
     def apkeditor(self, args) -> Apkeditor:
         """Get the APK editor configuration."""
@@ -123,7 +123,7 @@ def load_config(config: str = "config.json"):
     if os.path.isdir(config_path):
         config_path = os.path.join(config_path, "config.json")
     if not os.path.exists(config_path):
-        config_path = CONFIG_DIR / config
+        config_path = CONFIG_PATH / config
     if not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as f:

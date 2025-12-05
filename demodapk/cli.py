@@ -28,7 +28,7 @@ from demodapk.utils import show_logo
 )
 @click.option(
     "-i",
-    "--in",
+    "--id",
     "index",
     type=int,
     default=None,
@@ -58,6 +58,15 @@ from demodapk.utils import show_logo
     help="Keep only the rebuilt APK.",
 )
 @click.option(
+    "-s",
+    "--skip",
+    "skip_list",
+    metavar="<key>",
+    type=click.Choice(["fb", "rename"]),
+    multiple=True,
+    help="Skip specific JSON config keys.",
+)
+@click.option(
     "-f",
     "--force",
     is_flag=True,
@@ -73,7 +82,8 @@ from demodapk.utils import show_logo
 )
 @click.option(
     "-ua",
-    "--update-apkeditor",
+    "--getup",  # Wake Up!
+    "update_apkeditor",
     is_flag=True,
     help="Update APKEditor latest version.",
 )
@@ -85,24 +95,12 @@ from demodapk.utils import show_logo
     help="Decode with raw dex.",
 )
 @click.option(
-    "-nn",
-    "--no-rename",
-    is_flag=True,
-    help="Keep manifest names.",
-)
-@click.option(
-    "-nfb",
-    "--no-facebook",
-    is_flag=True,
-    help="Skip Facebook API update.",
-)
-@click.option(
-    "-nas",
-    "--rename-smali",
+    "-sm",
+    "--xsmali",
     is_flag=True,
     help="Rename package in smali files and directories.",
 )
-@enable_click_shell_completion_option("--autocomplete", "-aca", program_name="demodapk")
+@enable_click_shell_completion_option("--completion", "-ac", program_name="demodapk")
 @click.version_option(
     __version__,
     "-v",

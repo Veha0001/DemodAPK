@@ -25,8 +25,10 @@ from rich_gradient import Gradient
 install(show_locals=True)
 console = Console(log_path=False)
 
-CONFIG_DIR = Path.home() / ".config" / "demodapk"
-CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH = Path.home() / ".config" / "demodapk"
+LIBEXEC_PATH = Path.home() / ".local" / "libexec" / "demodapk"
+LIBEXEC_PATH.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH.mkdir(parents=True, exist_ok=True)
 
 
 def show_logo(

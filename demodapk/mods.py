@@ -23,6 +23,7 @@ from demodapk.baseconf import (
 )
 from demodapk.hex import update_bin_with_patch
 from demodapk.mark import apkeditor_build, apkeditor_decode, update_apkeditor
+from demodapk.misc import update_base_path, update_manifest_group
 from demodapk.patch import (
     extract_package_info,
     rename_package_in_manifest,
@@ -35,7 +36,6 @@ from demodapk.patch import (
 )
 from demodapk.schema import get_schema
 from demodapk.utils import console, msg, run_commands, showbox_packages
-from demodapk.xmls import update_manifest_group
 
 try:
     import inquirer
@@ -299,10 +299,10 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
         msg.error("AndroidManifest.xml not found in the directory.")
         sys.exit(1)
 
-    if conf.app_name and not args.no_rename:
+    if conf.app_name and "rename" not in args.skip_list:
         update_app_name_values(conf.app_name, ctx.value_strings)
 
-    if facebook and not args.no_facebook:
+    if facebook and "fb" not in args.skip_list:
         update_facebook_app_values(
             ctx.value_strings,
             fb_app_id=facebook.appid,
@@ -310,7 +310,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
             fb_login_protocol_scheme=facebook.login_protocol_scheme,
         )
 
-    if not args.no_rename and "package" in apk_config:
+    if "rename" not in args.skip_list and "package" in apk_config:
         rename_package_in_manifest(
             android_manifest,
             ctx.package_orig_name,
@@ -324,7 +324,7 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
         )
 
         if not ctx.dex_folder_exists and not editor.dex_option:
-            if args.rename_smali:
+            if args.xsmali:
                 update_smali_path_package(
                     ctx.smali_folder,
                     ctx.package_orig_path,
@@ -340,6 +340,8 @@ def get_updates(conf, android_manifest, apk_config, ctx: UpdateContext, args):
                 ctx.package_orig_name,
                 new_package_name=package.name,
             )
+    if "path" in apk_config:
+        update_base_path(apk_dir, apk_config["path"])
     if "hex" in apk_config:
         update_bin_with_patch(apk_config, apk_dir)
     update_manifest_group(manifest_xml=android_manifest, apk_config=apk_config)

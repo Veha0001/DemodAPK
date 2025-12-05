@@ -3,7 +3,6 @@ auto-click-auto
 rich
 rich-click
 rich-gradient
-platformdirs
 inquirer
 mkdocs
 mkdocs-material
