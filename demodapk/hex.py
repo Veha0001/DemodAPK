@@ -121,6 +121,13 @@ def _apply_search_replace_patch(
     if not regex:
         return 0, patched_data
 
+    # For search-and-replace, replace_bytes must be literal (no wildcards)
+    try:
+        replace_bytes = bytes.fromhex(re.sub(r"\s+", "", hex_replace_str))
+    except ValueError:
+        msg.error(f"Invalid hex characters in replace pattern: {hex_replace_str}")
+        return 0, patched_data
+
     current_offset = 0
     patches_in_this_code = 0
     while current_offset < len(patched_data):
@@ -138,21 +145,14 @@ def _apply_search_replace_patch(
                 prefix="?",
             )
 
-            replace_bytes = _parse_replace_pattern(
-                hex_replace_str, patched_data, found_offset
-            )
-            if replace_bytes is None:
-                # Error already printed in _parse_replace_pattern
+            end_of_replace = found_offset + len(replace_bytes)
+            if end_of_replace > len(patched_data):
+                msg.error(f"Patch is out of bounds for pattern {hex_search_or_offset}.")
                 break
 
-            # The slice to be replaced is the matched part of the data.
-            end_of_match = match.end()
-
-            patched_data[found_offset:end_of_match] = replace_bytes
+            patched_data[found_offset:end_of_replace] = replace_bytes
             patches_in_this_code += 1
-
-            # Move offset to the end of the replaced section to avoid overlapping matches.
-            current_offset = found_offset + len(replace_bytes)
+            current_offset = end_of_replace
         else:
             break  # No more matches found
 
@@ -258,3 +258,4 @@ def patch_codes(
             msg.error(f"Failed to write to file {actual_output_path}: {e}")
     else:
         msg.info(f"No patches applied to [b cyan]{src.name}[/].")
+
