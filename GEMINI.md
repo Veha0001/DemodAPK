@@ -65,6 +65,42 @@ The configuration file follows the schema defined in `demodapk/schema.json`. Her
 
 **Configuration:** To enable this feature, set `"hide_app_icon": true` within the `"manifest"` section of your app's configuration in the JSON file.
 
+### Manifest Configuration Options
+
+**Functionality:** The `manifest` section within your app's configuration allows for direct manipulation of the `AndroidManifest.xml` file.
+
+**Supported Options:**
+-   `hide_app_icon` (boolean): If `true`, hides the app icon from the launcher.
+-   `app_debuggable` (boolean): If `true`, sets `android:debuggable="true"` on the `<application>` tag.
+-   `app_label` (string): Sets the `android:label` attribute on the `<application>` tag.
+-   `remove_metadata` (list of strings): Removes specified `<meta-data>` entries from the manifest.
+-   `version_targetsdk` (integer): Sets the `android:targetSdkVersion` attribute on the `<uses-sdk>` tag.
+-   `version_code` (integer): Sets the `android:versionCode` attribute on the `<manifest>` tag.
+-   `version_name` (string): Sets the `android:versionName` attribute on the `<manifest>` tag.
+
+**Example Configuration (`config.json`):**
+
+```json
+{
+  "DemodAPK": {
+    "com.example.oldpackage": {
+      "package": "com.example.newpackage",
+      "app_name": "My New App",
+      "manifest": {
+        "hide_app_icon": true,
+        "app_debuggable": true,
+        "app_label": "My Renamed App",
+        "remove_metadata": ["com.example.SOME_KEY"],
+        "version_targetsdk": 33,
+        "version_code": 100,
+        "version_name": "1.0.0-beta"
+      },
+      "level": 2
+    }
+  }
+}
+```
+
 ## Development Guidelines for Gemini
 
 -   **Adhere to `demodapk/schema.json`:** When generating or modifying configuration files, always ensure they conform to the defined schema.

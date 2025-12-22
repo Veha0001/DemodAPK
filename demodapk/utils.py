@@ -21,6 +21,9 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.traceback import install
 from rich_gradient import Gradient
+from rich_color_ext.patch import uninstall as restore_rich_colors
+
+restore_rich_colors()
 
 install(show_locals=True)
 console = Console(log_path=False)
@@ -45,7 +48,7 @@ def show_logo(
         text (str): Text to convert to ASCII art
         font (str, optional): ASCII art font name. Defaults to "small".
         style (str, bool): Text style. Defaults to "bold". Gradient colors.
-        like (bool, int): Panel fit, Number of blank lines after logo. Defaults to 1.
+        fits (bool, int): Panel fit, Number of blank lines after logo. Defaults to 1.
         panel (bool): Print inside a rich panel.
     Returns:
         None
@@ -56,14 +59,14 @@ def show_logo(
         fits = (fits, 1)
     logo_art = text2art(text, font=font)
     if isinstance(logo_art, str):
-        lines = str(logo_art).splitlines()
+        lines: Any = str(logo_art).splitlines()
         if panel:
             if fits[0]:
                 lines = Panel.fit("\n".join(lines))
             else:
                 lines = Panel("\n".join(lines))
 
-        lolcat = Gradient(lines) if style[1] else lines
+        lolcat = Gradient(lines, console=console) if style[1] else lines
         console.print(lolcat, style=style[0], soft_wrap=True)
         console.line(fits[1])
 

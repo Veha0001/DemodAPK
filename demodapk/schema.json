@@ -372,6 +372,10 @@
                   "type": "integer",
                   "minimum": 1,
                   "description": "Changes the version code of the app. This will turn off app store updates"
+                },
+                "version_name": {
+                  "type": "string",
+                  "description": "Changes the version name of the app."
                 }
               },
               "additionalProperties": false

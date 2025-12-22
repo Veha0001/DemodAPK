@@ -171,6 +171,9 @@ def update_manifest_group(manifest_xml: str, apk_config: dict) -> None:
     if config.get("version_code") is not None:
         set_version_code(manifest_xml, config["version_code"])
 
+    if config.get("version_name") is not None:
+        set_version_name(manifest_xml, config["version_name"])
+
 
 def hide_app_icon(manifest_xml: str) -> None:
     """
@@ -420,6 +423,36 @@ def set_version_code(manifest_xml: str, version_code: int) -> None:
 
         tree.write(manifest_xml, encoding="utf-8", xml_declaration=True)
         msg.success(f"Set versionCode to {version_code}.")
+
+    except ET.ParseError as e:
+        msg.error(f"Failed to parse manifest: {e}")
+
+
+def set_version_name(manifest_xml: str, version_name: str) -> None:
+    """
+    Sets the android:versionName attribute in AndroidManifest.xml.
+
+    Args:
+        manifest_xml (str): Path to AndroidManifest.xml
+        version_name (str): Version name to set
+    """
+    if not version_name:
+        msg.warning("Version name cannot be empty.")
+        return
+
+    if not os.path.isfile(manifest_xml):
+        msg.error(f"File {manifest_xml} not found.")
+        return
+
+    try:
+        tree = ET.parse(manifest_xml)
+        root = tree.getroot()
+
+        # Set android:versionName on <manifest> tag
+        root.set(android_attr("versionName"), version_name)
+
+        tree.write(manifest_xml, encoding="utf-8", xml_declaration=True)
+        msg.success(f"Set versionName to {version_name}.")
 
     except ET.ParseError as e:
         msg.error(f"Failed to parse manifest: {e}")

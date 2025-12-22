@@ -10,7 +10,7 @@ import re
 import shutil
 import sys
 from contextlib import nullcontext
-from os.path import abspath, basename
+from os.path import abspath, basename, relpath
 
 from rich.panel import Panel
 
@@ -153,13 +153,10 @@ def apkeditor_merge(
         None
     """
     # New base name of apk_file end with .apk
-    command = (
-        f'{get_apkeditor_cmd(cfg)} m -i "{os.path.abspath(apk_file)}"'
-        f' -o "{os.path.abspath(merge_base_apk)}"'
-    )
+    command = f'{get_apkeditor_cmd(cfg)} m -i "{abspath(apk_file)}" -o "{abspath(merge_base_apk)}"'
     if force:
         command += " -f"
-    msg.info(f"Merging: {os.path.basename(apk_file)}", prefix="-")
+    msg.info(f"Merging: {basename(apk_file)}", prefix="-")
     with (
         console.status("[bold blue]Processing...", spinner="point", spinner_style="blue")
         if quietly
@@ -167,7 +164,7 @@ def apkeditor_merge(
     ):
         run_commands([command], quietly, tasker=True)
     msg.success(
-        f"Merged into: {os.path.basename(merge_base_apk)}",
+        f"Merged into: {basename(merge_base_apk)}",
         prefix="+",
     )
 
@@ -214,7 +211,7 @@ def apkeditor_decode(
     with console.status("[bold green]Processing...", spinner="point") if quietly else nullcontext():
         run_commands([command], quietly, tasker=True)
     msg.success(
-        f"Decoded into: {cfg.to_output}",
+        f"Decoded into: {relpath(output_dir)}",
         prefix="+",
     )
 
