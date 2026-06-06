@@ -9,7 +9,6 @@ and various customization options.
 from types import SimpleNamespace
 
 import rich_click as click
-from auto_click_auto import enable_click_shell_completion_option
 
 from demodapk import __version__
 from demodapk.baseconf import load_config
@@ -34,6 +33,7 @@ from demodapk.utils import show_logo
     default=None,
     metavar="<int>",
     help="Index of package configured.",
+    panel="General",
 )
 @click.option(
     "-c",
@@ -43,16 +43,19 @@ from demodapk.utils import show_logo
     metavar="<json>",
     show_default=True,
     help="Path to the configuration file.",
+    panel="General",
 )
 @click.option(
     "-sc",
     "--schema",
     is_flag=True,
     help="Apply schema to the config.",
+    panel="General",
 )
 @click.option(
     "-S",
-    "--single-apk",
+    "--lone",
+    "lone_apk",
     is_flag=True,
     default=False,
     help="Keep only the rebuilt APK.",
@@ -86,6 +89,7 @@ from demodapk.utils import show_logo
     "update_apkeditor",
     is_flag=True,
     help="Update APKEditor latest version.",
+    panel="General",
 )
 @click.option(
     "-dex",
@@ -100,12 +104,12 @@ from demodapk.utils import show_logo
     is_flag=True,
     help="Rename package in smali files and directories.",
 )
-@enable_click_shell_completion_option("--completion", "-ac", program_name="demodapk")
 @click.version_option(
     __version__,
     "-v",
     "--version",
 )
+@click.option_panel("General")
 def main(**kwargs):
     """DemodAPK: APK Modification Script"""
     args = SimpleNamespace(**kwargs)

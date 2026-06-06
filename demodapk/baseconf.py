@@ -91,14 +91,14 @@ class ConfigHandler:
         # Safely get values from args, defaulting to None if args is None
         args_output = getattr(args, "output", None) if args else None
         args_raw_dex = getattr(args, "raw_dex", None) if args else None
-        args_single_apk = getattr(args, "single_apk", False) if args else False
+        args_lone_apk = getattr(args, "lone_apk", False) if args else False
 
         return Apkeditor(
             editor_jar=apkeditor_conf.get("jarpath", ""),
             javaopts=apkeditor_conf.get("javaopts", ""),
             dex_option=args_raw_dex or apkeditor_conf.get("dex", False),
             to_output=args_output or apkeditor_conf.get("output"),
-            clean=args_single_apk or apkeditor_conf.get("clean"),
+            clean=args_lone_apk or apkeditor_conf.get("clean"),
         )
 
     def facebook(self) -> Facebook:

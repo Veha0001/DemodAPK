@@ -1,5 +1,4 @@
 art
-auto-click-auto
 rich
 rich-click
 rich-gradient
